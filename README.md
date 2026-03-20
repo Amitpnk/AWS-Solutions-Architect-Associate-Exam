@@ -46,7 +46,8 @@ Solutions architects must evaluate trade-offs and choose the most appropriate AW
 | Exam Name              | AWS Certified Solutions Architect – Associate |
 | Exam Code              | SAA-C03                                       |
 | Duration               | 130 minutes                                   |
-| Questions              | ~65                                           |
+| Questions              | ~65 (50 scored, 15 unscored)                  |
+| Passing Score          | 720 / 1,000 (Scaled score)                    |
 | Format                 | Multiple Choice & Multiple Response           |
 | Recommended Experience | 1+ year hands-on AWS experience               |
 
