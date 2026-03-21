@@ -214,7 +214,7 @@ Common DR strategies:
 | Warm Standby               | Low      | High      |
 | Multi-Region Active-Active | Very Low | Very High |
 
-# 📖 Study Tips
+## Study Tips
 
 1. Understand **architecture patterns** rather than memorizing services.
 2. Focus on **security and networking concepts**.
@@ -223,15 +223,15 @@ Common DR strategies:
 5. Review **AWS Well-Architected Framework pillars**.
 
 
-# 🔗 Useful Resources
+## Useful Resources
 
-Official AWS documentation
-AWS Skill Builder training
-AWS Well-Architected Framework
-Practice exams and hands-on labs
+* Official AWS documentation
+* AWS Skill Builder training
+* AWS Well-Architected Framework
+* Practice exams and hands-on labs
 
 
-# 🤝 Contributing
+## Contributing
 
 Contributions are welcome!
 
@@ -245,11 +245,11 @@ You can help by:
 Create a pull request to contribute.
 
 
-# ⭐ Support
+## Support
 
 If you find this repository useful, consider giving it a **star ⭐**.
  
-# Key Preparation Resources
+## Key Preparation Resources
 
 * **[Official Exam Guide (PDF)](https://docs.aws.amazon.com/pdfs/aws-certification/latest/solutions-architect-associate-03/solutions-architect-associate-03.pdf):** The definitive source for all task statements and in-scope services.
 * **[AWS Skill Builder](https://skillbuilder.aws/learning-plan/UYRXS2DF85/exam-prep-plan-aws-certified-solutions-architect--associate-saac03--english/):** Offers a 4-step exam prep plan including official practice questions.
