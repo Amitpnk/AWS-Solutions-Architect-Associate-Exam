@@ -50,6 +50,10 @@ Solutions architects must evaluate trade-offs and choose the most appropriate AW
 | Passing Score          | 720 / 1,000 (Scaled score)                    |
 | Format                 | Multiple Choice & Multiple Response           |
 | Recommended Experience | 1+ year hands-on AWS experience               |
+| Cost | $150 USD               |
+| Delivery | 1+ year hands-on AWS experience               |
+| **Cost** | $150 USD |
+| **Delivery** | Testing center or Online proctored (Pearson VUE) |
 
 The exam primarily tests **real-world architectural design scenarios** rather than theoretical knowledge. ([aabiance.com][4])
 
@@ -260,6 +264,7 @@ If you find this repository useful, consider giving it a **star ⭐**.
 
 Sthithapragna - Practice exam - 63
 https://www.youtube.com/watch?v=PhdDjKXl_Y4&t=3183s
+Paid - patreon.com/collection/1283618
 
 Practice exam (very good) - Playlist - CertPro Deep dive - 500 Question
 https://www.youtube.com/watch?v=OGy8zXqkHfo&list=PLB574eEmT4ocaZvy0MHVykInztB7nsB8e&index=1
@@ -276,3 +281,4 @@ http://cloudexpert-solutions.s3-website-us-east-1.amazonaws.com/index.html
 
 Low perference
 https://www.youtube.com/watch?v=jMP0z7vxGOg&list=PLyABYqulvUwaow4m_e2AJYlOjmWTOIjcM
+
