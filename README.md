@@ -6,7 +6,7 @@ The goal of this repository is to provide a **concise, structured, and practical
 
 It includes key AWS services, architecture patterns, security concepts, and best practices aligned with the **AWS Well-Architected Framework**.
 
-# 📚 Table of Contents
+## Table of Contents
 
 * Overview
 * Exam Overview
@@ -25,7 +25,7 @@ It includes key AWS services, architecture patterns, security concepts, and best
 * Study Tips
 * Useful Resources
 
-# 🚀 Overview
+## Overview
 
 The **AWS Certified Solutions Architect – Associate** certification validates your ability to design distributed systems and scalable architectures on AWS. ([AWS Documentation][2])
 
@@ -39,30 +39,28 @@ This certification focuses on designing solutions that are:
 
 Solutions architects must evaluate trade-offs and choose the most appropriate AWS services for different use cases. ([CloudFluently][3])
 
-# 🧪 Exam Overview
+## Exam Overview
 
-| Attribute              | Details                                       |
-| ---------------------- | --------------------------------------------- |
-| Exam Name              | AWS Certified Solutions Architect – Associate |
-| Exam Code              | SAA-C03                                       |
-| Duration               | 130 minutes                                   |
-| Questions              | ~65 (50 scored, 15 unscored)                  |
-| Passing Score          | 720 / 1,000 (Scaled score)                    |
-| Format                 | Multiple Choice & Multiple Response           |
-| Recommended Experience | 1+ year hands-on AWS experience               |
-| Cost | $150 USD               |
-| Delivery | 1+ year hands-on AWS experience               |
-| **Cost** | $150 USD |
-| **Delivery** | Testing center or Online proctored (Pearson VUE) |
+| Attribute              | Details                                          |
+| ---------------------- | ------------------------------------------------ |
+| Exam Name              | AWS Certified Solutions Architect – Associate    |
+| Exam Code              | SAA-C03                                          |
+| Duration               | 130 minutes                                      |
+| Questions              | ~65 (50 scored, 15 unscored)                     |
+| Passing Score          | 720 / 1,000 (Scaled score)                       |
+| Format                 | Multiple Choice & Multiple Response              |
+| Recommended Experience | 1+ year hands-on AWS experience                  |
+| Cost                   | $150 USD                                         |
+| Delivery               | Testing center or Online proctored (Pearson VUE) |
 
 The exam primarily tests **real-world architectural design scenarios** rather than theoretical knowledge. ([aabiance.com][4])
 
 
-# 📊 Exam Domains
+## Exam Domains
 
 The exam is divided into four major domains:
 
-### 1️⃣ Design Secure Architectures (30%)
+### 1. Design Secure Architectures (30%)
 
 Topics include:
 
@@ -71,7 +69,7 @@ Topics include:
 * Security groups & NACLs
 * Secure access to AWS services
 
-### 2️⃣ Design Resilient Architectures (26%)
+### 2. Design Resilient Architectures (26%)
 
 Topics include:
 
@@ -80,7 +78,7 @@ Topics include:
 * Elastic Load Balancing
 * Disaster recovery strategies
 
-### 3️⃣ Design High-Performing Architectures (24%)
+### 3. Design High-Performing Architectures (24%)
 
 Topics include:
 
@@ -88,7 +86,7 @@ Topics include:
 * Storage performance (S3, EBS, EFS)
 * Caching (CloudFront, ElastiCache)
 
-### 4️⃣ Design Cost-Optimized Architectures (20%)
+### 4. Design Cost-Optimized Architectures (20%)
 
 Topics include:
 
@@ -98,44 +96,44 @@ Topics include:
 
 These domains represent the core competencies required for designing solutions on AWS. ([AWS Documentation][5])
 
-# ☁️ Core AWS Services
+## Core AWS Services
 
-## Compute
+### Compute
 
 * EC2
 * Lambda
 * ECS / EKS
 * Elastic Beanstalk
 
-## Storage
+### Storage
 
 * S3
 * EBS
 * EFS
 * Glacier
 
-## Databases
+### Databases
 
 * RDS
 * DynamoDB
 * Aurora
 * Redshift
 
-## Networking
+### Networking
 
 * VPC
 * Route 53
 * API Gateway
 * Direct Connect
 
-## Application Integration
+### Application Integration
 
 * SQS
 * SNS
 * EventBridge
 * Step Functions
 
-# 🏗 Architecture Patterns
+## Architecture Patterns
 
 Common architectures tested in the exam:
 
@@ -151,7 +149,7 @@ Example architecture:
 Client → CloudFront → ALB → EC2 Auto Scaling → RDS
 ```
 
-# 🔐 Security Best Practices
+## Security Best Practices
 
 * Use **IAM roles instead of credentials**
 * Enable **MFA**
@@ -159,7 +157,7 @@ Client → CloudFront → ALB → EC2 Auto Scaling → RDS
 * Use **VPC security groups and NACLs**
 * Follow the **Principle of Least Privilege**
 
-# 📦 Storage Services
+## Storage Services
 
 | Service | Use Case              |
 | ------- | --------------------- |
@@ -168,7 +166,7 @@ Client → CloudFront → ALB → EC2 Auto Scaling → RDS
 | EFS     | Shared file system    |
 | Glacier | Archival storage      |
 
-# ⚡ Serverless Architecture
+## Serverless Architecture
 
 Key services:
 
@@ -184,7 +182,7 @@ Example:
 Client → API Gateway → Lambda → DynamoDB
 ```
 
-# 📈 Monitoring & Logging
+## Monitoring & Logging
 
 Important monitoring tools:
 
@@ -195,7 +193,7 @@ Important monitoring tools:
 
 These services help with **observability, troubleshooting, and auditing**.
 
-# 💰 Cost Optimization
+## Cost Optimization
 
 Strategies:
 
@@ -205,7 +203,7 @@ Strategies:
 * Right-size EC2 instances
 * Use serverless services when possible
 
-# 🌍 High Availability & Disaster Recovery
+## High Availability & Disaster Recovery
 
 Common DR strategies:
 
