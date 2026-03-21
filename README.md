@@ -98,129 +98,176 @@ These domains represent the core competencies required for designing solutions o
 
 ## Core AWS Services
 
-### Compute
+### Analytics
 
-* EC2
-* Lambda
-* ECS / EKS
-* Elastic Beanstalk
-
-### Storage
-
-* S3
-* EBS
-* EFS
-* Glacier
-
-### Databases
-
-* RDS
-* DynamoDB
-* Aurora
-* Redshift
-
-### Networking
-
-* VPC
-* Route 53
-* API Gateway
-* Direct Connect
+* Amazon Athena
+* AWS Data Exchange
+* Amazon Data Firehose
+* Amazon EMR
+* AWS Glue
+* Amazon Kinesis
+* AWS Lake Formation
+* Amazon Managed Streaming for Apache Kafka (Amazon MSK)
+* Amazon OpenSearch Service
+* Amazon QuickSuite
+* Amazon Redshift
 
 ### Application Integration
 
-* SQS
-* SNS
-* EventBridge
-* Step Functions
+* Amazon AppFlow
+* AWS AppSync
+* Amazon EventBridge
+* Amazon MQ
+* Amazon SNS
+* Amazon SQS
+* AWS Step Functions
 
-## Architecture Patterns
+### AWS Cost Management
 
-Common architectures tested in the exam:
+* AWS Budgets
+* AWS Cost and Usage Report
+* AWS Cost Explorer
+* Savings Plans
 
-* Multi-tier architecture
-* Serverless architecture
-* Microservices architecture
-* Event-driven architecture
-* Hybrid architecture
+### Compute
 
-Example architecture:
+* AWS Batch
+* Amazon EC2
+* Amazon EC2 Auto Scaling
+* AWS Elastic Beanstalk
+* AWS Outposts
+* AWS Serverless Application Repository
+* VMware Cloud on AWS
+* AWS Wavelength
 
-```
-Client → CloudFront → ALB → EC2 Auto Scaling → RDS
-```
+### Containers
 
-## Security Best Practices
+* Amazon ECR
+* Amazon ECS
+* Amazon ECS Anywhere
+* Amazon EKS
+* Amazon EKS Anywhere
+* Amazon EKS Distro
 
-* Use **IAM roles instead of credentials**
-* Enable **MFA**
-* Encrypt data **at rest and in transit**
-* Use **VPC security groups and NACLs**
-* Follow the **Principle of Least Privilege**
+### Database
 
-## Storage Services
+* Amazon Aurora
+* Amazon Aurora Serverless
+* Amazon DocumentDB
+* Amazon DynamoDB
+* Amazon ElastiCache
+* Amazon Keyspaces
+* Amazon Neptune
+* Amazon RDS
+* Amazon Redshift
 
-| Service | Use Case              |
-| ------- | --------------------- |
-| S3      | Object storage        |
-| EBS     | Block storage for EC2 |
-| EFS     | Shared file system    |
-| Glacier | Archival storage      |
+### Developer Tools
 
-## Serverless Architecture
+AWS X-Ray
 
-Key services:
+### Front-End Web and Mobile
 
+* AWS Amplify
+* Amazon API Gateway
+* AWS Device Farm
+
+### Machine Learning
+
+* Amazon Comprehend
+* Amazon Kendra
+* Amazon Lex
+* Amazon Polly
+* Amazon Rekognition
+* Amazon SageMaker AI
+* Amazon Textract
+* Amazon Transcribe
+* Amazon Translate
+
+### Management and Governance
+
+*  AWS Auto Scaling
+*  AWS CLI
+*  AWS CloudFormation
+*  AWS CloudTrail
+*  Amazon CloudWatch
+*  AWS Compute Optimizer
+*  AWS Config
+*  AWS Control Tower
+*  AWS Health Dashboard
+*  AWS License Manager
+*  Amazon Managed Grafana
+*  Amazon Managed Service for Prometheus
+*  AWS Management Console
+*  AWS Organizations
+*  AWS Service Catalog
+*  AWS Systems Manager
+*  AWS Trusted Advisor
+*  AWS Well-Architected Tool
+
+### Media Services
+
+* Amazon Elastic Transcoder
+* Amazon Kinesis Video Streams
+
+### Migration and Transfer
+
+* AWS Application Migration Service
+* AWS DataSync
+* AWS DMS
+* AWS Snow Family
+* AWS Transfer Family
+
+### Networking and Content Delivery
+
+* AWS Client VPN
+* Amazon CloudFront
+* AWS Direct Connect
+* Elastic Load Balancing (ELB)
+* AWS Global Accelerator
+* AWS PrivateLink
+* Amazon Route 53
+* AWS Site-to-Site VPN
+* AWS Transit Gateway
+* Amazon VPC
+
+### Security, Identity, and Compliance
+
+* AWS Artifact
+* AWS Audit Manager
+* AWS Certificate Manager (ACM)
+* AWS CloudHSM
+* Amazon Cognito
+* Amazon Detective
+* AWS Directory Service
+* AWS Firewall Manager
+* Amazon GuardDuty
+* AWS IAM Identity Center
+* Amazon Inspector
+* AWS KMS
+* Amazon Macie
+* AWS Network Firewall
+* AWS Resource Access Manager (AWS RAM)
+* AWS Secrets Manager
+* AWS Security Hub
+* AWS Shield
+* AWS WAF
+* IAM
+
+### Serverless
+
+* AWS AppSync
+* AWS Fargate
 * AWS Lambda
-* API Gateway
-* DynamoDB
-* EventBridge
-* Step Functions
 
-Example:
+### Storage
 
-```
-Client → API Gateway → Lambda → DynamoDB
-```
-
-## Monitoring & Logging
-
-Important monitoring tools:
-
-* CloudWatch
-* CloudTrail
-* AWS Config
-* X-Ray
-
-These services help with **observability, troubleshooting, and auditing**.
-
-## Cost Optimization
-
-Strategies:
-
-* Use **Reserved Instances or Savings Plans**
-* Use **S3 lifecycle policies**
-* Use **Spot Instances**
-* Right-size EC2 instances
-* Use serverless services when possible
-
-## High Availability & Disaster Recovery
-
-Common DR strategies:
-
-| Strategy                   | RTO      | Cost      |
-| -------------------------- | -------- | --------- |
-| Backup & Restore           | High     | Low       |
-| Pilot Light                | Medium   | Medium    |
-| Warm Standby               | Low      | High      |
-| Multi-Region Active-Active | Very Low | Very High |
-
-## Study Tips
-
-1. Understand **architecture patterns** rather than memorizing services.
-2. Focus on **security and networking concepts**.
-3. Practice with **scenario-based questions**.
-4. Build **hands-on labs** in AWS.
-5. Review **AWS Well-Architected Framework pillars**.
+* AWS Backup
+* Amazon EBS
+* Amazon EFS
+* Amazon FSx (for all types)
+* Amazon S3
+* Amazon S3 Glacier
+* AWS Storage Gateway
 
 
 ## Useful Resources
@@ -229,7 +276,6 @@ Common DR strategies:
 * AWS Skill Builder training
 * AWS Well-Architected Framework
 * Practice exams and hands-on labs
-
 
 ## Contributing
 
