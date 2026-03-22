@@ -124,7 +124,7 @@ These domains represent the core competencies required for designing solutions o
 
 ### AWS Cost Management
 
-* AWS Budgets
+* [AWS Budgets](#aws-budgets)
 * AWS Cost and Usage Report
 * AWS Cost Explorer
 * Savings Plans
@@ -186,7 +186,7 @@ AWS X-Ray
 ### Management and Governance
 
 *  AWS Auto Scaling
-*  [AWS CLI](#AWS CLI)
+*  [AWS CLI](#aws-cli)
 *  AWS CloudFormation
 *  AWS CloudTrail
 *  Amazon CloudWatch
@@ -278,7 +278,7 @@ xxx
 
 xxx
 
-
+### AWS Budgets
 
 ## Useful Resources
 
