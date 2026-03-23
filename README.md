@@ -60,39 +60,7 @@ The exam primarily tests **real-world architectural design scenarios** rather th
 
 The exam is divided into four major domains:
 
-### 1. Design Secure Architectures (30%)
-
-Topics include:
-
-* IAM policies and roles
-* Encryption (KMS)
-* Security groups & NACLs
-* Secure access to AWS services
-
-### 2. Design Resilient Architectures (26%)
-
-Topics include:
-
-* High availability architectures
-* Auto Scaling
-* Elastic Load Balancing
-* Disaster recovery strategies
-
-### 3. Design High-Performing Architectures (24%)
-
-Topics include:
-
-* EC2 performance optimization
-* Storage performance (S3, EBS, EFS)
-* Caching (CloudFront, ElastiCache)
-
-### 4. Design Cost-Optimized Architectures (20%)
-
-Topics include:
-
-* Cost-effective storage
-* Compute pricing models
-* Architecture cost optimization
+![alt text](img/image.png)
 
 These domains represent the core competencies required for designing solutions on AWS. ([AWS Documentation][5])
 
