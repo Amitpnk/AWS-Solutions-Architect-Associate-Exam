@@ -412,6 +412,7 @@ A **fully managed, centralized backup service** that automates and consolidates 
 
 <img src="img/AWS-efs.png" alt="AWS-efs" width="100" height="100">
 
+
 ##### Architecture
 ```
          ┌────────────────────────────────────────────────────┐
@@ -523,7 +524,8 @@ Fully managed **third-party file systems** on AWS. Choose based on OS/workload r
 ##### What It Is
 **Object storage** — store and retrieve any amount of data, any time, from anywhere. Industry-standard for most storage use cases.
 
-![alt text](image-1.png)
+<img src="img/AWS-s3.png" alt="AWS-s3" width="100" height="100">
+
 
 ##### Storage Classes
 
