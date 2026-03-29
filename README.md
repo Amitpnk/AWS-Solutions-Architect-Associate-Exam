@@ -618,6 +618,8 @@ Fully managed **third-party file systems** on AWS. Choose based on OS/workload r
 ##### What It Is
 Low-cost **archival storage** for data that is rarely accessed. Part of the S3 storage class family.
 
+<img src="img/S3-Glacier.png" alt="AWS-backup" width="100" height="100">
+
 ##### Tiers
 | Tier | Retrieval Time | Min Storage Duration | Best For |
 |---|---|---|---|
@@ -640,6 +642,8 @@ Low-cost **archival storage** for data that is rarely accessed. Part of the S3 s
 
 ##### What It Is
 **Hybrid cloud storage** service — bridges on-premises environments to AWS storage. Three gateway types for different use cases.
+
+<img src="img/Storage-Gateway.png" alt="AWS-backup" width="100" height="100">
 
 ##### Gateway Types
 
