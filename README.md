@@ -324,6 +324,8 @@ xxx
 ##### What It Is
 A **fully managed, centralized backup service** that automates and consolidates backup tasks across AWS services and on-premises resources.
 
+<img src="img/AWS-backup.png" alt="AWS-backup" width="100" height="100">
+
 ##### Key Concepts
 | Feature | Detail |
 |---|---|
@@ -348,10 +350,10 @@ A **fully managed, centralized backup service** that automates and consolidates 
 ##### What It Is
 **Block-level storage** volumes attached to EC2 instances. Like a hard drive in the cloud.
 
+<img src="img/AWS-ebs.png" alt="AWS-ebs" width="100" height="100">
+
+
 ##### Volume Types
-
-
-
 
 | EBS Volume Types | gp3 (SSD) | gp2 (SSD) | io2 / io1 (SSD) | st1 / sc1 (HDD) |
 |---|---|---|---|---|
@@ -407,6 +409,8 @@ A **fully managed, centralized backup service** that automates and consolidates 
 
 ##### What It Is
 **Managed NFS (Network File System)** that can be mounted by multiple EC2 instances simultaneously. Fully elastic — grows/shrinks automatically.
+
+<img src="img/AWS-efs.png" alt="AWS-efs" width="100" height="100">
 
 ##### Architecture
 ```
@@ -467,6 +471,8 @@ A **fully managed, centralized backup service** that automates and consolidates 
 ##### What It Is
 Fully managed **third-party file systems** on AWS. Choose based on OS/workload requirements.
 
+![AWS-fsx](img/AWS-fsx.png)
+
 ##### FSx Comparison Table
 
 | Feature | FSx for Windows | FSx for Lustre | FSx for NetApp ONTAP | FSx for OpenZFS |
@@ -504,7 +510,7 @@ Fully managed **third-party file systems** on AWS. Choose based on OS/workload r
 - NFS-based, ZFS features (snapshots, clones, compression)
 - **Use when**: migrating ZFS/NFS Linux workloads to AWS
 
-##### Exam Key Points ✅
+##### Exam Key Points
 - FSx for **Windows** → SMB + Active Directory (**most tested combo**)
 - FSx for **Lustre** → HPC / ML + S3 data repository
 - FSx for **ONTAP** → enterprise multi-protocol needs
@@ -516,6 +522,8 @@ Fully managed **third-party file systems** on AWS. Choose based on OS/workload r
 
 ##### What It Is
 **Object storage** — store and retrieve any amount of data, any time, from anywhere. Industry-standard for most storage use cases.
+
+![alt text](image-1.png)
 
 ##### Storage Classes
 
