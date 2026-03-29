@@ -227,15 +227,15 @@ AWS X-Ray
 * AWS Fargate
 * AWS Lambda
 
-### Storage
+### [Storage](#storage-services)
 
-* AWS Backup
-* Amazon EBS
-* Amazon EFS
-* Amazon FSx (for all types)
-* Amazon S3
-* Amazon S3 Glacier
-* AWS Storage Gateway
+* [AWS Backup](#aws-backup)
+* [Amazon EBS](#amazon-ebs-elastic-block-store)
+* [Amazon EFS](#amazon-efs-elastic-file-system)
+* [Amazon FSx (for all types)](#amazon-fsx-all-types)
+* [Amazon S3](#amazon-s3-simple-storage-service)
+* [Amazon S3 Glacier](#amazon-s3-glacier)
+* [AWS Storage Gateway](#aws-storage-gateway)
 
 <details>
   <summary>Out-of-scope AWS services and features</summary>
@@ -602,7 +602,7 @@ Fully managed **third-party file systems** on AWS. Choose based on OS/workload r
 - Trigger Lambda, SQS, SNS on object events (PUT, DELETE, etc.)
 - Or use **Amazon EventBridge** for more advanced routing
 
-##### Exam Key Points ✅
+##### Exam Key Points
 - S3 is **region-scoped** but bucket names are **globally unique**
 - Objects up to **5TB**, single PUT up to **5GB**
 - **S3 Select** — retrieve subset of data using SQL queries
