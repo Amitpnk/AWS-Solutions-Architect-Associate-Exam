@@ -537,6 +537,7 @@ A **fully managed batch processing service** that dynamically provisions compute
 A **Platform as a Service (PaaS)** that handles infrastructure provisioning, deployment, scaling, and monitoring — you just upload your code.
 
 <img src="img/AWS-Elastic-Beanstalk.png" alt="AWS-Elastic-Beanstalk" width="100" height="100">
+ 
 
 ##### Architecture
 ```
