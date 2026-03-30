@@ -324,6 +324,8 @@ xxx
 ##### What It Is
 A **fully managed batch processing service** that dynamically provisions compute resources (EC2 or Spot) to run batch jobs at any scale — no infrastructure management needed.
 
+<img src="img/AWS-Batch.png" alt="AWS-Batch" width="100" height="100">
+
 ##### Core Components
 
 | Component | Description |
@@ -375,6 +377,8 @@ A **fully managed batch processing service** that dynamically provisions compute
 
 ##### What It Is
 **Virtual servers** in the cloud. The foundational AWS compute service — full control over OS, networking, storage, and software.
+
+<img src="img/Amazon-EC2.png" alt="Amazon-EC2" width="100" height="100">
 
 ##### Instance Families
 
@@ -461,6 +465,9 @@ A **fully managed batch processing service** that dynamically provisions compute
 ##### What It Is
 **Automatically adjusts** the number of EC2 instances in response to demand, maintaining performance and minimizing cost.
 
+
+<img src="img/Amazon-EC2-Auto-Scaling.png" alt="Amazon-EC2-Auto-Scaling" width="100" height="100">
+
 ##### Architecture
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
@@ -529,6 +536,8 @@ A **fully managed batch processing service** that dynamically provisions compute
 ##### What It Is
 A **Platform as a Service (PaaS)** that handles infrastructure provisioning, deployment, scaling, and monitoring — you just upload your code.
 
+<img src="img/AWS-Elastic-Beanstalk.png" alt="AWS-Elastic-Beanstalk" width="100" height="100">
+
 ##### Architecture
 ```
 ┌──────────────────────────────────────────────────────────────────┐
@@ -592,6 +601,8 @@ A **Platform as a Service (PaaS)** that handles infrastructure provisioning, dep
 ##### What It Is
 AWS **rack-delivered infrastructure** installed in your on-premises data center, running native AWS services locally with full AWS API compatibility.
 
+<img src="img/AWS-Outposts.png" alt="AWS-Elastic-Beanstalk" width="100" height="100">
+
 ##### Architecture
 ```
 ┌───────────────────────────────────────────────────────────────────┐
@@ -642,6 +653,8 @@ AWS **rack-delivered infrastructure** installed in your on-premises data center,
 
 ##### What It Is
 A **managed repository** for pre-built serverless applications and components. Discover, deploy, and share serverless apps built with AWS SAM.
+
+<img src="img/AWS-sar.png" alt="AWS-Elastic-Beanstalk" width="100" height="100">
 
 ##### Architecture
 ```
