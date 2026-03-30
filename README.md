@@ -536,7 +536,7 @@ A **fully managed batch processing service** that dynamically provisions compute
 ##### What It Is
 A **Platform as a Service (PaaS)** that handles infrastructure provisioning, deployment, scaling, and monitoring — you just upload your code.
 
-<img src="img/AWS-Elastic-Beanstalk.png" alt="AWS-Elastic-Beanstalk" width="100" height="100">
+<img src="img/AWS-Elastic-Beanstalk2.png" alt="AWS-Elastic-Beanstalk" width="100" height="100">
  
 
 ##### Architecture
@@ -602,7 +602,7 @@ A **Platform as a Service (PaaS)** that handles infrastructure provisioning, dep
 ##### What It Is
 AWS **rack-delivered infrastructure** installed in your on-premises data center, running native AWS services locally with full AWS API compatibility.
 
-<img src="img/AWS-Outposts.png" alt="AWS-Elastic-Beanstalk" width="100" height="100">
+<img src="img/AWS-Outposts.png" alt="AWS-Outposts" width="100" height="100">
 
 ##### Architecture
 ```
@@ -655,7 +655,7 @@ AWS **rack-delivered infrastructure** installed in your on-premises data center,
 ##### What It Is
 A **managed repository** for pre-built serverless applications and components. Discover, deploy, and share serverless apps built with AWS SAM.
 
-<img src="img/AWS-sar.png" alt="AWS-Elastic-Beanstalk" width="100" height="100">
+<img src="img/AWS-sar.png" alt="AWS-sar" width="100" height="100">
 
 ##### Architecture
 ```
@@ -693,6 +693,134 @@ A **managed repository** for pre-built serverless applications and components. D
 - **Use when**: quickly deploying common serverless patterns (image resizing, API backends, chatbots)
 - Not heavily tested on SAA-C03 — understand the concept and purpose
 
+#### VMware Cloud on AWS
+
+##### What It Is
+A jointly developed service by **AWS and VMware** that lets you run VMware workloads on AWS infrastructure without changing VMware tools, skills, or processes.
+
+##### Architecture
+```
+┌───────────────────────────────────────────────────────────────────┐
+│                        AWS Region                                  │
+│                                                                    │
+│  ┌───────────────────────────────┐    ┌──────────────────────┐   │
+│  │    VMware Cloud on AWS SDDC   │    │   Native AWS         │   │
+│  │    (Software-Defined DC)      │◀──▶│   Services           │   │
+│  │                               │    │                      │   │
+│  │  ┌──────────┐  ┌──────────┐   │    │   S3, RDS, Lambda    │   │
+│  │  │ vSphere  │  │  vSAN    │   │    │   DynamoDB, etc.     │   │
+│  │  │ (Compute)│  │(Storage) │   │    │                      │   │
+│  │  └──────────┘  └──────────┘   │    └──────────────────────┘   │
+│  │  ┌──────────┐  ┌──────────┐   │                               │
+│  │  │  NSX-T   │  │  HCX     │   │                               │
+│  │  │(Network) │  │(Migrate) │   │                               │
+│  │  └──────────┘  └──────────┘   │                               │
+│  └───────────────────────────────┘                               │
+│                                                                    │
+│  On-Premises VMware ──── HCX ──────────────────────────────────▶ │
+└───────────────────────────────────────────────────────────────────┘
+```
+
+##### Key Concepts
+| Concept | Description |
+|---|---|
+| **SDDC** | Software-Defined Data Center — the VMware environment on AWS |
+| **vSphere** | VMware virtualization platform (VMs) |
+| **vSAN** | VMware storage (runs on bare-metal AWS hosts) |
+| **NSX-T** | VMware networking and security |
+| **HCX** | VMware Hybrid Cloud Extension — live migration of VMs to/from AWS |
+
+##### Exam Key Points
+- Runs on **dedicated bare-metal AWS infrastructure** (i3 or i3en instances)
+- **No re-platforming needed** — use same VMware tools (vCenter, vSphere, NSX)
+- Ideal for **data center extension**, **disaster recovery**, and **cloud migration**
+- Access native AWS services (S3, RDS) directly from VMware workloads
+- **HCX** enables **live, in-place migration** of VMs with minimal downtime
+- Managed by VMware — no need for VMware expertise changes
+- **Use when**: organizations have heavy VMware investment and want to extend to cloud
+
+
+#### AWS Wavelength
+
+##### What It Is
+Embeds AWS compute and storage services **within 5G telecommunications networks** at the edge — enabling ultra-low latency applications for mobile devices.
+
+<img src="img/AWS-Wavelength.png" alt="AWS-Wavelength" width="100" height="100">
+
+##### Architecture
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│                        AWS Wavelength                                 │
+│                                                                        │
+│  Mobile Device                                                         │
+│  (5G Phone/IoT)                                                        │
+│       │                                                                │
+│       │ 5G Radio                                                       │
+│       ▼                                                                │
+│  ┌──────────────────────────────┐                                     │
+│  │   Telecom Provider 5G        │                                     │
+│  │   Network (Verizon, Vodafone)│                                     │
+│  │                              │                                     │
+│  │   ┌──────────────────────┐   │         ┌───────────────────┐      │
+│  │   │  Wavelength Zone     │   │◀───────▶│   AWS Region      │      │
+│  │   │  (Edge Compute)      │   │         │                   │      │
+│  │   │  EC2, EBS, VPC       │   │         │   S3, DynamoDB    │      │
+│  │   └──────────────────────┘   │         │   RDS, etc.       │      │
+│  └──────────────────────────────┘         └───────────────────┘      │
+│                                                                        │
+│  Latency: ~1ms (device to Wavelength Zone)                            │
+└──────────────────────────────────────────────────────────────────────┘
+```
+
+##### Key Concepts
+| Concept | Description |
+|---|---|
+| **Wavelength Zone** | AWS infrastructure deployed inside telecom provider's 5G network |
+| **Carrier Gateway** | Connects Wavelength Zone to telecom network and internet |
+| **Carrier IP** | IP address assigned from telecom's pool for direct mobile access |
+
+##### Telecom Partners
+- Verizon (USA), Vodafone (Europe), KDDI (Japan), SK Telecom (South Korea)
+
+##### Exam Key Points
+- Designed for **single-digit millisecond latency** to 5G devices
+- **Wavelength Zone is an extension of your VPC** — same subnets, security groups, IAM
+- Traffic goes: Device → 5G network → Wavelength Zone → (if needed) → AWS Region
+- **No data leaves the telecom network** to reach the Wavelength Zone
+- **Use cases**: connected vehicles, AR/VR, real-time gaming, live video streaming, IoT
+- Similar concept to **Local Zones** but specifically for **telecom/5G** networks
+- **Local Zones** = low latency in a metro area; **Wavelength** = low latency over 5G
+
+---
+
+#### Quick Comparison: When to Use What - Compute service
+
+| Scenario | Service |
+|---|---|
+| Full control over servers, OS, networking | **Amazon EC2** |
+| Auto-scale EC2 fleet based on demand | **EC2 Auto Scaling** |
+| Deploy web app without managing infrastructure | **Elastic Beanstalk** |
+| Run batch processing / HPC jobs | **AWS Batch** |
+| Run VMware workloads on AWS | **VMware Cloud on AWS** |
+| Run AWS services in your own data center | **AWS Outposts** |
+| Ultra-low latency apps on 5G networks | **AWS Wavelength** |
+| Deploy pre-built serverless applications | **Serverless Application Repository** |
+
+
+#### Common Exam Traps - Compute service
+
+1. **Elastic Beanstalk is free** — you pay only for underlying resources (EC2, ELB, RDS)
+2. **Beanstalk Immutable** ≠ Blue/Green — Immutable replaces instances within same env; Blue/Green swaps entire environments via DNS
+3. **Don't put RDS inside Beanstalk** — it will be deleted when environment is deleted; always keep RDS external
+4. **EC2 Spot 2-minute warning** — not guaranteed for all interruptions; design fault-tolerant workloads
+5. **Dedicated Host vs Dedicated Instance** — Host = per-host billing + BYOL; Instance = per-instance billing, NO BYOL
+6. **Launch Template > Launch Configuration** — Launch Configurations are legacy; always use Launch Templates
+7. **Target Tracking Scaling** is the recommended/default policy — not Simple Scaling
+8. **Auto Scaling cooldown** prevents thrashing; warm-up period is for new instances joining the group
+9. **Outposts requires connectivity** to AWS Region via Service Link — it's NOT standalone
+10. **Wavelength ≠ Local Zones** — Wavelength is specifically for 5G carrier networks; Local Zones are metro edge
+11. **AWS Batch** jobs have **no time limit** — unlike Lambda (15 min max); use Batch for long-running jobs
+12. **Placement Group Spread** — max **7 instances per AZ** per group; hard limit
 
 ---
 
@@ -1096,7 +1224,7 @@ Low-cost **archival storage** for data that is rarely accessed. Part of the S3 s
 
 ---
 
-#### Quick Comparison: When to Use What
+#### Quick Comparison: When to Use What - Storage Services
 
 | Scenario | Service |
 |---|---|
