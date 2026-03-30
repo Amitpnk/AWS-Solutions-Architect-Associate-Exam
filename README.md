@@ -317,6 +317,371 @@ xxx
 
 ---
 
+### Compute Services
+
+#### AWS Batch
+
+##### What It Is
+A **fully managed batch processing service** that dynamically provisions compute resources (EC2 or Spot) to run batch jobs at any scale — no infrastructure management needed.
+
+##### Core Components
+
+| Component | Description |
+|---|---|
+| **Job** | Unit of work (shell script, Docker container, executable) |
+| **Job Definition** | Blueprint for a job (Docker image, CPU, memory, IAM role) |
+| **Job Queue** | Jobs submitted here; associated with compute environments |
+| **Compute Environment** | Managed or unmanaged EC2/Fargate resources that run jobs |
+
+##### Architecture
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                        AWS Batch Flow                            │
+│                                                                   │
+│  Developer                                                        │
+│     │                                                             │
+│     ▼                                                             │
+│  ┌──────────────┐     ┌──────────────┐     ┌──────────────────┐  │
+│  │ Job          │────▶│  Job Queue   │────▶│ Compute          │  │
+│  │ Definition   │     │  (Priority)  │     │ Environment      │  │
+│  │ (Docker/ECS) │     └──────────────┘     │                  │  │
+│  └──────────────┘                           │ ┌─────────────┐ │  │
+│                                             │ │  EC2 / Spot │ │  │
+│                                             │ │  Instances  │ │  │
+│                                             │ └─────────────┘ │  │
+│                                             │ ┌─────────────┐ │  │
+│                                             │ │  Fargate    │ │  │
+│                                             │ └─────────────┘ │  │
+│                                             └──────────────────┘  │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+##### Managed vs Unmanaged Compute Environments
+| Type | AWS Manages | You Manage |
+|---|---|---|
+| **Managed** | Provisioning, scaling, termination | Job definitions, queues |
+| **Unmanaged** | Nothing | You provision and manage instances |
+
+#### Exam Key Points
+- **AWS Batch vs Lambda**: Batch = long-running jobs (no time limit), Lambda = short functions (15 min max)
+- **Spot Instances** support — great for cost-optimized batch; jobs are retried on interruption
+- **Multi-node parallel jobs** — tightly coupled HPC using MPI
+- Jobs run as **Docker containers** on ECS under the hood
+- **AWS Batch on Fargate** — serverless compute, no EC2 management
+- Supports **job dependencies** — Job B starts only after Job A completes
+- **Use when**: ETL pipelines, ML training, genomics, financial risk modeling
+
+#### Amazon EC2 (Elastic Compute Cloud)
+
+##### What It Is
+**Virtual servers** in the cloud. The foundational AWS compute service — full control over OS, networking, storage, and software.
+
+##### Instance Families
+
+```
+┌────────────────────────────────────────────────────────────────────┐
+│                    EC2 Instance Families                            │
+├────────────┬──────────────────┬────────────────────────────────────┤
+│  Family    │  Optimized For   │  Examples / Use Cases              │
+├────────────┼──────────────────┼────────────────────────────────────┤
+│  General   │  Balanced        │  t3, t4g, m5, m6i                  │
+│  Purpose   │  CPU/Mem/Net     │  Web servers, app servers, dev     │
+├────────────┼──────────────────┼────────────────────────────────────┤
+│  Compute   │  High CPU        │  c5, c6g, c7g                      │
+│  Optimized │                  │  HPC, batch, gaming, ML inference  │
+├────────────┼──────────────────┼────────────────────────────────────┤
+│  Memory    │  High RAM        │  r5, r6g, x1, z1d                  │
+│  Optimized │                  │  In-memory DB, SAP HANA, Redis     │
+├────────────┼──────────────────┼────────────────────────────────────┤
+│  Storage   │  High Disk I/O   │  i3, i4i, d2, h1                   │
+│  Optimized │  or throughput   │  OLTP, NoSQL, data warehousing     │
+├────────────┼──────────────────┼────────────────────────────────────┤
+│  Accel.    │  GPU / FPGA      │  p3, p4, g4, inf1, trn1            │
+│  Computing │                  │  ML training, video encoding       │
+└────────────┴──────────────────┴────────────────────────────────────┘
+```
+
+##### Purchasing Options
+
+| Option | Payment | Discount | Best For |
+|---|---|---|---|
+| **On-Demand** | Per hour/second | None (baseline) | Short-term, unpredictable |
+| **Reserved (1 or 3 yr)** | Upfront/partial/no | Up to 72% | Steady-state workloads |
+| **Savings Plans** | Commit to $/hr | Up to 72% | Flexible instance types |
+| **Spot** | Bid market price | Up to 90% | Fault-tolerant, flexible |
+| **Dedicated Host** | Per host | Varies | Licensing, compliance (BYOL) |
+| **Dedicated Instance** | Per instance | Varies | Isolated hardware (no BYOL) |
+| **Capacity Reservations** | On-Demand rate | None | Guaranteed capacity in AZ |
+
+##### Reserved Instance Types
+| Type | Flexibility | Use Case |
+|---|---|---|
+| **Standard RI** | Locked to instance type/region | Max discount, predictable |
+| **Convertible RI** | Can change instance family/OS | Lower discount, more flexible |
+| **Scheduled RI** | Reserved for specific time windows | Predictable recurring jobs |
+
+##### EC2 Instance Lifecycle
+```
+         Pending ──▶ Running ──▶ Stopping ──▶ Stopped
+                        │                        │
+                        │◀───────────────────────┘
+                        │
+                        ▼
+                    Shutting-down ──▶ Terminated
+```
+
+##### Placement Groups
+| Type | Description | Use Case |
+|---|---|---|
+| **Cluster** | Same rack, same AZ | Low latency HPC, 10 Gbps |
+| **Spread** | Different hardware per instance (max 7/AZ) | Critical instances, HA |
+| **Partition** | Groups of instances on separate partitions | Hadoop, Kafka, Cassandra |
+
+##### AMI (Amazon Machine Image)
+- Blueprint for an EC2 instance (OS + software + config)
+- **Region-specific** — copy to other regions as needed
+- Types: AWS-provided, AWS Marketplace, Custom (your own)
+
+##### User Data & Metadata
+- **User Data**: Bootstrap script run at first launch (install packages, configure software)
+- **Instance Metadata**: `http://169.254.169.254/latest/meta-data/` — instance info available from within
+- **IMDSv2**: Session-oriented, more secure — enforce via instance metadata options
+
+##### Exam Key Points
+- **Spot Instance interruption**: 2-minute warning via instance metadata/CloudWatch Events
+- **Spot Fleet**: Mix of Spot + On-Demand; maintains target capacity
+- **Hibernate**: Saves RAM to EBS; must be enabled at launch; root volume must be encrypted
+- **Burstable instances (T-series)**: Use CPU credits; `unlimited` mode allows sustained burst
+- **Dedicated Host vs Dedicated Instance**: Host = per-host billing + BYOL; Instance = per-instance, no BYOL
+- **EC2 Instance Connect**: Browser-based SSH without managing SSH keys
+- **Nitro System**: Newer instance types (C5, M5+) — better performance, enhanced networking
+
+#### Amazon EC2 Auto Scaling
+
+##### What It Is
+**Automatically adjusts** the number of EC2 instances in response to demand, maintaining performance and minimizing cost.
+
+##### Architecture
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│                    EC2 Auto Scaling Group                            │
+│                                                                       │
+│   CloudWatch Alarm                                                    │
+│   (CPU > 70%)  ──▶  Scaling Policy  ──▶  Launch Template            │
+│                                                     │                │
+│          Min: 2        Desired: 4       Max: 10     │                │
+│          ┌──┐          ┌──┐ ┌──┐        ┌──┐        │                │
+│   AZ-1a  │EC2│         │EC2│ │EC2│       │EC2│◀───────┘                │
+│          └──┘          └──┘ └──┘        └──┘        new instance     │
+│   AZ-1b  ┌──┐                                                        │
+│          │EC2│                                                        │
+│          └──┘                                                        │
+│                                                                       │
+│          └──────────── Load Balancer (ALB/NLB) ──────────────┘       │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
+##### Scaling Policies
+
+| Policy | How It Works | Use Case |
+|---|---|---|
+| **Simple Scaling** | Single adjustment when alarm triggers; cooldown period | Basic scaling |
+| **Step Scaling** | Bigger adjustments for bigger alarm breaches | Variable load |
+| **Target Tracking** | Maintain a target metric (e.g., 50% CPU) | Most common, recommended |
+| **Scheduled Scaling** | Scale at known times | Predictable patterns |
+| **Predictive Scaling** | ML-based forecast + proactive scaling | Cyclical traffic |
+
+##### Launch Template vs Launch Configuration
+| Feature | Launch Template (Recommended) | Launch Configuration (Legacy) |
+|---|---|---|
+| Versioning | ✅ | ❌ |
+| Multiple instance types | ✅ | ❌ |
+| Spot + On-Demand mix | ✅ | ❌ |
+| T2/T3 Unlimited | ✅ | ❌ |
+
+##### Lifecycle Hooks
+```
+  Launch: Pending ──▶ Pending:Wait ──▶ Pending:Proceed ──▶ InService
+  Terminate: Terminating ──▶ Terminating:Wait ──▶ Terminating:Proceed ──▶ Terminated
+```
+- Pause instance in wait state to perform custom actions (install software, drain connections)
+- Default wait: 1 hour; send heartbeat to extend
+
+##### Health Checks
+| Type | Source | Use Case |
+|---|---|---|
+| **EC2** (default) | Instance status checks | Basic health |
+| **ELB** | Load balancer health checks | Web/app tier |
+| **Custom** | Lambda/CloudWatch | Application-level |
+
+##### Exam Key Points
+- **Cooldown period**: Prevents rapid scale-in/out after a scaling activity (default 300s)
+- **Warm-up period**: New instances don't count toward metrics until warmed up
+- **Default termination policy**: Terminates oldest launch configuration first, then in AZ with most instances
+- **ASG spans multiple AZs** — balances instances across AZs automatically
+- **Instance Refresh**: Rolling replacement of instances (e.g., after AMI update) with configurable min healthy %
+- ASG integrates with **ALB/NLB** — auto-registers/deregisters instances
+- **Scale-in protection**: Prevent specific instances from being terminated during scale-in
+
+
+#### AWS Elastic Beanstalk
+
+##### What It Is
+A **Platform as a Service (PaaS)** that handles infrastructure provisioning, deployment, scaling, and monitoring — you just upload your code.
+
+##### Architecture
+```
+┌──────────────────────────────────────────────────────────────────┐
+│                   Elastic Beanstalk Application                   │
+│                                                                    │
+│  Developer ──▶  Upload Code (ZIP/WAR/Docker)                      │
+│                       │                                            │
+│                       ▼                                            │
+│  ┌────────────────────────────────────────────────────────────┐   │
+│  │              Beanstalk Environment                          │   │
+│  │                                                             │   │
+│  │  ┌─────────────────┐      ┌──────────────────────────────┐ │   │
+│  │  │  Load Balancer  │      │  Auto Scaling Group          │ │   │
+│  │  │  (ALB/NLB/CLB)  │─────▶│  EC2 Instances               │ │   │
+│  │  └─────────────────┘      └──────────────────────────────┘ │   │
+│  │                                                             │   │
+│  │  ┌─────────────────┐      ┌──────────────────────────────┐ │   │
+│  │  │  RDS (optional) │      │  CloudWatch Monitoring       │ │   │
+│  │  └─────────────────┘      └──────────────────────────────┘ │   │
+│  └────────────────────────────────────────────────────────────┘   │
+└──────────────────────────────────────────────────────────────────┘
+```
+
+##### Supported Platforms
+- **Languages**: Node.js, Java, .NET, PHP, Python, Ruby, Go
+- **Containers**: Docker (single/multi-container)
+- **Web servers**: Tomcat, Passenger, Puma, IIS
+
+##### Environment Tiers
+| Tier | Use Case | Underlying |
+|---|---|---|
+| **Web Server** | Handles HTTP requests | ALB + ASG + EC2 |
+| **Worker** | Background jobs from SQS | SQS + ASG + EC2 |
+
+##### Deployment Policies
+| Policy | Downtime | Extra Cost | Rollback Speed |
+|---|---|---|---|
+| **All at once** | Yes (brief) | None | Manual re-deploy |
+| **Rolling** | No | None | Manual re-deploy |
+| **Rolling with additional batch** | No | Yes (extra batch) | Manual re-deploy |
+| **Immutable** | No | Yes (double fleet) | Fast (swap ASG) |
+| **Blue/Green** | No | Yes (2 environments) | Instant (DNS swap) |
+| **Traffic splitting** | No | Yes | Automatic |
+
+##### .ebextensions
+- Configuration files in `.ebextensions/` folder (YAML/JSON)
+- Customize and configure the Beanstalk environment
+- Example: install packages, set env variables, configure nginx
+
+##### Exam Key Points
+- **Free service** — you only pay for the underlying resources (EC2, RDS, ELB)
+- **Full control of EC2 instances** — access the servers if needed (unlike Lambda)
+- **Immutable deployment** = safest; new instances deployed, then swapped — best for production
+- **Blue/Green** = two separate environments; Route 53/CNAME swap
+- **Managed Platform Updates**: Beanstalk can auto-apply platform patches
+- Store database **outside** Beanstalk environment — RDS in Beanstalk is deleted when environment is deleted
+- **Use when**: developers want to deploy without managing infrastructure (PaaS)
+
+#### AWS Outposts
+
+##### What It Is
+AWS **rack-delivered infrastructure** installed in your on-premises data center, running native AWS services locally with full AWS API compatibility.
+
+##### Architecture
+```
+┌───────────────────────────────────────────────────────────────────┐
+│                          Your Data Center                          │
+│                                                                    │
+│  ┌──────────────────────────────────────────────────────────┐     │
+│  │                    AWS Outpost Rack                       │     │
+│  │                                                           │     │
+│  │  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌─────────┐  │     │
+│  │  │  EC2     │  │  EBS     │  │  S3      │  │  RDS    │  │     │
+│  │  │  Compute │  │  Storage │  │ (Local)  │  │ (Local) │  │     │
+│  │  └──────────┘  └──────────┘  └──────────┘  └─────────┘  │     │
+│  │                                                           │     │
+│  └──────────────────────────────────────────────────────────┘     │
+│                           │  Service Link (VPN)                   │
+└───────────────────────────┼───────────────────────────────────────┘
+                            │
+                    ┌───────▼──────────┐
+                    │   AWS Region     │
+                    │ (control plane,  │
+                    │  IAM, Console)   │
+                    └──────────────────┘
+```
+
+##### Form Factors
+| Form Factor | Description |
+|---|---|
+| **Outpost Rack** | Full 42U rack; delivered and installed by AWS |
+| **Outpost Servers** | 1U/2U server; smaller footprint for branch offices |
+
+##### Supported Services on Outposts
+- EC2, EBS, S3 (Outposts), RDS, EKS, ECS, ElastiCache, EMR, ALB
+
+##### Connectivity
+- **Service Link**: Private VPN connection back to AWS Region (required for management)
+- **Local Gateway (LGW)**: Connects Outpost to on-premises network
+
+##### Exam Key Points
+- **Low latency** for on-premises applications that need AWS services locally
+- **Data residency** — data stays on-premises for regulatory requirements
+- AWS owns and manages the hardware; you provide power, space, and network
+- **Outposts is an extension of your VPC** — same subnet, security groups, IAM
+- Requires reliable **network connectivity** back to AWS Region (Service Link)
+- **Use when**: data sovereignty, ultra-low latency on-prem, hybrid cloud
+
+
+#### AWS Serverless Application Repository (SAR)
+
+##### What It Is
+A **managed repository** for pre-built serverless applications and components. Discover, deploy, and share serverless apps built with AWS SAM.
+
+##### Architecture
+```
+┌──────────────────────────────────────────────────────────────────┐
+│              AWS Serverless Application Repository               │
+│                                                                    │
+│  Publisher (Developer)              Consumer (You)                │
+│  ┌─────────────────┐                ┌─────────────────────────┐  │
+│  │  SAM Template   │                │ Browse / Search Apps    │  │
+│  │  + Code         │──── Publish ──▶│                         │  │
+│  │  + Policies     │                │ Deploy with 1-click     │  │
+│  └─────────────────┘                │         │               │  │
+│                                     └─────────┼───────────────┘  │
+│                                               ▼                   │
+│                                    ┌─────────────────────────┐   │
+│                                    │  CloudFormation Stack   │   │
+│                                    │  (Lambda, API GW, etc.) │   │
+│                                    └─────────────────────────┘   │
+└──────────────────────────────────────────────────────────────────┘
+```
+
+##### Key Concepts
+| Concept | Description |
+|---|---|
+| **SAM (Serverless Application Model)** | Framework to define serverless apps (extension of CloudFormation) |
+| **Application** | Package of Lambda functions, event sources, APIs, and other resources |
+| **Publish** | Share your app publicly or privately within your org |
+| **Nested Applications** | Use SAR apps as components inside larger SAM templates |
+
+##### Exam Key Points
+- Applications published to SAR are **packaged as SAM templates**
+- Can be **public** (shared with everyone) or **private** (within AWS account/org)
+- Enables **code reuse** across teams and projects
+- Integrates with **CloudFormation** for deployment
+- **Use when**: quickly deploying common serverless patterns (image resizing, API backends, chatbots)
+- Not heavily tested on SAA-C03 — understand the concept and purpose
+
+
+---
+
 ### Storage Services
 
 #### AWS Backup
