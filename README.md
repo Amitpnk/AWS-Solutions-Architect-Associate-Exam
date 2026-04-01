@@ -831,6 +831,8 @@ Embeds AWS compute and storage services **within 5G telecommunications networks*
 ##### What It Is
 A **unified scaling service** that manages scaling for multiple AWS resources beyond just EC2 — including DynamoDB, ECS, Aurora, and more — from a single interface.
 
+<img src="img/mg/image.png" alt="" width="100" height="100">
+
 > ⚠️ **AWS Auto Scaling ≠ EC2 Auto Scaling**
 > - **EC2 Auto Scaling** = manages EC2 instance fleets only
 > - **AWS Auto Scaling** = orchestrates scaling across multiple resource types using Scaling Plans
@@ -926,6 +928,8 @@ aws s3 ls --profile prod
 ##### What It Is
 **Infrastructure as Code (IaC)** — model, provision, and manage AWS resources using declarative YAML/JSON templates.
 
+<img src="img/mg/image-1.png" alt="" width="100" height="100">
+
 ##### Architecture & Concepts
 ```
 ┌──────────────────────────────────────────────────────────────────────┐
@@ -1007,6 +1011,8 @@ aws s3 ls --profile prod
 ##### What It Is
 Records **API calls and account activity** across your AWS infrastructure — who did what, when, and from where.
 
+<img src="img/mg/image-2.png" alt="" width="100" height="100">
+
 ###### Architecture
 ```
 ┌──────────────────────────────────────────────────────────────────────┐
@@ -1057,6 +1063,8 @@ Records **API calls and account activity** across your AWS infrastructure — wh
 
 ##### What It Is
 AWS's **observability platform** — collect and monitor metrics, logs, events, and traces. The backbone of monitoring on AWS.
+
+<img src="img/mg/image-3.png" alt="" width="100" height="100">
 
 ##### Core Components
 ```
@@ -1135,6 +1143,8 @@ AWS's **observability platform** — collect and monitor metrics, logs, events, 
 ##### What It Is
 Uses **machine learning** to analyze resource utilization and recommend **optimal AWS resources** to reduce cost and improve performance.
 
+<img src="img/mg/image-4.png" alt="" width="100" height="100">
+
 ##### Supported Resources
 | Resource | What It Optimizes |
 |---|---|
@@ -1154,7 +1164,7 @@ Uses **machine learning** to analyze resource utilization and recommend **optima
   └─────────────────────────────────────────────────────┘
 ```
 
-##### Exam Key Points ✅
+##### Exam Key Points 
 - Requires **at least 30 days** of metric data for accurate recommendations
 - Integrates with **CloudWatch** for utilization data
 - **Free** basic tier; Enhanced Recommendations (with savings estimates) require opt-in
@@ -1165,6 +1175,8 @@ Uses **machine learning** to analyze resource utilization and recommend **optima
 
 ##### What It Is
 **Continuous compliance and configuration tracking** — records configuration changes of AWS resources and evaluates them against desired rules.
+
+<img src="img/mg/image-5.png" alt="" width="100" height="100">
 
 ##### Architecture
 ```
@@ -1225,6 +1237,8 @@ Uses **machine learning** to analyze resource utilization and recommend **optima
 ##### What It Is
 **Automated setup and governance** for a multi-account AWS environment using AWS best practices — built on top of AWS Organizations, Service Control Policies, and Config.
 
+<img src="img/mg/image-6.png" alt="" width="100" height="100">
+
 ##### Architecture
 ```
 ┌──────────────────────────────────────────────────────────────────────┐
@@ -1278,6 +1292,8 @@ Uses **machine learning** to analyze resource utilization and recommend **optima
 ##### What It Is
 Provides **personalized visibility** into AWS service health events that may affect your resources.
 
+<img src="img/mg/image-7.png" alt="" width="100" height="100">
+
 ##### Two Views
 | View | Description |
 |---|---|
@@ -1303,6 +1319,8 @@ Provides **personalized visibility** into AWS service health events that may aff
 ##### What It Is
 Manages **software licenses** from vendors (Microsoft, Oracle, SAP, IBM) across AWS and on-premises to ensure compliance and reduce over-provisioning.
 
+<img src="img/mg/image-8.png" alt="" width="100" height="100">
+
 ##### Key Concepts
 | Concept | Description |
 |---|---|
@@ -1324,6 +1342,8 @@ Manages **software licenses** from vendors (Microsoft, Oracle, SAP, IBM) across 
 ##### What It Is
 A fully managed **Grafana service** for interactive data visualization and dashboards — no Grafana infrastructure to manage.
 
+<img src="img/mg/image-9.png" alt="" width="100" height="100">
+
 ##### Key Concepts
 | Feature | Detail |
 |---|---|
@@ -1342,6 +1362,8 @@ A fully managed **Grafana service** for interactive data visualization and dashb
 
 ##### What It Is
 A **fully managed Prometheus-compatible** monitoring service for container workloads — no Prometheus server to operate.
+
+<img src="img/mg/image-10.png" alt="" width="100" height="100">
 
 ##### Architecture
 ```
@@ -1368,6 +1390,8 @@ A **fully managed Prometheus-compatible** monitoring service for container workl
 ### What It Is
 The **web-based GUI** to access and manage AWS services. Entry point for most AWS interactions.
 
+<img src="img/mg/image-11.png" alt="" width="100" height="100">
+
 ##### Key Features
 | Feature | Description |
 |---|---|
@@ -1388,6 +1412,8 @@ The **web-based GUI** to access and manage AWS services. Entry point for most AW
 
 ##### What It Is
 **Centrally manage and govern** multiple AWS accounts — consolidate billing, apply policies, and automate account creation.
+
+<img src="img/mg/image-12.png" alt="" width="100" height="100">
 
 ##### Architecture
 ```
@@ -1444,6 +1470,8 @@ The **web-based GUI** to access and manage AWS services. Entry point for most AW
 ##### What It Is
 A **self-service portal** for organizations to create and manage approved catalogs of IT services — ensures governance while giving users autonomy.
 
+<img src="img/mg/image-13.png" alt="" width="100" height="100">
+
 ##### Architecture
 ```
 ┌──────────────────────────────────────────────────────────────────┐
@@ -1484,6 +1512,8 @@ A **self-service portal** for organizations to create and manage approved catalo
 
 ##### What It Is
 A **unified operations platform** to manage EC2 and on-premises servers at scale — patching, configuration, automation, and remote access without SSH/RDP.
+
+<img src="img/mg/image-14.png" alt="" width="100" height="100">
 
 ##### Key Capabilities
 ```
@@ -1545,6 +1575,8 @@ A **unified operations platform** to manage EC2 and on-premises servers at scale
 ##### What It Is
 An **automated best-practice checker** that analyzes your AWS environment and provides recommendations across 5 categories.
 
+<img src="img/mg/image-15.png" alt="" width="100" height="100">
+
 ##### Five Pillars
 ```
 ┌──────────────────────────────────────────────────────────────────────┐
@@ -1587,6 +1619,8 @@ An **automated best-practice checker** that analyzes your AWS environment and pr
 
 ##### What It Is
 A **self-service review tool** that helps you evaluate your workloads against **AWS Well-Architected Framework best practices** and identify areas for improvement.
+
+<img src="img/mg/image-16.png" alt="" width="100" height="100">
 
 ##### Six Pillars of the Well-Architected Framework
 ```
