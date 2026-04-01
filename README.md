@@ -1128,7 +1128,7 @@ AWS's **observability platform** — collect and monitor metrics, logs, events, 
 - **Schedule**: cron/rate-based events (like a scheduler)
 - **Custom Event Bus** + **Partner Event Bus**
 
-##### Exam Key Points ✅
+##### Exam Key Points
 - **Default EC2 metrics**: CPU, Network, Disk I/O — **NOT memory or disk space** (need CloudWatch Agent)
 - **Detailed Monitoring**: 1-minute intervals (extra cost); Basic: 5-minute
 - **CloudWatch Logs Insights** ≠ CloudTrail — Insights queries CW Logs; CloudTrail is API audit
@@ -1401,7 +1401,7 @@ The **web-based GUI** to access and manage AWS services. Entry point for most AW
 | **Billing Dashboard** | Cost visibility and budgets |
 | **CloudShell** | Browser-based CLI — pre-authenticated, no local setup |
 
-##### Exam Key Points ✅
+##### Exam Key Points
 - **CloudShell** — free, browser-based shell with AWS CLI pre-installed; 1 GB persistent storage
 - **Console Mobile App** — view resources and alarms on mobile
 - MFA should be enforced for **root** and all **IAM users** with console access
