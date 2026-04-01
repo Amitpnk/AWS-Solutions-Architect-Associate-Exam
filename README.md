@@ -153,24 +153,24 @@ AWS X-Ray
 
 ### Management and Governance
 
-*  AWS Auto Scaling
-*  [AWS CLI](#aws-cli)
-*  AWS CloudFormation
-*  AWS CloudTrail
-*  Amazon CloudWatch
-*  AWS Compute Optimizer
-*  AWS Config
-*  AWS Control Tower
-*  AWS Health Dashboard
-*  AWS License Manager
-*  Amazon Managed Grafana
-*  Amazon Managed Service for Prometheus
-*  AWS Management Console
-*  AWS Organizations
-*  AWS Service Catalog
-*  AWS Systems Manager
-*  AWS Trusted Advisor
-*  AWS Well-Architected Tool
+*  [AWS Auto Scaling](#aws-auto-scaling)
+*  [AWS CLI](#aws-cli-command-line-interface)
+*  [AWS CloudFormation](#aws-cloudformation)
+*  [AWS CloudTrail](#aws-cloudtrail)
+*  [Amazon CloudWatch](#amazon-cloudwatch)
+*  [AWS Compute Optimizer](#aws-compute-optimizer)
+*  [AWS Config](#aws-config)
+*  [AWS Control Tower](#aws-control-tower)
+*  [AWS Health Dashboard](#aws-health-dashboard)
+*  [AWS License Manager](#aws-license-manager)
+*  [Amazon Managed Grafana](#amazon-managed-grafana)
+*  [Amazon Managed Service for Prometheus](#amazon-managed-service-for-prometheus-amp)
+*  [AWS Management Console](#aws-management-console)
+*  [AWS Organizations](#aws-organizations)
+*  [AWS Service Catalog](#aws-service-catalog)
+*  [AWS Systems Manager](#aws-systems-manager-ssm)
+*  [AWS Trusted Advisor](#aws-trusted-advisor)
+*  [AWS Well-Architected Tool](#aws-well-architected-tool)
 
 ### Media Services
 
@@ -1659,7 +1659,7 @@ A **self-service review tool** that helps you evaluate your workloads against **
 | Review workload against AWS best practices | **AWS Well-Architected Tool** |
 
 
-#### Common Exam Traps -Management and Governance
+#### Common Exam Traps - Management and Governance
 
 1. **CloudTrail ≠ CloudWatch** — CloudTrail = API audit log (who called what); CloudWatch = metrics/performance/logs
 2. **AWS Config is NOT preventive** — it detects non-compliance; use SCPs or IAM to prevent
