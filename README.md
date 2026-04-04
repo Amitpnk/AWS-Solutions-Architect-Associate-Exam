@@ -3602,6 +3602,1032 @@ A **logically isolated section** of the AWS cloud where you launch resources in 
 
 ---
 
+Serverless Services Study Guide
+
+---
+
+## AWS AppSync
+
+### What It Is
+A **fully managed GraphQL and Pub/Sub API service** that simplifies application development by letting you create flexible APIs to securely access, manipulate, and combine data from multiple sources — in real time.
+
+<img src="img/serverless/image.png" alt="" width="100" height="100">
+
+
+### Architecture
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│                         AWS AppSync                                   │
+│                                                                       │
+│  Clients                                                              │
+│  ┌──────────┐  ┌──────────┐  ┌──────────┐                           │
+│  │  Mobile  │  │  Web App │  │  IoT     │                           │
+│  │  App     │  │          │  │  Device  │                           │
+│  └────┬─────┘  └────┬─────┘  └────┬─────┘                           │
+│       └─────────────┴─────────────┘                                  │
+│                      │                                                │
+│          ┌───────────▼──────────────────────┐                        │
+│          │         AppSync API               │                        │
+│          │  ┌────────────────────────────┐   │                        │
+│          │  │  GraphQL Schema            │   │                        │
+│          │  │  (Types, Queries,          │   │                        │
+│          │  │   Mutations, Subscriptions)│   │                        │
+│          │  └────────────────────────────┘   │                        │
+│          │  ┌────────────────────────────┐   │                        │
+│          │  │  Resolvers (VTL / JS)      │   │                        │
+│          │  └────────────────────────────┘   │                        │
+│          └──────────────┬───────────────────┘                        │
+│                         │                                             │
+│   ┌─────────────────────┼──────────────────────────────┐             │
+│   ▼                     ▼                    ▼          ▼             │
+│ DynamoDB           Lambda              RDS/Aurora   OpenSearch        │
+│                                                                        │
+│   ▼                     ▼                    ▼          ▼             │
+│ HTTP APIs          EventBridge          Cognito     Custom Sources    │
+└──────────────────────────────────────────────────────────────────────┘
+```
+
+### Core Concepts
+
+#### GraphQL Operations
+| Operation | Description | Example |
+|---|---|---|
+| **Query** | Fetch data (read) | Get user profile |
+| **Mutation** | Modify data (write) | Update user profile |
+| **Subscription** | Real-time data push (WebSocket) | Chat messages, live scores |
+
+#### Resolvers
+- **Unit Resolver** — maps a single GraphQL field to a single data source
+- **Pipeline Resolver** — chains multiple functions sequentially (before/after hooks)
+- Written in **VTL (Velocity Template Language)** or **JavaScript**
+
+#### Data Sources
+| Source | Use Case |
+|---|---|
+| **DynamoDB** | Most common — NoSQL, low latency |
+| **Lambda** | Custom business logic, any data source |
+| **RDS (Aurora Serverless)** | Relational data |
+| **OpenSearch** | Full-text search |
+| **HTTP** | Any REST API |
+| **EventBridge** | Event publishing |
+| **None** | Local resolvers (transform data without hitting a source) |
+
+### AppSync Security
+| Auth Method | Description |
+|---|---|
+| **API Key** | Simple apps, dev/test; rotated every 365 days max |
+| **AWS IAM** | IAM users/roles/services; SigV4 signing |
+| **Amazon Cognito User Pools** | JWT tokens; per-user fine-grained access |
+| **OIDC** | Third-party identity providers |
+| **Lambda Authorizer** | Custom auth logic |
+
+### Real-Time (Subscriptions)
+- Uses **WebSockets** — persistent connection between client and AppSync
+- Client subscribes to mutations → receives push when data changes
+- **Use cases**: chat apps, live dashboards, collaborative editing, live sports updates
+
+### Caching
+- **Server-side caching** — AppSync caches resolver responses
+- TTL configurable per resolver
+- Reduces backend load and latency
+
+### Exam Key Points 
+- AppSync = **GraphQL** API (not REST — that's API Gateway)
+- **Real-time subscriptions** via WebSocket — key differentiator from REST APIs
+- **Multiple data sources** in a single API response (GraphQL federation)
+- **Cognito + AppSync** — fine-grained authorization using Cognito identity claims
+- **Offline support** — client-side data sync when device reconnects
+- **AppSync vs API Gateway**: AppSync = GraphQL + real-time; API Gateway = REST/HTTP/WebSocket
+- Can merge multiple GraphQL APIs using **Merged API** feature
+- **Use when**: chat apps, real-time collaboration, mobile apps needing data from multiple sources
+
+## AWS Fargate
+
+### What It Is
+A **serverless compute engine for containers** — run ECS or EKS containers without managing EC2 instances. AWS handles the underlying infrastructure.
+
+<img src="img/serverless/image-1.png" alt="" width="100" height="100">
+
+
+### Fargate vs EC2 Launch Type
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│              ECS: EC2 Launch Type vs Fargate Launch Type             │
+│                                                                       │
+│  EC2 Launch Type                   Fargate Launch Type               │
+│  ──────────────────────────────    ──────────────────────────────    │
+│  ┌────────────────────────────┐    ┌────────────────────────────┐   │
+│  │ You manage EC2 instances   │    │ No EC2 instances to manage │   │
+│  │                            │    │                            │   │
+│  │  ┌──────┐  ┌──────┐        │    │  ┌──────┐  ┌──────┐       │   │
+│  │  │Task  │  │Task  │        │    │  │Task  │  │Task  │       │   │
+│  │  └──────┘  └──────┘        │    │  └──────┘  └──────┘       │   │
+│  │  ┌──────┐  ┌──────┐        │    │  Each task gets its own   │   │
+│  │  │Task  │  │Task  │        │    │  isolated compute env     │   │
+│  │  └──────┘  └──────┘        │    │                            │   │
+│  │  ┌──────────────────┐      │    │  AWS provisions compute   │   │
+│  │  │  EC2 Instance    │      │    │  behind the scenes        │   │
+│  │  │  (you patch/mgmt)│      │    │                            │   │
+│  │  └──────────────────┘      │    │  Pay per task vCPU + mem  │   │
+│  │  Pay per EC2 instance      │    │                            │   │
+│  └────────────────────────────┘    └────────────────────────────┘   │
+└──────────────────────────────────────────────────────────────────────┘
+```
+
+### ECS with Fargate Architecture
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│                   ECS + Fargate Architecture                          │
+│                                                                       │
+│  ┌─────────────────────────────────────────────────────────────┐    │
+│  │                    ECS Cluster                               │    │
+│  │                                                              │    │
+│  │  ┌──────────────────────────────────────────────────────┐   │    │
+│  │  │                 ECS Service                           │   │    │
+│  │  │  (desired count, deployment config, load balancer)   │   │    │
+│  │  │                                                       │   │    │
+│  │  │   ┌─────────────┐  ┌─────────────┐  ┌─────────────┐  │   │    │
+│  │  │   │  Task       │  │  Task       │  │  Task       │  │   │    │
+│  │  │   │ ┌─────────┐ │  │ ┌─────────┐ │  │ ┌─────────┐ │  │   │    │
+│  │  │   │ │Container│ │  │ │Container│ │  │ │Container│ │  │   │    │
+│  │  │   │ │ (Docker)│ │  │ │ (Docker)│ │  │ │ (Docker)│ │  │   │    │
+│  │  │   │ └─────────┘ │  │ └─────────┘ │  │ └─────────┘ │  │   │    │
+│  │  │   │  ENI (own   │  │  ENI (own   │  │  ENI (own   │  │   │    │
+│  │  │   │  private IP)│  │  private IP)│  │  private IP)│  │   │    │
+│  │  │   └─────────────┘  └─────────────┘  └─────────────┘  │   │    │
+│  │  └──────────────────────────────────────────────────────┘   │    │
+│  └─────────────────────────────────────────────────────────────┘    │
+│                              │                                        │
+│                    ┌─────────▼──────────┐                            │
+│                    │  ALB / NLB         │                            │
+│                    └────────────────────┘                            │
+└──────────────────────────────────────────────────────────────────────┘
+```
+
+### Key Concepts
+
+#### Task Definition
+- Blueprint for your container(s) — CPU, memory, Docker image, environment vars, volumes, IAM role
+- **Task CPU/Memory**: must choose from predefined combinations (e.g., 0.25 vCPU / 0.5 GB)
+
+#### Task vs Service
+| Concept | Description | Use Case |
+|---|---|---|
+| **Task** | One-time or scheduled container run | Batch jobs, migrations |
+| **Service** | Long-running, maintains desired count | Web servers, APIs |
+
+#### Fargate Networking
+- Each Fargate task gets its **own ENI** (Elastic Network Interface) and **private IP**
+- Supports **awsvpc** network mode only
+- Security groups applied **at task level** (not cluster level)
+
+#### Fargate Storage
+- **Ephemeral storage**: 20 GB default, up to 200 GB — lost when task stops
+- **EFS mount**: for persistent shared storage across tasks
+- **No EBS** — Fargate tasks cannot directly mount EBS volumes
+
+### IAM Roles for Fargate
+| Role | Purpose |
+|---|---|
+| **Task Role** | Permissions for containers to call AWS services (S3, DynamoDB…) |
+| **Task Execution Role** | Permissions for ECS agent to pull images (ECR), write logs (CloudWatch) |
+
+### Fargate Spot
+- Run Fargate tasks on **spare AWS capacity** at up to 70% discount
+- Tasks can be **interrupted** — suitable for fault-tolerant, flexible workloads
+- Not for stateful or critical tasks
+
+### EKS on Fargate
+- Run Kubernetes **pods** on Fargate — no EC2 worker nodes
+- Requires **Fargate Profile** — define which pods run on Fargate (namespace/label selectors)
+- Each pod gets its own dedicated compute
+
+### Exam Key Points 
+- **No EC2 instances to manage** — serverless containers; no patching, no cluster capacity management
+- **Each task has its own ENI** — awsvpc network mode, task-level security groups
+- **EFS** for persistent storage; **ephemeral** local storage is temporary (lost on task stop)
+- **Fargate Spot** = cost optimization for interruptible workloads
+- **Task Role** (what containers can do) vs **Task Execution Role** (what ECS agent can do)
+- **Fargate vs Lambda**: Fargate = containerized long-running tasks, no time limit; Lambda = event-driven functions, 15-min max
+- **ECS Service Auto Scaling** + Fargate — scale tasks based on CPU, memory, or custom metrics
+- Cannot use **privileged containers** or **host networking** on Fargate (security isolation)
+- **Use when**: containerized workloads without server management, microservices, APIs
+
+---
+
+## λ 3. AWS Lambda
+
+### What It Is
+**Serverless compute** — run code in response to events without provisioning or managing servers. AWS handles scaling, patching, and availability automatically.
+
+<img src="img/serverless/image-2.png" alt="" width="100" height="100">
+
+### Architecture
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│                        AWS Lambda                                     │
+│                                                                       │
+│  Event Sources (Triggers)                                             │
+│  ┌────────┐ ┌────────┐ ┌────────┐ ┌────────┐ ┌────────┐ ┌────────┐ │
+│  │  API   │ │  S3    │ │  DDB   │ │  SQS   │ │  SNS   │ │  CW    │ │
+│  │Gateway │ │ Events │ │Streams │ │        │ │        │ │ Events │ │
+│  └───┬────┘ └───┬────┘ └───┬────┘ └───┬────┘ └───┬────┘ └───┬────┘ │
+│      └──────────┴──────────┴──────────┴──────────┴──────────┘       │
+│                                  │                                    │
+│                    ┌─────────────▼─────────────┐                     │
+│                    │      Lambda Function        │                     │
+│                    │                             │                     │
+│                    │  Runtime: Node.js, Python,  │                     │
+│                    │  Java, Go, Ruby, .NET,      │                     │
+│                    │  Custom Runtime             │                     │
+│                    │                             │                     │
+│                    │  Execution Role (IAM)        │                     │
+│                    │  Environment Variables       │                     │
+│                    │  Layers                      │                     │
+│                    └─────────────┬───────────────┘                     │
+│                                  │                                    │
+│        ┌────────────────┬────────┴──────────┬────────────────┐       │
+│        ▼                ▼                   ▼                ▼       │
+│   DynamoDB           S3              CloudWatch Logs     Other APIs  │
+└──────────────────────────────────────────────────────────────────────┘
+```
+
+### Lambda Configuration Limits
+
+| Setting | Value |
+|---|---|
+| **Timeout** | 1 sec – **15 minutes** (max) |
+| **Memory** | 128 MB – **10,240 MB** (10 GB) |
+| **vCPU** | Proportional to memory (1 vCPU at 1,769 MB) |
+| **Ephemeral Storage (/tmp)** | 512 MB default – **10,240 MB** (10 GB) |
+| **Deployment Package** | 50 MB (zip, direct); 250 MB (unzipped); **10 GB (container image)** |
+| **Concurrent Executions** | 1,000 (default, soft limit per region) |
+| **Environment Variables** | 4 KB total |
+| **Layers** | Up to 5 layers; 250 MB total unzipped |
+
+### Invocation Types
+
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│                   Lambda Invocation Types                             │
+│                                                                       │
+│  ┌──────────────────┐  ┌──────────────────┐  ┌──────────────────┐   │
+│  │  Synchronous     │  │  Asynchronous    │  │  Event Source    │   │
+│  │                  │  │                  │  │  Mapping (Poll)  │   │
+│  │  Caller waits    │  │  Fire and forget │  │                  │   │
+│  │  for response    │  │  Lambda retries  │  │  Lambda polls    │   │
+│  │                  │  │  2x on failure   │  │  the source      │   │
+│  │  API Gateway     │  │                  │  │                  │   │
+│  │  ALB             │  │  S3 Events       │  │  SQS             │   │
+│  │  CLI/SDK direct  │  │  SNS             │  │  DynamoDB Streams│   │
+│  │  Cognito         │  │  CloudWatch Logs │  │  Kinesis         │   │
+│  │                  │  │  EventBridge     │  │  MSK / MQ        │   │
+│  │  On error:       │  │                  │  │                  │   │
+│  │  Returns error   │  │  On error: DLQ   │  │  On error: bisect│   │
+│  │  to caller       │  │  or EventBridge  │  │  batch, DLQ      │   │
+│  └──────────────────┘  └──────────────────┘  └──────────────────┘   │
+└──────────────────────────────────────────────────────────────────────┘
+```
+
+### Lambda Concurrency
+
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│                   Lambda Concurrency Model                            │
+│                                                                       │
+│  Account Limit: 1,000 concurrent executions (per region)             │
+│                                                                       │
+│  ┌─────────────────────────────────────────────────────────────┐    │
+│  │                Reserved Concurrency                          │    │
+│  │  ┌──────────────────┐                                        │    │
+│  │  │   Function A     │  Max 300 concurrent ← guaranteed      │    │
+│  │  └──────────────────┘                      & limited        │    │
+│  │  ┌──────────────────┐                                        │    │
+│  │  │   Function B     │  Max 200 concurrent                   │    │
+│  │  └──────────────────┘                                        │    │
+│  │  Remaining 500 → unreserved pool for all other functions    │    │
+│  └─────────────────────────────────────────────────────────────┘    │
+│                                                                       │
+│  ┌─────────────────────────────────────────────────────────────┐    │
+│  │              Provisioned Concurrency                         │    │
+│  │  Pre-initializes execution environments                      │    │
+│  │  Eliminates cold starts → sub-ms latency                    │    │
+│  │  Charged even when idle                                      │    │
+│  └─────────────────────────────────────────────────────────────┘    │
+└──────────────────────────────────────────────────────────────────────┘
+```
+
+| Concurrency Type | Description | Use Case |
+|---|---|---|
+| **Unreserved** | Uses pool shared with all functions | Default |
+| **Reserved** | Guarantees max limit for a function | Throttle noisy functions |
+| **Provisioned** | Pre-warmed environments; no cold start | Latency-sensitive production |
+
+### Cold Start vs Warm Start
+```
+  Cold Start:
+  Request ──▶ Init Container ──▶ Load Runtime ──▶ Load Function ──▶ Execute
+              (100ms–1s+)
+
+  Warm Start (reuse):
+  Request ──▶ Execute (milliseconds)
+```
+
+**Cold Start Mitigation**:
+- Use **Provisioned Concurrency**
+- Use **smaller deployment packages**
+- Prefer **Python/Node.js** runtimes (faster init than Java/.NET)
+- Use **Lambda SnapStart** (Java) — snapshot initialized state
+
+### Lambda Networking
+
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│              Lambda Networking Options                                │
+│                                                                       │
+│  Default (No VPC)                    VPC Mode                        │
+│  ──────────────────────────          ──────────────────────────      │
+│  ┌────────────────────────┐          ┌────────────────────────┐     │
+│  │  Lambda                │          │  Lambda                │     │
+│  │  (AWS-managed network) │          │  (in your VPC subnet)  │     │
+│  │                        │          │                        │     │
+│  │  ✅ Internet access     │          │  ✅ Private resources  │     │
+│  │  ✅ AWS service APIs    │          │    (RDS, ElastiCache)  │     │
+│  │  ❌ VPC resources       │          │  ❌ No internet by     │     │
+│  │    (RDS, private EC2)  │          │     default (need NAT) │     │
+│  └────────────────────────┘          └────────────────────────┘     │
+└──────────────────────────────────────────────────────────────────────┘
+```
+
+- **VPC Lambda needs NAT Gateway** to access the internet
+- Lambda in VPC uses **Hyperplane ENI** (shared ENIs — no longer creates per-function ENI)
+- Still needs **security group** and **subnet** configuration
+
+### Lambda Triggers — Common Patterns
+
+#### S3 → Lambda
+- Object created/deleted → trigger Lambda for image processing, ETL
+
+#### API Gateway → Lambda
+- Serverless REST API — most common Lambda use case
+
+#### SQS → Lambda (Event Source Mapping)
+- Lambda polls SQS; processes messages in batches
+- On failure: messages return to queue or go to **DLQ**
+- **`FunctionResponseTypes: ReportBatchItemFailures`** — partial batch success
+
+#### DynamoDB Streams → Lambda
+- Process change records (INSERT, MODIFY, REMOVE)
+- Use for: replicate data, trigger notifications, audit log
+
+#### EventBridge (Scheduled)
+- **Cron or rate expressions** — Lambda as a scheduled task (replacement for cron jobs)
+
+### Lambda Layers
+- **Share code/dependencies** across multiple functions
+- Up to 5 layers per function; 250 MB unzipped total
+- **Runtime dependencies** (e.g., numpy, pandas), SDKs, configuration files
+- Common use: AWS SDK updates, shared utilities, ML models
+
+### Lambda Destinations
+- Route function output to another service **based on success or failure**
+- **Async invocations only**
+
+| Outcome | Destination Options |
+|---|---|
+| **On Success** | SQS, SNS, Lambda, EventBridge |
+| **On Failure** | SQS, SNS, Lambda, EventBridge |
+
+> **Destinations vs DLQ**: Destinations send the full event payload + metadata; DLQ (SQS/SNS) only for failures.
+
+### Lambda@Edge & CloudFront Functions
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│          Lambda@Edge vs CloudFront Functions                          │
+│                                                                       │
+│  Feature           │ CloudFront Functions  │ Lambda@Edge             │
+│  ──────────────────┼───────────────────────┼────────────────────── │
+│  Location          │ 200+ Edge locations   │ Regional edge caches   │
+│  Latency           │ Sub-ms                │ ms                     │
+│  Runtime           │ JS only               │ Node.js, Python        │
+│  Max exec time     │ < 1ms                 │ 5–10 seconds           │
+│  Memory            │ 2 MB                  │ 128 MB – 10 GB         │
+│  Network access    │ ❌                    │ ✅                     │
+│  Triggers          │ Viewer req/resp only  │ All 4 CF events        │
+│  Use case          │ Header manipulation   │ A/B testing, auth,     │
+│                    │ URL rewrites, simple  │ complex redirects      │
+│                    │ redirects             │                        │
+└──────────────────────────────────────────────────────────────────────┘
+```
+
+**Four CloudFront Event Points for Lambda@Edge**:
+1. **Viewer Request** — after CF receives request from viewer
+2. **Origin Request** — before CF forwards to origin
+3. **Origin Response** — after CF receives from origin
+4. **Viewer Response** — before CF forwards to viewer
+
+### Lambda SnapStart (Java)
+- Eliminates Java cold starts by **snapshotting** initialized execution environment
+- On invoke: restores from snapshot instead of re-initializing
+- **~10x faster** cold start for Java functions
+
+### Environment Variables & Secrets
+- **Environment variables**: plaintext or encrypted with KMS
+- Reference **Secrets Manager / Parameter Store** at runtime (don't bake secrets into code)
+- Max 4 KB total for all environment variables
+
+### Lambda Power Tuning
+- **Memory ↑ → CPU ↑ → faster execution → may cost less** (fewer ms billed)
+- Use **AWS Lambda Power Tuning** (open-source Step Functions state machine) to find optimal memory
+- Billed per **GB-second**: (memory in GB) × (duration in seconds)
+
+### Exam Key Points ✅
+- **Max timeout = 15 minutes** — for longer jobs use Fargate, Batch, or EC2
+- **Max memory = 10 GB** — CPU scales proportionally
+- **Ephemeral storage (/tmp)** = up to 10 GB — shared across same execution context within warm invocations
+- **Cold starts** — use Provisioned Concurrency for latency-sensitive apps
+- **Lambda in VPC** → needs NAT Gateway for internet; adds some latency
+- **Reserved concurrency = throttle** — caps max concurrent for function (protects downstream)
+- **Provisioned concurrency = pre-warm** — eliminates cold starts (costs money)
+- **Async failures** → DLQ or Destinations (On Failure)
+- **SQS + Lambda**: Lambda polls; batch size configurable; partial batch failure supported
+- **Lambda Layers**: share code/libraries; max 5 per function
+- **Lambda@Edge**: run at CloudFront edge; max 5–10 sec; supports all 4 CF event types
+- **CloudFront Functions**: ultra-fast, sub-ms; viewer req/resp only; JS only
+- **SnapStart**: Java cold start reduction via snapshotting
+- **Execution Role** = what Lambda can do; **Resource Policy** = who can invoke Lambda
+
+---
+
+## 🔄 Quick Comparison: Serverless Services
+
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│                    Serverless Decision Tree                           │
+│                                                                       │
+│  What are you building?                                               │
+│                                                                       │
+│  GraphQL API + Real-time?  ──────────────────────▶  AWS AppSync      │
+│                                                                       │
+│  REST/HTTP API + Functions?  ────────────────────▶  API Gateway      │
+│                                                       + Lambda       │
+│                                                                       │
+│  Event-driven functions (< 15 min)?  ────────────▶  AWS Lambda      │
+│                                                                       │
+│  Containerized workload, no server mgmt?  ───────▶  AWS Fargate     │
+│                                                                       │
+│  Long-running container (> 15 min)?  ────────────▶  Fargate         │
+│                                                       (ECS/EKS)     │
+│                                                                       │
+│  Batch/HPC jobs?  ───────────────────────────────▶  AWS Batch       │
+│                                                       (on Fargate)  │
+└──────────────────────────────────────────────────────────────────────┘
+```
+
+| Dimension | Lambda | Fargate | AppSync |
+|---|---|---|---|
+| **Compute model** | Function | Container | Managed API |
+| **Max runtime** | 15 min | No limit | N/A |
+| **Scaling** | Automatic (per request) | Task-level | Automatic |
+| **State** | Stateless | Stateless | Stateless |
+| **Packaging** | Zip / Container image | Docker image | GraphQL schema |
+| **Trigger** | Events | Service/task | GraphQL operations |
+| **Persistent storage** | EFS / S3 | EFS / S3 | Data sources |
+| **Cost model** | Per GB-second | Per vCPU-second + GB-second | Per request + connection |
+
+---
+
+## 🚨 Common Exam Traps
+
+1. **Lambda max timeout is 15 minutes** — anything longer needs Fargate, Batch, or EC2
+2. **Lambda in VPC does NOT get internet access by default** — must add NAT Gateway in a public subnet
+3. **Reserved Concurrency ≠ Provisioned Concurrency** — Reserved = cap/throttle; Provisioned = pre-warm to eliminate cold starts
+4. **Cold starts affect Java/.NET more** than Python/Node.js — Provisioned Concurrency or SnapStart for Java
+5. **Lambda memory scales CPU** — more memory = more CPU; sometimes cheaper to use more memory (fewer billed ms)
+6. **Fargate tasks cannot mount EBS** — use EFS for shared persistent storage; ephemeral storage is lost on stop
+7. **Fargate = awsvpc only** — each task gets its own ENI and private IP; security groups at task level
+8. **Task Role vs Task Execution Role** — Task Role = what the container does; Execution Role = what ECS/Fargate does (pull images, write logs)
+9. **Lambda Destinations vs DLQ** — Destinations support both success and failure, carry full payload; DLQ is failure-only (legacy)
+10. **AppSync = GraphQL, NOT REST** — API Gateway handles REST; AppSync handles GraphQL with real-time subscriptions
+11. **Lambda@Edge timeout = 5–10 seconds** — much shorter than regular Lambda; CloudFront Functions = <1ms
+12. **ACM certificate for Lambda@Edge must be in us-east-1** — same rule as CloudFront
+13. **SQS + Lambda** = Lambda polls SQS (not the other way around) — this is event source mapping
+14. **Fargate Spot** can be interrupted — do not use for stateful or critical tasks
+15. **Lambda ephemeral /tmp storage** is shared across warm invocations within same execution context — do not store sensitive data without cleanup
+
+---
+
+### Serverless Services Study Guide
+
+#### AWS AppSync
+
+##### What It Is
+A **fully managed GraphQL and Pub/Sub API service** that simplifies application development by letting you create flexible APIs to securely access, manipulate, and combine data from multiple sources — in real time.
+
+![alt text](image.png)
+
+##### Architecture
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│                         AWS AppSync                                   │
+│                                                                       │
+│  Clients                                                              │
+│  ┌──────────┐  ┌──────────┐  ┌──────────┐                           │
+│  │  Mobile  │  │  Web App │  │  IoT     │                           │
+│  │  App     │  │          │  │  Device  │                           │
+│  └────┬─────┘  └────┬─────┘  └────┬─────┘                           │
+│       └─────────────┴─────────────┘                                  │
+│                      │                                                │
+│          ┌───────────▼──────────────────────┐                        │
+│          │         AppSync API               │                        │
+│          │  ┌────────────────────────────┐   │                        │
+│          │  │  GraphQL Schema            │   │                        │
+│          │  │  (Types, Queries,          │   │                        │
+│          │  │   Mutations, Subscriptions)│   │                        │
+│          │  └────────────────────────────┘   │                        │
+│          │  ┌────────────────────────────┐   │                        │
+│          │  │  Resolvers (VTL / JS)      │   │                        │
+│          │  └────────────────────────────┘   │                        │
+│          └──────────────┬───────────────────┘                        │
+│                         │                                             │
+│   ┌─────────────────────┼──────────────────────────────┐             │
+│   ▼                     ▼                    ▼          ▼             │
+│ DynamoDB           Lambda              RDS/Aurora   OpenSearch        │
+│                                                                        │
+│   ▼                     ▼                    ▼          ▼             │
+│ HTTP APIs          EventBridge          Cognito     Custom Sources    │
+└──────────────────────────────────────────────────────────────────────┘
+```
+
+##### Core Concepts
+
+###### GraphQL Operations
+| Operation | Description | Example |
+|---|---|---|
+| **Query** | Fetch data (read) | Get user profile |
+| **Mutation** | Modify data (write) | Update user profile |
+| **Subscription** | Real-time data push (WebSocket) | Chat messages, live scores |
+
+###### Resolvers
+- **Unit Resolver** — maps a single GraphQL field to a single data source
+- **Pipeline Resolver** — chains multiple functions sequentially (before/after hooks)
+- Written in **VTL (Velocity Template Language)** or **JavaScript**
+
+###### Data Sources
+| Source | Use Case |
+|---|---|
+| **DynamoDB** | Most common — NoSQL, low latency |
+| **Lambda** | Custom business logic, any data source |
+| **RDS (Aurora Serverless)** | Relational data |
+| **OpenSearch** | Full-text search |
+| **HTTP** | Any REST API |
+| **EventBridge** | Event publishing |
+| **None** | Local resolvers (transform data without hitting a source) |
+
+##### AppSync Security
+| Auth Method | Description |
+|---|---|
+| **API Key** | Simple apps, dev/test; rotated every 365 days max |
+| **AWS IAM** | IAM users/roles/services; SigV4 signing |
+| **Amazon Cognito User Pools** | JWT tokens; per-user fine-grained access |
+| **OIDC** | Third-party identity providers |
+| **Lambda Authorizer** | Custom auth logic |
+
+##### Real-Time (Subscriptions)
+- Uses **WebSockets** — persistent connection between client and AppSync
+- Client subscribes to mutations → receives push when data changes
+- **Use cases**: chat apps, live dashboards, collaborative editing, live sports updates
+
+##### Caching
+- **Server-side caching** — AppSync caches resolver responses
+- TTL configurable per resolver
+- Reduces backend load and latency
+
+##### Exam Key Points 
+- AppSync = **GraphQL** API (not REST — that's API Gateway)
+- **Real-time subscriptions** via WebSocket — key differentiator from REST APIs
+- **Multiple data sources** in a single API response (GraphQL federation)
+- **Cognito + AppSync** — fine-grained authorization using Cognito identity claims
+- **Offline support** — client-side data sync when device reconnects
+- **AppSync vs API Gateway**: AppSync = GraphQL + real-time; API Gateway = REST/HTTP/WebSocket
+- Can merge multiple GraphQL APIs using **Merged API** feature
+- **Use when**: chat apps, real-time collaboration, mobile apps needing data from multiple sources
+
+
+#### AWS Fargate
+
+##### What It Is
+A **serverless compute engine for containers** — run ECS or EKS containers without managing EC2 instances. AWS handles the underlying infrastructure.
+
+![alt text](image-1.png)
+
+##### Fargate vs EC2 Launch Type
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│              ECS: EC2 Launch Type vs Fargate Launch Type             │
+│                                                                       │
+│  EC2 Launch Type                   Fargate Launch Type               │
+│  ──────────────────────────────    ──────────────────────────────    │
+│  ┌────────────────────────────┐    ┌────────────────────────────┐   │
+│  │ You manage EC2 instances   │    │ No EC2 instances to manage │   │
+│  │                            │    │                            │   │
+│  │  ┌──────┐  ┌──────┐        │    │  ┌──────┐  ┌──────┐       │   │
+│  │  │Task  │  │Task  │        │    │  │Task  │  │Task  │       │   │
+│  │  └──────┘  └──────┘        │    │  └──────┘  └──────┘       │   │
+│  │  ┌──────┐  ┌──────┐        │    │  Each task gets its own   │   │
+│  │  │Task  │  │Task  │        │    │  isolated compute env     │   │
+│  │  └──────┘  └──────┘        │    │                            │   │
+│  │  ┌──────────────────┐      │    │  AWS provisions compute   │   │
+│  │  │  EC2 Instance    │      │    │  behind the scenes        │   │
+│  │  │  (you patch/mgmt)│      │    │                            │   │
+│  │  └──────────────────┘      │    │  Pay per task vCPU + mem  │   │
+│  │  Pay per EC2 instance      │    │                            │   │
+│  └────────────────────────────┘    └────────────────────────────┘   │
+└──────────────────────────────────────────────────────────────────────┘
+```
+
+##### ECS with Fargate Architecture
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│                   ECS + Fargate Architecture                          │
+│                                                                       │
+│  ┌─────────────────────────────────────────────────────────────┐    │
+│  │                    ECS Cluster                               │    │
+│  │                                                              │    │
+│  │  ┌──────────────────────────────────────────────────────┐   │    │
+│  │  │                 ECS Service                           │   │    │
+│  │  │  (desired count, deployment config, load balancer)   │   │    │
+│  │  │                                                       │   │    │
+│  │  │   ┌─────────────┐  ┌─────────────┐  ┌─────────────┐  │   │    │
+│  │  │   │  Task       │  │  Task       │  │  Task       │  │   │    │
+│  │  │   │ ┌─────────┐ │  │ ┌─────────┐ │  │ ┌─────────┐ │  │   │    │
+│  │  │   │ │Container│ │  │ │Container│ │  │ │Container│ │  │   │    │
+│  │  │   │ │ (Docker)│ │  │ │ (Docker)│ │  │ │ (Docker)│ │  │   │    │
+│  │  │   │ └─────────┘ │  │ └─────────┘ │  │ └─────────┘ │  │   │    │
+│  │  │   │  ENI (own   │  │  ENI (own   │  │  ENI (own   │  │   │    │
+│  │  │   │  private IP)│  │  private IP)│  │  private IP)│  │   │    │
+│  │  │   └─────────────┘  └─────────────┘  └─────────────┘  │   │    │
+│  │  └──────────────────────────────────────────────────────┘   │    │
+│  └─────────────────────────────────────────────────────────────┘    │
+│                              │                                        │
+│                    ┌─────────▼──────────┐                            │
+│                    │  ALB / NLB         │                            │
+│                    └────────────────────┘                            │
+└──────────────────────────────────────────────────────────────────────┘
+```
+
+##### Key Concepts
+
+###### Task Definition
+- Blueprint for your container(s) — CPU, memory, Docker image, environment vars, volumes, IAM role
+- **Task CPU/Memory**: must choose from predefined combinations (e.g., 0.25 vCPU / 0.5 GB)
+
+###### Task vs Service
+| Concept | Description | Use Case |
+|---|---|---|
+| **Task** | One-time or scheduled container run | Batch jobs, migrations |
+| **Service** | Long-running, maintains desired count | Web servers, APIs |
+
+###### Fargate Networking
+- Each Fargate task gets its **own ENI** (Elastic Network Interface) and **private IP**
+- Supports **awsvpc** network mode only
+- Security groups applied **at task level** (not cluster level)
+
+###### Fargate Storage
+- **Ephemeral storage**: 20 GB default, up to 200 GB — lost when task stops
+- **EFS mount**: for persistent shared storage across tasks
+- **No EBS** — Fargate tasks cannot directly mount EBS volumes
+
+##### IAM Roles for Fargate
+| Role | Purpose |
+|---|---|
+| **Task Role** | Permissions for containers to call AWS services (S3, DynamoDB…) |
+| **Task Execution Role** | Permissions for ECS agent to pull images (ECR), write logs (CloudWatch) |
+
+##### Fargate Spot
+- Run Fargate tasks on **spare AWS capacity** at up to 70% discount
+- Tasks can be **interrupted** — suitable for fault-tolerant, flexible workloads
+- Not for stateful or critical tasks
+
+##### EKS on Fargate
+- Run Kubernetes **pods** on Fargate — no EC2 worker nodes
+- Requires **Fargate Profile** — define which pods run on Fargate (namespace/label selectors)
+- Each pod gets its own dedicated compute
+
+##### Exam Key Points 
+- **No EC2 instances to manage** — serverless containers; no patching, no cluster capacity management
+- **Each task has its own ENI** — awsvpc network mode, task-level security groups
+- **EFS** for persistent storage; **ephemeral** local storage is temporary (lost on task stop)
+- **Fargate Spot** = cost optimization for interruptible workloads
+- **Task Role** (what containers can do) vs **Task Execution Role** (what ECS agent can do)
+- **Fargate vs Lambda**: Fargate = containerized long-running tasks, no time limit; Lambda = event-driven functions, 15-min max
+- **ECS Service Auto Scaling** + Fargate — scale tasks based on CPU, memory, or custom metrics
+- Cannot use **privileged containers** or **host networking** on Fargate (security isolation)
+- **Use when**: containerized workloads without server management, microservices, APIs
+
+#### AWS Lambda
+
+##### What It Is
+**Serverless compute** — run code in response to events without provisioning or managing servers. AWS handles scaling, patching, and availability automatically.
+
+![alt text](image-2.png)
+
+##### Architecture
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│                        AWS Lambda                                     │
+│                                                                       │
+│  Event Sources (Triggers)                                             │
+│  ┌────────┐ ┌────────┐ ┌────────┐ ┌────────┐ ┌────────┐ ┌────────┐ │
+│  │  API   │ │  S3    │ │  DDB   │ │  SQS   │ │  SNS   │ │  CW    │ │
+│  │Gateway │ │ Events │ │Streams │ │        │ │        │ │ Events │ │
+│  └───┬────┘ └───┬────┘ └───┬────┘ └───┬────┘ └───┬────┘ └───┬────┘ │
+│      └──────────┴──────────┴──────────┴──────────┴──────────┘       │
+│                                  │                                    │
+│                    ┌─────────────▼─────────────┐                     │
+│                    │      Lambda Function        │                     │
+│                    │                             │                     │
+│                    │  Runtime: Node.js, Python,  │                     │
+│                    │  Java, Go, Ruby, .NET,      │                     │
+│                    │  Custom Runtime             │                     │
+│                    │                             │                     │
+│                    │  Execution Role (IAM)        │                     │
+│                    │  Environment Variables       │                     │
+│                    │  Layers                      │                     │
+│                    └─────────────┬───────────────┘                     │
+│                                  │                                    │
+│        ┌────────────────┬────────┴──────────┬────────────────┐       │
+│        ▼                ▼                   ▼                ▼       │
+│   DynamoDB           S3              CloudWatch Logs     Other APIs  │
+└──────────────────────────────────────────────────────────────────────┘
+```
+
+##### Lambda Configuration Limits
+
+| Setting | Value |
+|---|---|
+| **Timeout** | 1 sec – **15 minutes** (max) |
+| **Memory** | 128 MB – **10,240 MB** (10 GB) |
+| **vCPU** | Proportional to memory (1 vCPU at 1,769 MB) |
+| **Ephemeral Storage (/tmp)** | 512 MB default – **10,240 MB** (10 GB) |
+| **Deployment Package** | 50 MB (zip, direct); 250 MB (unzipped); **10 GB (container image)** |
+| **Concurrent Executions** | 1,000 (default, soft limit per region) |
+| **Environment Variables** | 4 KB total |
+| **Layers** | Up to 5 layers; 250 MB total unzipped |
+
+##### Invocation Types
+
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│                   Lambda Invocation Types                             │
+│                                                                       │
+│  ┌──────────────────┐  ┌──────────────────┐  ┌──────────────────┐   │
+│  │  Synchronous     │  │  Asynchronous    │  │  Event Source    │   │
+│  │                  │  │                  │  │  Mapping (Poll)  │   │
+│  │  Caller waits    │  │  Fire and forget │  │                  │   │
+│  │  for response    │  │  Lambda retries  │  │  Lambda polls    │   │
+│  │                  │  │  2x on failure   │  │  the source      │   │
+│  │  API Gateway     │  │                  │  │                  │   │
+│  │  ALB             │  │  S3 Events       │  │  SQS             │   │
+│  │  CLI/SDK direct  │  │  SNS             │  │  DynamoDB Streams│   │
+│  │  Cognito         │  │  CloudWatch Logs │  │  Kinesis         │   │
+│  │                  │  │  EventBridge     │  │  MSK / MQ        │   │
+│  │  On error:       │  │                  │  │                  │   │
+│  │  Returns error   │  │  On error: DLQ   │  │  On error: bisect│   │
+│  │  to caller       │  │  or EventBridge  │  │  batch, DLQ      │   │
+│  └──────────────────┘  └──────────────────┘  └──────────────────┘   │
+└──────────────────────────────────────────────────────────────────────┘
+```
+
+##### Lambda Concurrency
+
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│                   Lambda Concurrency Model                            │
+│                                                                       │
+│  Account Limit: 1,000 concurrent executions (per region)             │
+│                                                                       │
+│  ┌─────────────────────────────────────────────────────────────┐    │
+│  │                Reserved Concurrency                          │    │
+│  │  ┌──────────────────┐                                        │    │
+│  │  │   Function A     │  Max 300 concurrent ← guaranteed      │    │
+│  │  └──────────────────┘                      & limited        │    │
+│  │  ┌──────────────────┐                                        │    │
+│  │  │   Function B     │  Max 200 concurrent                   │    │
+│  │  └──────────────────┘                                        │    │
+│  │  Remaining 500 → unreserved pool for all other functions    │    │
+│  └─────────────────────────────────────────────────────────────┘    │
+│                                                                       │
+│  ┌─────────────────────────────────────────────────────────────┐    │
+│  │              Provisioned Concurrency                         │    │
+│  │  Pre-initializes execution environments                      │    │
+│  │  Eliminates cold starts → sub-ms latency                    │    │
+│  │  Charged even when idle                                      │    │
+│  └─────────────────────────────────────────────────────────────┘    │
+└──────────────────────────────────────────────────────────────────────┘
+```
+
+| Concurrency Type | Description | Use Case |
+|---|---|---|
+| **Unreserved** | Uses pool shared with all functions | Default |
+| **Reserved** | Guarantees max limit for a function | Throttle noisy functions |
+| **Provisioned** | Pre-warmed environments; no cold start | Latency-sensitive production |
+
+##### Cold Start vs Warm Start
+```
+  Cold Start:
+  Request ──▶ Init Container ──▶ Load Runtime ──▶ Load Function ──▶ Execute
+              (100ms–1s+)
+
+  Warm Start (reuse):
+  Request ──▶ Execute (milliseconds)
+```
+
+**Cold Start Mitigation**:
+- Use **Provisioned Concurrency**
+- Use **smaller deployment packages**
+- Prefer **Python/Node.js** runtimes (faster init than Java/.NET)
+- Use **Lambda SnapStart** (Java) — snapshot initialized state
+
+##### Lambda Networking
+
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│              Lambda Networking Options                                │
+│                                                                       │
+│  Default (No VPC)                    VPC Mode                        │
+│  ──────────────────────────          ──────────────────────────      │
+│  ┌────────────────────────┐          ┌────────────────────────┐     │
+│  │  Lambda                │          │  Lambda                │     │
+│  │  (AWS-managed network) │          │  (in your VPC subnet)  │     │
+│  │                        │          │                        │     │
+│  │  ✅ Internet access     │          │  ✅ Private resources  │     │
+│  │  ✅ AWS service APIs    │          │    (RDS, ElastiCache)  │     │
+│  │  ❌ VPC resources       │          │  ❌ No internet by     │     │
+│  │    (RDS, private EC2)  │          │     default (need NAT) │     │
+│  └────────────────────────┘          └────────────────────────┘     │
+└──────────────────────────────────────────────────────────────────────┘
+```
+
+- **VPC Lambda needs NAT Gateway** to access the internet
+- Lambda in VPC uses **Hyperplane ENI** (shared ENIs — no longer creates per-function ENI)
+- Still needs **security group** and **subnet** configuration
+
+##### Lambda Triggers — Common Patterns
+
+###### S3 → Lambda
+- Object created/deleted → trigger Lambda for image processing, ETL
+
+###### API Gateway → Lambda
+- Serverless REST API — most common Lambda use case
+
+###### SQS → Lambda (Event Source Mapping)
+- Lambda polls SQS; processes messages in batches
+- On failure: messages return to queue or go to **DLQ**
+- **`FunctionResponseTypes: ReportBatchItemFailures`** — partial batch success
+
+###### DynamoDB Streams → Lambda
+- Process change records (INSERT, MODIFY, REMOVE)
+- Use for: replicate data, trigger notifications, audit log
+
+###### EventBridge (Scheduled)
+- **Cron or rate expressions** — Lambda as a scheduled task (replacement for cron jobs)
+
+##### Lambda Layers
+- **Share code/dependencies** across multiple functions
+- Up to 5 layers per function; 250 MB unzipped total
+- **Runtime dependencies** (e.g., numpy, pandas), SDKs, configuration files
+- Common use: AWS SDK updates, shared utilities, ML models
+
+##### Lambda Destinations
+- Route function output to another service **based on success or failure**
+- **Async invocations only**
+
+| Outcome | Destination Options |
+|---|---|
+| **On Success** | SQS, SNS, Lambda, EventBridge |
+| **On Failure** | SQS, SNS, Lambda, EventBridge |
+
+> **Destinations vs DLQ**: Destinations send the full event payload + metadata; DLQ (SQS/SNS) only for failures.
+
+##### Lambda@Edge & CloudFront Functions
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│          Lambda@Edge vs CloudFront Functions                          │
+│                                                                       │
+│  Feature           │ CloudFront Functions  │ Lambda@Edge             │
+│  ──────────────────┼───────────────────────┼────────────────────── │
+│  Location          │ 200+ Edge locations   │ Regional edge caches   │
+│  Latency           │ Sub-ms                │ ms                     │
+│  Runtime           │ JS only               │ Node.js, Python        │
+│  Max exec time     │ < 1ms                 │ 5–10 seconds           │
+│  Memory            │ 2 MB                  │ 128 MB – 10 GB         │
+│  Network access    │ ❌                    │ ✅                     │
+│  Triggers          │ Viewer req/resp only  │ All 4 CF events        │
+│  Use case          │ Header manipulation   │ A/B testing, auth,     │
+│                    │ URL rewrites, simple  │ complex redirects      │
+│                    │ redirects             │                        │
+└──────────────────────────────────────────────────────────────────────┘
+```
+
+**Four CloudFront Event Points for Lambda@Edge**:
+1. **Viewer Request** — after CF receives request from viewer
+2. **Origin Request** — before CF forwards to origin
+3. **Origin Response** — after CF receives from origin
+4. **Viewer Response** — before CF forwards to viewer
+
+##### Lambda SnapStart (Java)
+- Eliminates Java cold starts by **snapshotting** initialized execution environment
+- On invoke: restores from snapshot instead of re-initializing
+- **~10x faster** cold start for Java functions
+
+##### Environment Variables & Secrets
+- **Environment variables**: plaintext or encrypted with KMS
+- Reference **Secrets Manager / Parameter Store** at runtime (don't bake secrets into code)
+- Max 4 KB total for all environment variables
+
+##### Lambda Power Tuning
+- **Memory ↑ → CPU ↑ → faster execution → may cost less** (fewer ms billed)
+- Use **AWS Lambda Power Tuning** (open-source Step Functions state machine) to find optimal memory
+- Billed per **GB-second**: (memory in GB) × (duration in seconds)
+
+##### Exam Key Points 
+- **Max timeout = 15 minutes** — for longer jobs use Fargate, Batch, or EC2
+- **Max memory = 10 GB** — CPU scales proportionally
+- **Ephemeral storage (/tmp)** = up to 10 GB — shared across same execution context within warm invocations
+- **Cold starts** — use Provisioned Concurrency for latency-sensitive apps
+- **Lambda in VPC** → needs NAT Gateway for internet; adds some latency
+- **Reserved concurrency = throttle** — caps max concurrent for function (protects downstream)
+- **Provisioned concurrency = pre-warm** — eliminates cold starts (costs money)
+- **Async failures** → DLQ or Destinations (On Failure)
+- **SQS + Lambda**: Lambda polls; batch size configurable; partial batch failure supported
+- **Lambda Layers**: share code/libraries; max 5 per function
+- **Lambda@Edge**: run at CloudFront edge; max 5–10 sec; supports all 4 CF event types
+- **CloudFront Functions**: ultra-fast, sub-ms; viewer req/resp only; JS only
+- **SnapStart**: Java cold start reduction via snapshotting
+- **Execution Role** = what Lambda can do; **Resource Policy** = who can invoke Lambda
+
+---
+
+#### Quick Comparison: Serverless Services
+
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│                    Serverless Decision Tree                           │
+│                                                                       │
+│  What are you building?                                               │
+│                                                                       │
+│  GraphQL API + Real-time?  ──────────────────────▶  AWS AppSync      │
+│                                                                       │
+│  REST/HTTP API + Functions?  ────────────────────▶  API Gateway      │
+│                                                       + Lambda       │
+│                                                                       │
+│  Event-driven functions (< 15 min)?  ────────────▶  AWS Lambda      │
+│                                                                       │
+│  Containerized workload, no server mgmt?  ───────▶  AWS Fargate     │
+│                                                                       │
+│  Long-running container (> 15 min)?  ────────────▶  Fargate         │
+│                                                       (ECS/EKS)     │
+│                                                                       │
+│  Batch/HPC jobs?  ───────────────────────────────▶  AWS Batch       │
+│                                                       (on Fargate)  │
+└──────────────────────────────────────────────────────────────────────┘
+```
+
+| Dimension | Lambda | Fargate | AppSync |
+|---|---|---|---|
+| **Compute model** | Function | Container | Managed API |
+| **Max runtime** | 15 min | No limit | N/A |
+| **Scaling** | Automatic (per request) | Task-level | Automatic |
+| **State** | Stateless | Stateless | Stateless |
+| **Packaging** | Zip / Container image | Docker image | GraphQL schema |
+| **Trigger** | Events | Service/task | GraphQL operations |
+| **Persistent storage** | EFS / S3 | EFS / S3 | Data sources |
+| **Cost model** | Per GB-second | Per vCPU-second + GB-second | Per request + connection |
+
+
+#### Common Exam Traps - Serverless Services Study Guide
+
+1. **Lambda max timeout is 15 minutes** — anything longer needs Fargate, Batch, or EC2
+2. **Lambda in VPC does NOT get internet access by default** — must add NAT Gateway in a public subnet
+3. **Reserved Concurrency ≠ Provisioned Concurrency** — Reserved = cap/throttle; Provisioned = pre-warm to eliminate cold starts
+4. **Cold starts affect Java/.NET more** than Python/Node.js — Provisioned Concurrency or SnapStart for Java
+5. **Lambda memory scales CPU** — more memory = more CPU; sometimes cheaper to use more memory (fewer billed ms)
+6. **Fargate tasks cannot mount EBS** — use EFS for shared persistent storage; ephemeral storage is lost on stop
+7. **Fargate = awsvpc only** — each task gets its own ENI and private IP; security groups at task level
+8. **Task Role vs Task Execution Role** — Task Role = what the container does; Execution Role = what ECS/Fargate does (pull images, write logs)
+9. **Lambda Destinations vs DLQ** — Destinations support both success and failure, carry full payload; DLQ is failure-only (legacy)
+10. **AppSync = GraphQL, NOT REST** — API Gateway handles REST; AppSync handles GraphQL with real-time subscriptions
+11. **Lambda@Edge timeout = 5–10 seconds** — much shorter than regular Lambda; CloudFront Functions = <1ms
+12. **ACM certificate for Lambda@Edge must be in us-east-1** — same rule as CloudFront
+13. **SQS + Lambda** = Lambda polls SQS (not the other way around) — this is event source mapping
+14. **Fargate Spot** can be interrupted — do not use for stateful or critical tasks
+15. **Lambda ephemeral /tmp storage** is shared across warm invocations within same execution context — do not store sensitive data without cleanup
+
+
+
+---
+
 ### Storage Services
 
 #### AWS Backup
