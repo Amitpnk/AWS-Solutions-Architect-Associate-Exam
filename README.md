@@ -68,17 +68,17 @@ These domains represent the core competencies required for designing solutions o
 
 ### Analytics
 
-* Amazon Athena
-* AWS Data Exchange
-* Amazon Data Firehose
-* Amazon EMR
-* AWS Glue
-* Amazon Kinesis
-* AWS Lake Formation
-* Amazon Managed Streaming for Apache Kafka (Amazon MSK)
-* Amazon OpenSearch Service
-* Amazon QuickSuite
-* Amazon Redshift
+* [Amazon Athena](#amazon-athena)
+* [AWS Data Exchange](#aws-data-exchange)
+* [Amazon Data Firehose](#amazon-data-firehose-formerly-kinesis-data-firehose)
+* [Amazon EMR](#amazon-emr-elastic-mapreduce)
+* [AWS Glue](#aws-glue)
+* [Amazon Kinesis](#amazon-kinesis)
+* [AWS Lake Formation](#aws-lake-formation)
+* [Amazon Managed Streaming for Apache Kafka (Amazon MSK)]
+* [Amazon OpenSearch Service](#amazon-opensearch-service)
+* [Amazon QuickSuite](#amazon-quicksight)
+* [Amazon Redshift](#amazon-redshift)
 
 ### Application Integration
 
@@ -305,19 +305,922 @@ AWS X-Ray
 
 
 
-### IAM
+---
 
-xxx
+### Analytics
 
-### AWS CLI
+#### Amazon Athena
 
-xxx
+##### What It Is
+A **serverless, interactive query service** that lets you analyze data directly in **Amazon S3** using standard SQL — no infrastructure to manage, no data loading required.
 
-### AWS Budgets
+##### Architecture
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│                        Amazon Athena                                  │
+│                                                                       │
+│  Data Sources                                                         │
+│  ┌────────────┐  ┌────────────┐  ┌────────────┐  ┌───────────────┐  │
+│  │  S3        │  │  Glue Data │  │  Federated │  │  CloudWatch   │  │
+│  │  (CSV,JSON │  │  Catalog   │  │  Query     │  │  Logs / Lake  │  │
+│  │  Parquet,  │  │  (schema   │  │  (RDS,DDB, │  │  Formation    │  │
+│  │  ORC, Avro)│  │  metadata) │  │   Redis…)  │  │               │  │
+│  └────────┬───┘  └─────┬──────┘  └─────┬──────┘  └───────┬───────┘  │
+│           └────────────┴────────────────┴──────────────────┘         │
+│                                   │                                   │
+│                    ┌──────────────▼─────────────┐                    │
+│                    │       Amazon Athena          │                   │
+│                    │   (Presto / Trino engine)   │                   │
+│                    │     Standard SQL queries     │                   │
+│                    └──────────────┬──────────────┘                   │
+│                                   │                                   │
+│              ┌────────────────────┼────────────────────┐             │
+│              ▼                    ▼                    ▼             │
+│          S3 Results           QuickSight            Jupyter          │
+│          (query output)       (visualize)           Notebooks        │
+└──────────────────────────────────────────────────────────────────────┘
+```
+
+##### Supported Formats & Performance
+| Format | Compression | Performance |
+|---|---|---|
+| **Parquet** (recommended) | Snappy, GZIP | Best — columnar, predicate pushdown |
+| **ORC** (recommended) | Snappy, ZLIB | Best — columnar, splittable |
+| **JSON** | GZIP, Snappy | Good |
+| **CSV / TSV** | GZIP | Poor — row-based, not splittable when compressed |
+| **Avro** | Snappy, Deflate | Good — row-based, good for streaming |
+
+### Athena Pricing Model
+- **Pay per query**: $5 per TB of data scanned
+- Reduce costs by:
+  - Using **columnar formats** (Parquet/ORC) — scan only needed columns
+  - **Partitioning** data (e.g., `s3://bucket/year=2024/month=01/`) — skip irrelevant partitions
+  - **Compression** — reduce bytes scanned
+  - **Bucketing** — organize data within partitions
+
+##### Key Features
+| Feature | Description |
+|---|---|
+| **Federated Query** | Query data in RDS, DynamoDB, Redshift, on-prem via Lambda connectors |
+| **Workgroups** | Isolate queries per team/project; set data scan limits, cost controls |
+| **Saved Queries** | Store and share frequently used SQL |
+| **Prepared Statements** | Parameterized queries for repeated execution |
+| **ACID Transactions** | Via Apache Iceberg, Hudi, Delta Lake table formats |
+| **Lake Formation Integration** | Fine-grained column/row-level access control on S3 data |
+
+##### Athena for Use Cases
+| Use Case | Details |
+|---|---|
+| **Ad-hoc querying** | Query S3 logs, CloudTrail, ALB access logs, VPC Flow Logs |
+| **ETL replacement** | Transform and query without loading into DB |
+| **Data lake analytics** | Query structured/semi-structured data at scale |
+| **Business intelligence** | Connect QuickSight → Athena → S3 |
+
+##### Exam Key Points
+- **Serverless** — no clusters, no setup; pay per query (per TB scanned)
+- **Always use Parquet/ORC + partitioning** to minimize cost and maximize speed
+- **Glue Data Catalog** = metadata store for Athena tables (schema on read)
+- **Federated Query** extends Athena beyond S3 to other data sources via Lambda
+- **Athena does not store data** — queries S3 directly; results stored in S3 output bucket
+- Query **CloudTrail logs, ELB logs, VPC Flow Logs** in S3 — very common exam scenario
+- **Use when**: serverless SQL on S3 without moving data, log analysis, ad-hoc analytics
+
+#### AWS Data Exchange
+
+##### What It Is
+A service that makes it easy to **find, subscribe to, and use third-party data** in the cloud — without building or maintaining data pipelines.
+
+##### Architecture
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│                      AWS Data Exchange                                │
+│                                                                       │
+│  Data Providers                         Data Consumers (You)          │
+│  (Reuters, S&P, IMDb,                   ┌──────────────────────────┐ │
+│   healthcare firms, etc.)               │  Subscribe to dataset    │ │
+│  ┌────────────────────┐                 │                          │ │
+│  │  Publish dataset   │──── Subscribe ─▶│  Auto-export to S3       │ │
+│  │  (files, APIs,     │                 │                          │ │
+│  │   Redshift tables) │                 │  Use with Athena,        │ │
+│  └────────────────────┘                 │  Redshift, EMR, etc.     │ │
+│                                         └──────────────────────────┘ │
+│  Data Types: S3 files, APIs, Redshift tables, Lake Formation         │
+└──────────────────────────────────────────────────────────────────────┘
+```
+
+##### Exam Key Points
+- **Not heavily tested** on SAA-C03 — understand the concept
+- Enables **data monetization** (providers) and **data enrichment** (consumers)
+- Data automatically delivered to **S3** after subscription
+- Common use: financial data (S&P), weather data, demographic data for ML
+- **Use when**: enriching internal data with third-party licensed datasets
+
+
+#### Amazon Data Firehose (formerly Kinesis Data Firehose)
+
+##### What It Is
+A **fully managed delivery service** for real-time streaming data to destinations like S3, Redshift, OpenSearch, and third-party services — with optional transformation.
+
+##### Architecture
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│                    Amazon Data Firehose                               │
+│                                                                       │
+│  Sources                                                              │
+│  ┌────────────┐  ┌────────────┐  ┌────────────┐  ┌───────────────┐  │
+│  │  Kinesis   │  │  CloudWatch│  │  MSK       │  │  Direct PUT   │  │
+│  │  Data      │  │  Logs      │  │ (Kafka)    │  │  (SDK/Agent)  │  │
+│  │  Streams   │  │            │  │            │  │               │  │
+│  └──────┬─────┘  └──────┬─────┘  └──────┬─────┘  └──────┬────────┘  │
+│         └───────────────┴───────────────┴────────────────┘           │
+│                                  │                                    │
+│             ┌────────────────────▼────────────────────┐              │
+│             │             Firehose Delivery Stream      │              │
+│             │                                          │              │
+│             │  ┌───────────────────────────────────┐  │              │
+│             │  │  Optional: Lambda Transformation  │  │              │
+│             │  │  (format convert, enrich, filter) │  │              │
+│             │  └───────────────────────────────────┘  │              │
+│             │                                          │              │
+│             │  Buffer: size (1–128 MB) + time (60–900s)│              │
+│             └──────────────────┬───────────────────────┘              │
+│                                │                                      │
+│    ┌───────────────────────────┼────────────────────────────┐        │
+│    ▼                           ▼                            ▼        │
+│  Amazon S3              OpenSearch              Amazon Redshift      │
+│                                                                       │
+│    ▼                           ▼                                     │
+│  Splunk                   HTTP Endpoint                              │
+│  Datadog                  (3rd party)                                │
+└──────────────────────────────────────────────────────────────────────┘
+```
+
+##### Key Concepts
+| Feature | Detail |
+|---|---|
+| **Near real-time** | 60-second minimum latency (buffering) — NOT real-time |
+| **Buffer** | Flush when size (MB) OR time (seconds) threshold hit — whichever first |
+| **Lambda Transform** | Invoke Lambda to transform/enrich records before delivery |
+| **Format Conversion** | Auto-convert JSON → Parquet/ORC (no Lambda needed) |
+| **Compression** | GZIP, Snappy, ZIP for S3 destination |
+| **Backup** | Send all or failed records to S3 backup bucket |
+| **No consumers** | Unlike Kinesis Data Streams — you don't write consumers; Firehose delivers automatically |
+
+##### Firehose Destinations
+| Destination | Notes |
+|---|---|
+| **Amazon S3** | Primary landing zone; supports partitioning by date |
+| **Amazon Redshift** | Copies via S3 intermediate step (COPY command) |
+| **Amazon OpenSearch** | Real-time search/analytics indexing |
+| **Splunk** | Security and log analytics |
+| **HTTP Endpoint** | Any custom HTTP destination (Datadog, New Relic, MongoDB) |
+| **3rd Party** | Coralogix, Dynatrace, LogicMonitor |
+
+##### Exam Key Points
+- **Firehose is NOT real-time** — minimum 60s buffer (near real-time)
+- **No data storage** in Firehose itself — streams through to destination
+- **No consumers to write** — unlike Kinesis Data Streams
+- **Lambda Transform** = custom processing before delivery (filter, enrich, reformat)
+- **Format Conversion** (JSON → Parquet/ORC) is built-in — no Lambda needed
+- **Redshift destination** uses S3 as intermediate → issues COPY command to Redshift
+- **Use when**: streaming logs/events to S3 data lake, real-time indexing into OpenSearch
+
+
+#### Amazon EMR (Elastic MapReduce)
+
+##### What It Is
+A **managed big data platform** for running large-scale distributed data processing frameworks — Hadoop, Spark, Hive, Presto, HBase, Flink — on a resizable cluster of EC2 instances.
+
+##### Architecture
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│                        Amazon EMR Cluster                             │
+│                                                                       │
+│  ┌────────────────────────────────────────────────────────────────┐  │
+│  │                      EMR Cluster                               │  │
+│  │                                                                │  │
+│  │  ┌──────────────────┐   ┌──────────────────┐                  │  │
+│  │  │   Primary Node   │   │  Core Nodes       │                  │  │
+│  │  │  (Master)        │   │  (HDFS + compute) │                  │  │
+│  │  │  - Coordinates   │   │  ┌────┐ ┌────┐   │                  │  │
+│  │  │  - YARN RM       │   │  │EC2 │ │EC2 │   │                  │  │
+│  │  │  - HDFS NN       │   │  └────┘ └────┘   │                  │  │
+│  │  └──────────────────┘   └──────────────────┘                  │  │
+│  │                                                                │  │
+│  │  ┌──────────────────────────────────────────────────────────┐ │  │
+│  │  │  Task Nodes (optional — compute only, no HDFS, SPOT OK)  │ │  │
+│  │  │  ┌────┐ ┌────┐ ┌────┐ ┌────┐                            │ │  │
+│  │  │  │EC2 │ │EC2 │ │EC2 │ │EC2 │  (Spot Instances)          │ │  │
+│  │  │  └────┘ └────┘ └────┘ └────┘                            │ │  │
+│  │  └──────────────────────────────────────────────────────────┘ │  │
+│  └────────────────────────────────────────────────────────────────┘  │
+│                           │                                           │
+│  ┌────────────────────────┼────────────────────────────────────┐    │
+│  ▼                        ▼                                    ▼    │
+│ Amazon S3 (EMRFS)      DynamoDB                            HDFS     │
+│ (recommended storage)                                               │
+└──────────────────────────────────────────────────────────────────────┘
+```
+
+##### Node Types
+| Node Type | Role | HDFS | Spot Safe? |
+|---|---|---|---|
+| **Primary (Master)** | Orchestrate cluster, run resource manager | Yes (NN) | ❌ No |
+| **Core** | Run tasks + store HDFS data | Yes (DN) | ⚠️ Risk of data loss |
+| **Task** | Run tasks only — no HDFS | No | ✅ Yes (safe) |
+
+##### EMR Deployment Options
+| Option | Description |
+|---|---|
+| **EMR on EC2** | Traditional; full control over cluster |
+| **EMR on EKS** | Run Spark jobs on EKS cluster (shared infrastructure) |
+| **EMR Serverless** | No cluster management; auto-scales workers; pay per use |
+
+##### Storage Options
+| Storage | Description |
+|---|---|
+| **EMRFS (S3)** | Recommended — decouple storage from compute; no data loss on cluster termination |
+| **HDFS** | Ephemeral local storage — lost when cluster terminates |
+| **Local FS** | Instance store — ephemeral |
+| **EBS** | Persistent block storage for HDFS |
+
+##### EMR Cluster Types
+| Type | Description |
+|---|---|
+| **Long-running** | Persistent cluster; interactive queries (Hive, Spark SQL) |
+| **Transient (Spot)** | Spin up → process → terminate; cost-optimized batch |
+
+##### Cost Optimization
+- **Task Nodes on Spot** — safe because no HDFS; big savings
+- **Spot for Core Nodes** — risky (data loss on interruption) but possible with EMRFS
+- **Auto Scaling** — scale core/task nodes based on YARN metrics
+- **Graviton instances** — lower cost for Spark workloads
+
+##### Exam Key Points
+- **Use S3 (EMRFS) as primary storage** — decouples storage from compute; data persists after cluster terminates
+- **Task nodes are Spot-safe** — no HDFS, just compute
+- **EMR Serverless** = no cluster management (newest option)
+- Supports **Apache Spark, Hadoop, Hive, Presto, HBase, Flink, Pig**
+- **EMR Studio** — managed Jupyter environment for EMR
+- **Use when**: large-scale ETL, ML training, log processing, clickstream analysis, genomics
+
+
+#### AWS Glue
+
+##### What It Is
+A **fully managed serverless ETL (Extract, Transform, Load)** service — discovers, catalogs, cleans, transforms, and moves data between data stores.
+
+##### Architecture
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│                          AWS Glue                                     │
+│                                                                       │
+│  ┌─────────────────────────────────────────────────────────────┐    │
+│  │                   Glue Data Catalog                          │    │
+│  │  (Central metadata repository — databases, tables, schemas) │    │
+│  │  Used by: Athena, Redshift Spectrum, EMR, Lake Formation    │    │
+│  └─────────────────────────────────────────────────────────────┘    │
+│                                                                       │
+│  ┌──────────────────┐    ┌────────────────┐    ┌──────────────────┐ │
+│  │  Glue Crawlers   │    │  Glue Jobs     │    │  Glue Workflows  │ │
+│  │                  │    │                │    │                  │ │
+│  │  Scan data in S3,│    │  Python/Scala  │    │  Orchestrate     │ │
+│  │  RDS, DynamoDB,  │    │  Spark scripts │    │  multi-job ETL   │ │
+│  │  Redshift        │    │  (serverless   │    │  pipelines       │ │
+│  │                  │    │   Spark)       │    │                  │ │
+│  │  Auto-detect     │    │                │    │  Triggers:       │ │
+│  │  schema and      │    │  PySpark or    │    │  schedule,       │ │
+│  │  populate        │    │  Spark SQL     │    │  on-demand,      │ │
+│  │  Data Catalog    │    │                │    │  event-based     │ │
+│  └──────────────────┘    └────────────────┘    └──────────────────┘ │
+│                                                                       │
+│  ┌──────────────────┐    ┌────────────────┐    ┌──────────────────┐ │
+│  │  Glue DataBrew   │    │  Glue Elastic  │    │  Glue Studio     │ │
+│  │  (visual data    │    │  Views         │    │  (visual ETL     │ │
+│  │   prep, no code) │    │  (virtual table│    │   designer)      │ │
+│  │                  │    │   across DBs)  │    │                  │ │
+│  └──────────────────┘    └────────────────┘    └──────────────────┘ │
+└──────────────────────────────────────────────────────────────────────┘
+```
+
+##### Glue Data Catalog
+- Central **metadata store** for all your data assets
+- Stores: database names, table definitions, column names, data types, partition info
+- Used by: **Athena, Redshift Spectrum, EMR, Lake Formation**
+- Each account has **one Glue Data Catalog per region**
+
+##### Glue Crawlers
+- Automatically scan data sources → infer schema → update Data Catalog
+- Scheduled or on-demand
+- Supports: S3, RDS, DynamoDB, Redshift, JDBC sources
+
+##### Glue Jobs
+| Type | Description |
+|---|---|
+| **Spark ETL** | Distributed PySpark or Scala Spark on serverless cluster |
+| **Streaming ETL** | Micro-batch processing from Kinesis or Kafka |
+| **Python Shell** | Single-node Python for lightweight tasks |
+| **Ray** | Distributed Python for ML workloads |
+
+##### Glue Features
+| Feature | Description |
+|---|---|
+| **DynamicFrame** | Glue-specific DataFrame — handles schema inconsistencies |
+| **Job Bookmarks** | Track processed data — resume from where job left off (avoid reprocessing) |
+| **FindMatches** | ML-based deduplication / record matching |
+| **Glue DataBrew** | Visual data cleaning without code (no-code ETL) |
+| **Glue Studio** | Drag-and-drop ETL job builder |
+| **Connection** | Reusable connection config for JDBC, S3, Kafka, etc. |
+
+##### Exam Key Points
+- **Glue Data Catalog** = metadata layer for Athena, EMR, Redshift Spectrum — they all share it
+- **Glue Crawlers** = auto-discover schema; populate catalog
+- **Job Bookmarks** = prevent reprocessing of already-processed data
+- **Glue is serverless** — no cluster to manage; billed per DPU-hour
+- **Glue vs EMR**: Glue = managed serverless ETL; EMR = full control big data cluster
+- **Glue DataBrew** = no-code data prep (for analysts, not engineers)
+- **Use when**: building data lakes, ETL pipelines, schema discovery, S3 → Redshift pipelines
+
+#### Amazon Kinesis
+
+##### What It Is
+A platform for **real-time streaming data** on AWS — collect, process, and analyze data streams at any scale. Three distinct services under the Kinesis umbrella.
+
+##### Kinesis Family Overview
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│                      Amazon Kinesis Family                            │
+│                                                                       │
+│  ┌──────────────────────┐   ┌──────────────────────────────────────┐ │
+│  │  Kinesis Data        │   │  Amazon Data Firehose                │ │
+│  │  Streams (KDS)       │   │  (formerly Kinesis Data Firehose)   │ │
+│  │                      │   │                                      │ │
+│  │  Real-time           │   │  Near real-time (60s+ buffer)        │ │
+│  │  Custom consumers    │   │  No consumers needed                 │ │
+│  │  1–365 day retention │   │  Delivery to S3/Redshift/OS/etc.    │ │
+│  │  Replay capability   │   │  Optional Lambda transform           │ │
+│  │  Manual scaling      │   │  Fully managed delivery              │ │
+│  └──────────────────────┘   └──────────────────────────────────────┘ │
+│                                                                       │
+│  ┌──────────────────────────────────────────────────────────────────┐ │
+│  │  Kinesis Video Streams                                           │ │
+│  │  Ingest, store, process video streams from connected devices     │ │
+│  │  (cameras, CCTV, IoT)                                           │ │
+│  └──────────────────────────────────────────────────────────────────┘ │
+└──────────────────────────────────────────────────────────────────────┘
+```
+
+##### Kinesis Data Streams (KDS) — Deep Dive
+
+###### Shards — The Core Unit
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│                  Kinesis Data Stream (4 Shards)                       │
+│                                                                       │
+│  Producers                                                            │
+│  (apps, IoT, logs)                                                   │
+│       │                                                               │
+│       ▼  Partition Key determines shard                               │
+│  ┌─────────┐  ┌─────────┐  ┌─────────┐  ┌─────────┐                │
+│  │ Shard 1 │  │ Shard 2 │  │ Shard 3 │  │ Shard 4 │                │
+│  │         │  │         │  │         │  │         │                │
+│  │ 1 MB/s  │  │ 1 MB/s  │  │ 1 MB/s  │  │ 1 MB/s  │  Write        │
+│  │ in      │  │ in      │  │ in      │  │ in      │                │
+│  │         │  │         │  │         │  │         │                │
+│  │ 2 MB/s  │  │ 2 MB/s  │  │ 2 MB/s  │  │ 2 MB/s  │  Read         │
+│  │ out     │  │ out     │  │ out     │  │ out     │                │
+│  └─────────┘  └─────────┘  └─────────┘  └─────────┘                │
+│       │              │              │              │                  │
+│       └──────────────┴──────────────┴──────────────┘                 │
+│                              │                                        │
+│  Consumers (Enhanced Fan-Out or standard)                             │
+│  Lambda, KDA, KDF, EC2, EMR                                          │
+└──────────────────────────────────────────────────────────────────────┘
+```
+
+###### Shard Capacity
+| Direction | Per Shard | Total (N shards) |
+|---|---|---|
+| **Write (Ingest)** | 1 MB/s or 1,000 records/s | N × 1 MB/s |
+| **Read (Standard)** | 2 MB/s shared across consumers | N × 2 MB/s |
+| **Read (Enhanced Fan-Out)** | 2 MB/s per consumer per shard | N × 2 MB/s × C consumers |
+
+###### Consumer Types
+| Type | Latency | Cost | Pull/Push |
+|---|---|---|---|
+| **Standard (GetRecords)** | ~200ms | Included | Pull (polling) |
+| **Enhanced Fan-Out** | ~70ms | Extra cost | Push (HTTP/2) |
+
+###### Key KDS Concepts
+| Concept | Description |
+|---|---|
+| **Partition Key** | Routes records to shards (consistent hashing) |
+| **Sequence Number** | Unique ID per record within a shard |
+| **Retention** | 24 hours (default) up to 365 days |
+| **Replay** | Re-read historical data from stream |
+| **Resharding** | Split shards (scale up) or merge shards (scale down) |
+| **On-Demand Mode** | Auto-scale shards; pay per GB; simpler management |
+| **Provisioned Mode** | Manual shard count; predictable cost |
+
+###### KDS Producers & Consumers
+- **Producers**: Kinesis Producer Library (KPL), AWS SDK, Kinesis Agent
+- **Consumers**: Kinesis Client Library (KCL), Lambda, Kinesis Data Analytics, Firehose, EMR
+
+##### Kinesis Data Analytics (Amazon Managed Service for Apache Flink)
+- **Real-time SQL or Flink** processing on streaming data from KDS or MSK
+- Output to KDS, Firehose, Lambda
+- **Use when**: real-time dashboards, anomaly detection, metric generation from streams
+
+##### Exam Key Points
+- **KDS = real-time, KDF = near real-time (≥60s)** — critical distinction
+- **Shard = 1 MB/s in, 2 MB/s out** — memorize for capacity planning
+- **Hot shard** = too many records with same partition key → use high-cardinality partition keys
+- **Enhanced Fan-Out** = dedicated 2 MB/s per consumer per shard (low latency)
+- **Retention**: default 24h, max 365 days — only KDS supports replay
+- **KDS vs SQS**: KDS = ordered per shard, replay, real-time streaming; SQS = distributed queue, auto-scale, at-least-once
+- **On-Demand mode** = automatic scaling (shards auto-adjust); **Provisioned** = manual shard management
+- **Use when**: real-time analytics, log ingestion, clickstream, IoT telemetry, event sourcing
+
+
+#### AWS Lake Formation
+
+##### What It Is
+A **managed service to build, secure, and manage data lakes** — simplifies ingestion, cataloging, cleaning, and access control for data stored in S3.
+
+##### Architecture
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│                       AWS Lake Formation                              │
+│                                                                       │
+│  Data Sources                                                         │
+│  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────────────┐    │
+│  │  S3      │  │  RDS     │  │  DynamoDB│  │  On-Premises DB  │    │
+│  └────┬─────┘  └────┬─────┘  └────┬─────┘  └────────┬─────────┘    │
+│       └─────────────┴─────────────┴─────────────────┘               │
+│                               │  Ingest (Blueprints)                 │
+│                               ▼                                       │
+│  ┌──────────────────────────────────────────────────────────────┐   │
+│  │                   Data Lake (S3)                              │   │
+│  │                                                               │   │
+│  │   ┌─────────────────────────────────────────────────────┐   │   │
+│  │   │         Glue Data Catalog (Metadata)                │   │   │
+│  │   └─────────────────────────────────────────────────────┘   │   │
+│  │                                                               │   │
+│  │   Lake Formation Permissions (column, row, cell level)       │   │
+│  └───────────────────────────────────┬───────────────────────────┘   │
+│                                       │                               │
+│         ┌─────────────────────────────┼──────────────────────┐       │
+│         ▼                             ▼                       ▼       │
+│     Amazon Athena              Amazon Redshift             Amazon EMR │
+│     (SQL queries)              (Spectrum)                 (big data)  │
+└──────────────────────────────────────────────────────────────────────┘
+```
+
+##### Key Features
+| Feature | Description |
+|---|---|
+| **Blueprints** | Pre-built workflows to ingest data from common sources |
+| **Governed Tables** | ACID transactions on S3 data lake (row-level locking) |
+| **Fine-grained Access Control** | Column-level, row-level, cell-level permissions |
+| **Data Filters** | Row/column filtering based on identity |
+| **Cross-account sharing** | Share cataloged data with other AWS accounts |
+| **LF-Tags** | Attribute-based access control for large catalog management |
+
+##### Lake Formation vs S3 + Glue
+| Aspect | S3 + Glue (manually) | Lake Formation |
+|---|---|---|
+| **Access control** | S3 bucket policies | Fine-grained column/row level |
+| **Data ingestion** | Custom ETL | Blueprints |
+| **Governance** | Manual | Centralized |
+| **Setup complexity** | High | Lower (managed) |
+
+##### Exam Key Points
+- **Lake Formation = governance layer on top of Glue Data Catalog + S3**
+- **Column-level and row-level security** — Athena and Redshift Spectrum respect LF permissions
+- **Governed Tables** = ACID transactions in data lake (INSERT, UPDATE, DELETE on S3)
+- **Blueprints** = pre-built templates to import data (incremental, full load)
+- Works with existing **Glue Data Catalog** — extends it with fine-grained permissions
+- **Use when**: building a governed data lake with fine-grained access control across multiple analytics services
+
+
+#### Amazon MSK (Managed Streaming for Apache Kafka)
+
+##### What It Is
+A **fully managed Apache Kafka service** — create, run, and scale Kafka clusters without managing the underlying infrastructure.
+
+##### Architecture
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│                      Amazon MSK Cluster                               │
+│                                                                       │
+│  Producers                                                            │
+│  (applications, IoT, microservices)                                  │
+│       │                                                               │
+│       ▼  Kafka Protocol                                               │
+│  ┌────────────────────────────────────────────────────────────────┐  │
+│  │  MSK Cluster (multi-AZ)                                        │  │
+│  │                                                                │  │
+│  │  ┌───────────┐  ┌───────────┐  ┌───────────┐                  │  │
+│  │  │ Broker 1  │  │ Broker 2  │  │ Broker 3  │                  │  │
+│  │  │ (AZ-1a)   │  │ (AZ-1b)   │  │ (AZ-1c)   │                  │  │
+│  │  │           │  │           │  │           │                  │  │
+│  │  │ Topics +  │  │ Topics +  │  │ Topics +  │                  │  │
+│  │  │ Partitions│  │ Partitions│  │ Partitions│                  │  │
+│  │  └───────────┘  └───────────┘  └───────────┘                  │  │
+│  │                                                                │  │
+│  │  ZooKeeper (managed by AWS) or KRaft mode                     │  │
+│  └────────────────────────────────────────────────────────────────┘  │
+│       │                                                               │
+│       ▼  Kafka Consumer Groups                                        │
+│  Lambda, Flink (KDA), Glue, EC2 consumers, Firehose                  │
+└──────────────────────────────────────────────────────────────────────┘
+```
+
+##### MSK vs Kinesis Data Streams
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│                    MSK vs Kinesis Data Streams                        │
+│                                                                       │
+│  Feature           │  Amazon MSK           │  Kinesis Data Streams  │
+│  ──────────────────┼───────────────────────┼─────────────────────── │
+│  Protocol          │  Apache Kafka native  │  AWS proprietary       │
+│  Message Size      │  Up to 10 MB (config) │  1 MB max              │
+│  Retention         │  Configurable (days-  │  1–365 days            │
+│                    │  unlimited)           │                        │
+│  Partitions        │  Topics + Partitions  │  Shards                │
+│  Throughput unit   │  Partitions           │  Shards (1 MB/s each)  │
+│  Scaling           │  Add brokers/storage  │  Shard split/merge     │
+│  Ordering          │  Per partition        │  Per shard             │
+│  Replay            │  ✅ (configurable TTL)│  ✅ (up to 365 days)   │
+│  Managed level     │  Semi (cluster mgmt)  │  Fully managed         │
+│  Existing Kafka    │  ✅ (drop-in)         │  ❌                    │
+│  Consumer groups   │  ✅ native Kafka      │  KCL / Lambda          │
+│  VPC access        │  VPC only             │  Public + VPC          │
+│  Security          │  TLS, SASL/SCRAM,     │  IAM, KMS              │
+│                    │  mTLS, IAM            │                        │
+└──────────────────────────────────────────────────────────────────────┘
+```
+
+##### MSK Deployment Options
+| Option | Description |
+|---|---|
+| **MSK Provisioned** | You choose broker type, count, storage |
+| **MSK Serverless** | No capacity management; auto-scales; pay per usage |
+
+##### Exam Key Points
+- **MSK = fully managed Kafka** — use when you need Kafka APIs or migrating existing Kafka
+- **MSK Serverless** = no broker management (like KDS on-demand)
+- **Data lives in your VPC** — MSK brokers in your subnets (multi-AZ)
+- **Message size up to 10 MB** (configurable) vs KDS's 1 MB limit
+- **Firehose** can read from MSK → deliver to S3/Redshift/OpenSearch
+- **Lambda** supports MSK as event source (event source mapping)
+- **Use when**: existing Kafka ecosystem, need Kafka-compatible APIs, large message sizes, long retention
+
+
+#### Amazon OpenSearch Service
+
+##### What It Is
+A **managed search and analytics engine** (based on Elasticsearch/OpenSearch) — ingest, search, analyze, and visualize data in near real-time. Formerly called Amazon Elasticsearch Service.
+
+##### Architecture
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│                    Amazon OpenSearch Service                          │
+│                                                                       │
+│  Data Ingest                                                          │
+│  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────────────┐    │
+│  │ Firehose │  │  Lambda  │  │ Logstash │  │  CloudWatch Logs │    │
+│  │          │  │          │  │          │  │  Subscription    │    │
+│  └────┬─────┘  └────┬─────┘  └────┬─────┘  └──────────┬───────┘    │
+│       └─────────────┴─────────────┴────────────────────┘            │
+│                               │                                       │
+│                    ┌──────────▼──────────┐                           │
+│                    │  OpenSearch Domain  │                           │
+│                    │  (cluster of nodes) │                           │
+│                    │                     │                           │
+│                    │  ┌───────────────┐  │                           │
+│                    │  │ Hot tier      │  │                           │
+│                    │  │ (SSD nodes)   │  │                           │
+│                    │  ├───────────────┤  │                           │
+│                    │  │ Warm tier     │  │                           │
+│                    │  │ (slower nodes)│  │                           │
+│                    │  ├───────────────┤  │                           │
+│                    │  │ Cold tier     │  │                           │
+│                    │  │ (S3 backed)   │  │                           │
+│                    │  └───────────────┘  │                           │
+│                    └──────────┬──────────┘                           │
+│                               │                                       │
+│              ┌────────────────┼─────────────────┐                   │
+│              ▼                ▼                 ▼                   │
+│        OpenSearch         OpenSearch       Kibana / OS              │
+│        REST API           Dashboards       Dashboards               │
+└──────────────────────────────────────────────────────────────────────┘
+```
+
+##### Key Features
+| Feature | Description |
+|---|---|
+| **Full-text search** | Inverted index; tokenization; relevance scoring |
+| **Index** | Collection of documents (like a database table) |
+| **Shard** | Horizontal partition of an index |
+| **Replica** | Copy of a shard for HA and read scaling |
+| **OpenSearch Dashboards** | Kibana-compatible visualization layer |
+| **ISM (Index State Management)** | Automate index lifecycle (move, delete, rollover) |
+| **UltraWarm** | S3-backed warm storage — lower cost, query-able |
+| **Cold Storage** | S3 storage for indexes not actively needed |
+| **ML Features** | Anomaly detection, semantic search (kNN) |
+
+##### Common Use Cases
+| Use Case | Description |
+|---|---|
+| **Log analytics** | Ingest logs from Firehose/Lambda → search and visualize |
+| **Full-text search** | E-commerce product search, document search |
+| **Clickstream analytics** | User behavior analysis |
+| **Security analytics** | SIEM use cases, threat hunting |
+| **Observability** | APM, distributed tracing |
+
+##### Access Control
+| Method | Description |
+|---|---|
+| **Resource-based policy** | Who can access the domain endpoint |
+| **Identity-based (IAM)** | IAM policies for API calls |
+| **Fine-grained access control** | Index, document, field-level permissions |
+| **VPC access** | Deploy domain in VPC (cannot be changed after creation) |
+| **Cognito** | Auth for OpenSearch Dashboards (end-user login) |
+
+##### Exam Key Points
+- **Not serverless** — you provision instance types and count (but Serverless option exists)
+- **OpenSearch Serverless** = no cluster management; auto-scales; newer option
+- **Multi-AZ**: deploy with replicas across AZs for HA
+- **Kibana → OpenSearch Dashboards** — same visualization tool, rebranded
+- **Common pattern**: Firehose → OpenSearch (streaming log delivery)
+- **DynamoDB → Lambda → OpenSearch** — index DynamoDB items for search
+- **Cannot use RDS** → OpenSearch directly; always need a transform layer (Lambda)
+- **Use when**: full-text search, log analytics, real-time dashboards, e-commerce search
+
+
+#### Amazon QuickSight
+
+##### What It Is
+A **serverless, cloud-native business intelligence (BI)** service — create and publish interactive dashboards and visualizations from data across AWS and external sources.
+
+##### Architecture
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│                       Amazon QuickSight                               │
+│                                                                       │
+│  Data Sources                                                         │
+│  ┌────────┐ ┌────────┐ ┌────────┐ ┌────────┐ ┌───────────────────┐  │
+│  │Athena  │ │Redshift│ │  RDS   │ │  S3    │ │  Salesforce,      │  │
+│  │        │ │        │ │ Aurora │ │  CSV   │ │  Jira, ServiceNow │  │
+│  └───┬────┘ └───┬────┘ └───┬────┘ └───┬────┘ └─────────┬─────────┘  │
+│      └──────────┴──────────┴──────────┴─────────────────┘            │
+│                              │                                        │
+│             ┌────────────────▼────────────────────┐                  │
+│             │              SPICE                   │                  │
+│             │  (Super-fast, Parallel, In-memory    │                  │
+│             │   Calculation Engine)                │                  │
+│             │  In-memory cache — fast queries      │                  │
+│             │  10 GB per user (Standard)           │                  │
+│             └────────────────┬────────────────────┘                  │
+│                              │                                        │
+│             ┌────────────────▼────────────────────┐                  │
+│             │     QuickSight Dashboards            │                  │
+│             │  Analyses, Visuals, ML Insights      │                  │
+│             │  Embed in apps (QuickSight Embedded) │                  │
+│             └────────────────────────────────────────┘                │
+└──────────────────────────────────────────────────────────────────────┘
+```
+
+##### Key Concepts
+| Concept | Description |
+|---|---|
+| **SPICE** | In-memory engine for fast queries; data imported into SPICE |
+| **Dataset** | Connection to a data source + any transformations |
+| **Analysis** | Workspace for creating visuals |
+| **Dashboard** | Published, read-only view of an analysis |
+| **Sheet** | Collection of visuals within an analysis |
+| **ML Insights** | Auto-detect anomalies, forecasting, narrative summaries |
+
+##### QuickSight Editions
+| Edition | Target | Features |
+|---|---|---|
+| **Standard** | Individuals/small teams | Basic BI, SPICE |
+| **Enterprise** | Organizations | Row-level security, private VPC, AD integration, ML insights |
+| **Enterprise + Q** | Business users | Natural language queries ("What were sales in Q3?") |
+
+##### Row-Level Security (RLS)
+- Restrict which rows a user sees in a dataset
+- Define rules: `username/group → filter condition`
+- Enterprise edition only
+
+##### QuickSight Embedding
+- Embed dashboards in external applications
+- Use **QuickSight Embedded** with per-session pricing
+- **Anonymous embedding** — no QuickSight login required for viewers
+
+##### Exam Key Points
+- **Serverless BI** — no infrastructure to manage; pay per session or per user
+- **SPICE** = in-memory cache — enables fast queries without hitting source every time
+- **ML Insights** = built-in anomaly detection, forecasting, auto-narratives (no ML expertise needed)
+- **Row-level security** — Enterprise edition; restrict data per user/group
+- **QuickSight Q** — natural language interface for business users
+- **Does not replace Athena/Redshift** — QuickSight is the visualization layer on top
+- **Use when**: business dashboards, self-service BI, embedded analytics in apps
+
+
+#### Amazon Redshift
+
+##### What It Is
+A **fully managed, petabyte-scale cloud data warehouse** — optimized for OLAP (Online Analytical Processing) workloads using columnar storage and massively parallel processing (MPP).
+
+##### Architecture
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│                      Amazon Redshift Cluster                          │
+│                                                                       │
+│  ┌────────────────────────────────────────────────────────────────┐  │
+│  │  Leader Node                                                   │  │
+│  │  • Receives queries from clients (SQL)                         │  │
+│  │  • Creates query execution plan                                │  │
+│  │  • Coordinates parallel execution                              │  │
+│  │  • Aggregates results from compute nodes                       │  │
+│  └──────────────────────────┬─────────────────────────────────────┘  │
+│                             │                                         │
+│      ┌──────────────────────┼──────────────────────┐                 │
+│      ▼                      ▼                      ▼                 │
+│  ┌───────────┐          ┌───────────┐          ┌───────────┐         │
+│  │ Compute   │          │ Compute   │          │ Compute   │         │
+│  │ Node 1    │          │ Node 2    │          │ Node 3    │         │
+│  │           │          │           │          │           │         │
+│  │ Slices:   │          │ Slices:   │          │ Slices:   │         │
+│  │ [S1][S2]  │          │ [S3][S4]  │          │ [S5][S6]  │         │
+│  │           │          │           │          │           │         │
+│  │ Columnar  │          │ Columnar  │          │ Columnar  │         │
+│  │ storage   │          │ storage   │          │ storage   │         │
+│  └───────────┘          └───────────┘          └───────────┘         │
+└──────────────────────────────────────────────────────────────────────┘
+```
+
+##### Node Types
+| Type | Storage | Use Case |
+|---|---|---|
+| **RA3** (recommended) | Managed storage (S3 backed); scales independently | Flexible; decouple compute/storage |
+| **DC2** | Local SSD | High performance, dense compute |
+| **DS2** (legacy) | Local HDD | Large data, lower cost |
+
+##### Key Features
+
+###### Columnar Storage + Compression
+- Data stored by **column**, not row — only read columns needed for query
+- **Zone maps** — track min/max per block; skip irrelevant blocks
+- **Compression encoding** — per column (run-length, delta, LZO, etc.)
+
+###### Distribution Styles
+| Style | Description | Use Case |
+|---|---|---|
+| **AUTO** | Redshift chooses based on table size | Default |
+| **EVEN** | Round-robin across slices | No clear join column |
+| **KEY** | Rows with same key go to same slice | Join/group on that column |
+| **ALL** | Copy entire table to every node | Small dimension tables |
+
+###### Sort Keys
+| Type | Description |
+|---|---|
+| **Compound** | Sort by multiple columns in order; best for range queries |
+| **Interleaved** | Equal weight to each column; good for multiple filter columns |
+
+###### Redshift Spectrum
+- Query data in **S3 directly** from Redshift without loading
+- Uses **Glue Data Catalog** for metadata
+- Scales independently from Redshift cluster
+- **Pattern**: hot data in Redshift + cold data in S3 via Spectrum
+
+###### Redshift Serverless
+- No cluster management; auto-scales capacity
+- Pay per compute RPU (Redshift Processing Units) per second
+- Good for intermittent or unpredictable workloads
+
+###### Loading Data
+| Method | Description |
+|---|---|
+| **COPY command** | Bulk load from S3, DynamoDB, EMR, SSH — fastest method |
+| **INSERT** | Row-by-row — slow; avoid for bulk loads |
+| **Firehose** | S3 intermediate → COPY into Redshift |
+| **Glue ETL** | Transform data before loading |
+
+###### Redshift Features
+| Feature | Description |
+|---|---|
+| **Materialized Views** | Pre-compute and cache complex query results |
+| **Concurrency Scaling** | Burst extra read capacity; first 1 hr/day free |
+| **Aqua** | Advanced Query Accelerator — hardware-accelerated cache layer |
+| **Data Sharing** | Share live data across Redshift clusters without copying |
+| **Federated Query** | Query RDS/Aurora in-place from Redshift |
+| **Snapshots** | Automated (every 8h or 5 GB) + manual; copy across regions |
+| **Multi-AZ** | RA3 supports multi-AZ for HA (dual-cluster) |
+
+###### Enhanced VPC Routing
+- Force all COPY and UNLOAD traffic through your VPC (not public internet)
+- Required for compliance; uses VPC endpoints for S3
+
+##### Redshift vs Other Services
+| Scenario | Use |
+|---|---|
+| OLAP — complex queries on large datasets | **Redshift** |
+| OLTP — transactional row operations | **RDS / Aurora** |
+| Ad-hoc queries on S3 without loading | **Athena** |
+| Real-time search and analytics | **OpenSearch** |
+| Real-time stream processing | **Kinesis / MSK** |
+
+##### Exam Key Points
+- **Columnar storage + MPP** = optimized for analytical (OLAP) queries
+- **COPY command** = fastest way to load data (always use over INSERT)
+- **Redshift Spectrum** = extend Redshift to query S3 directly (hot/cold separation)
+- **RA3** = recommended node type; storage and compute scale independently
+- **Snapshots are incremental** — stored in S3; automatic + manual
+- **Enhanced VPC Routing** — force traffic through VPC (compliance requirement)
+- **Concurrency Scaling** — auto-add read capacity during bursts
+- **Data Sharing** — share data between clusters without ETL or copying
+- **Leader node** is free for clusters with 2+ compute nodes
+- **Use when**: data warehouse, BI/reporting, large-scale SQL analytics, petabyte-scale data
 
 ---
 
-### Compute Services
+#### Quick Comparison: Analytics Services
+
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│                    Analytics Decision Framework                       │
+│                                                                       │
+│  What is your use case?                                               │
+│                                                                       │
+│  Real-time stream ingestion + custom processing                       │
+│  ───────────────────────────────────────────────                     │
+│  → Kinesis Data Streams (real-time, custom consumers, replay)        │
+│  → MSK / Kafka (Kafka-native, large messages, existing Kafka)        │
+│                                                                       │
+│  Stream to destinations (S3, Redshift, OpenSearch)                   │
+│  ──────────────────────────────────────────────────                  │
+│  → Data Firehose (managed delivery, near real-time, no code)         │
+│                                                                       │
+│  Big data processing / ETL at scale                                  │
+│  ────────────────────────────────────                                │
+│  → Glue (serverless ETL, schema discovery, Data Catalog)             │
+│  → EMR (full-control Spark/Hadoop/Hive, large-scale batch)           │
+│                                                                       │
+│  Interactive SQL on S3 (ad-hoc, no loading)                          │
+│  ─────────────────────────────────────────                           │
+│  → Athena (serverless, pay per query, Glue Catalog)                  │
+│                                                                       │
+│  Data warehouse (OLAP, complex joins, BI)                            │
+│  ────────────────────────────────────────                            │
+│  → Redshift (columnar, MPP, petabyte scale)                          │
+│                                                                       │
+│  Search + log analytics + full-text search                           │
+│  ─────────────────────────────────────────                           │
+│  → OpenSearch (inverted index, Dashboards, Kibana)                   │
+│                                                                       │
+│  Business dashboards + BI visualization                              │
+│  ──────────────────────────────────────                              │
+│  → QuickSight (serverless BI, SPICE, ML Insights, embedding)         │
+│                                                                       │
+│  Governed data lake with fine-grained access control                 │
+│  ────────────────────────────────────────────────────                │
+│  → Lake Formation (column/row-level security, Glue Catalog)          │
+│                                                                       │
+│  Third-party data enrichment                                          │
+│  ────────────────────────────                                        │
+│  → Data Exchange (subscribe to external datasets → S3)               │
+└──────────────────────────────────────────────────────────────────────┘
+```
+
+#### Common Exam Traps - Analytics Services
+
+1. **Athena charges per TB scanned** — always use Parquet/ORC + partitioning to reduce cost
+2. **Firehose is near real-time (≥60s)**, NOT real-time — use Kinesis Data Streams for true real-time
+3. **Kinesis Data Streams shard = 1 MB/s write, 2 MB/s read** — calculate shards needed for capacity
+4. **Hot shard in KDS** = uneven partition key distribution → choose high-cardinality partition keys
+5. **KDS Enhanced Fan-Out** = dedicated 2 MB/s per consumer per shard (not shared 2 MB/s)
+6. **EMR task nodes are Spot-safe** — no HDFS; core nodes should be On-Demand (HDFS data loss risk)
+7. **EMR primary node failure** = cluster failure — use On-Demand for primary and core nodes
+8. **Glue Data Catalog is shared** across Athena, EMR, Redshift Spectrum, Lake Formation in the same region
+9. **Glue Job Bookmarks** = prevent reprocessing; critical for incremental ETL pipelines
+10. **Redshift COPY command** = bulk load (fast); INSERT = row-by-row (slow); always use COPY
+11. **Redshift is not for OLTP** — use RDS/Aurora for transactional workloads; Redshift is OLAP only
+12. **Redshift Spectrum** queries S3 using Glue catalog — decouple hot (Redshift) and cold (S3) data
+13. **OpenSearch is NOT serverless by default** — provision node types; use OpenSearch Serverless for managed
+14. **MSK message size up to 10 MB** vs **KDS max 1 MB per record** — use MSK for large messages
+15. **QuickSight SPICE** = in-memory cache; data imported and refreshed — not always live
+16. **Lake Formation permissions override S3 bucket policies** for registered data — LF is the access control layer
+17. **Firehose to Redshift** always goes via S3 intermediate → COPY command (never direct)
+18. **Athena Federated Query** requires Lambda connectors for non-S3 sources (RDS, DynamoDB, etc.)
+19. **MSK vs KDS**: use MSK when migrating existing Kafka, needing Kafka APIs, or large messages; use KDS for AWS-native serverless streaming
+20. **QuickSight Row-Level Security** is Enterprise edition only — not available in Standard
+
+---
+
+### Compute
 
 #### AWS Batch
 
