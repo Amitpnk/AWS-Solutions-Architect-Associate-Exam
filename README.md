@@ -62,6 +62,7 @@ The exam is divided into four major domains:
 
 ![alt text](img/image.png)
 
+
 These domains represent the core competencies required for designing solutions on AWS. ([AWS Documentation][5])
 
 ## Core AWS Services (In-scope AWS services and features)
@@ -187,16 +188,16 @@ AWS X-Ray
 
 ### Networking and Content Delivery
 
-* AWS Client VPN
-* Amazon CloudFront
-* AWS Direct Connect
-* Elastic Load Balancing (ELB)
-* AWS Global Accelerator
-* AWS PrivateLink
-* Amazon Route 53
-* AWS Site-to-Site VPN
-* AWS Transit Gateway
-* Amazon VPC
+* [AWS Client VPN](#aws-client-vpn)
+* [Amazon CloudFront](#amazon-cloudfront)
+* [AWS Direct Connect](#aws-direct-connect-dx)
+* [Elastic Load Balancing (ELB)](#elastic-load-balancing-elb)
+* [AWS Global Accelerator](#aws-global-accelerator)
+* [AWS PrivateLink](#aws-privatelink)
+* [Amazon Route 53](#amazon-route-53)
+* [AWS Site-to-Site VPN](#aws-site-to-site-vpn)
+* [AWS Transit Gateway](#aws-transit-gateway-tgw)
+* [Amazon VPC](#amazon-vpc-virtual-private-cloud)
 
 ### Security, Identity, and Compliance
 
@@ -314,6 +315,8 @@ AWS X-Ray
 ##### What It Is
 A **serverless, interactive query service** that lets you analyze data directly in **Amazon S3** using standard SQL — no infrastructure to manage, no data loading required.
 
+<img src="img/analytics/image.png" alt="AWS-Batch" width="100" height="100">
+
 ##### Architecture
 ```
 ┌──────────────────────────────────────────────────────────────────────┐
@@ -390,6 +393,8 @@ A **serverless, interactive query service** that lets you analyze data directly 
 ##### What It Is
 A service that makes it easy to **find, subscribe to, and use third-party data** in the cloud — without building or maintaining data pipelines.
 
+<img src="img/analytics/image-1.png" alt="" width="100" height="100">
+
 ##### Architecture
 ```
 ┌──────────────────────────────────────────────────────────────────────┐
@@ -420,6 +425,8 @@ A service that makes it easy to **find, subscribe to, and use third-party data**
 
 ##### What It Is
 A **fully managed delivery service** for real-time streaming data to destinations like S3, Redshift, OpenSearch, and third-party services — with optional transformation.
+
+<img src="img/analytics/image-2.png" alt="AWS-Batch" width="100" height="100">
 
 ##### Architecture
 ```
@@ -490,6 +497,9 @@ A **fully managed delivery service** for real-time streaming data to destination
 
 ##### What It Is
 A **managed big data platform** for running large-scale distributed data processing frameworks — Hadoop, Spark, Hive, Presto, HBase, Flink — on a resizable cluster of EC2 instances.
+
+<img src="img/analytics/image-3.png" alt="" width="100" height="100">
+
 
 ##### Architecture
 ```
@@ -570,6 +580,9 @@ A **managed big data platform** for running large-scale distributed data process
 ##### What It Is
 A **fully managed serverless ETL (Extract, Transform, Load)** service — discovers, catalogs, cleans, transforms, and moves data between data stores.
 
+<img src="img/analytics/image-4.png" alt="" width="100" height="100">
+
+
 ##### Architecture
 ```
 ┌──────────────────────────────────────────────────────────────────────┐
@@ -645,6 +658,8 @@ A **fully managed serverless ETL (Extract, Transform, Load)** service — discov
 
 ##### What It Is
 A platform for **real-time streaming data** on AWS — collect, process, and analyze data streams at any scale. Three distinct services under the Kinesis umbrella.
+
+<img src="img/analytics/image-5.png" alt="" width="100" height="100">
 
 ##### Kinesis Family Overview
 ```
@@ -747,6 +762,8 @@ A platform for **real-time streaming data** on AWS — collect, process, and ana
 ##### What It Is
 A **managed service to build, secure, and manage data lakes** — simplifies ingestion, cataloging, cleaning, and access control for data stored in S3.
 
+<img src="img/analytics/image-6.png" alt="" width="100" height="100">
+
 ##### Architecture
 ```
 ┌──────────────────────────────────────────────────────────────────────┐
@@ -807,6 +824,8 @@ A **managed service to build, secure, and manage data lakes** — simplifies ing
 
 ##### What It Is
 A **fully managed Apache Kafka service** — create, run, and scale Kafka clusters without managing the underlying infrastructure.
+
+<img src="img/analytics/image-7.png" alt="" width="100" height="100">
 
 ##### Architecture
 ```
@@ -881,6 +900,8 @@ A **fully managed Apache Kafka service** — create, run, and scale Kafka cluste
 
 ##### What It Is
 A **managed search and analytics engine** (based on Elasticsearch/OpenSearch) — ingest, search, analyze, and visualize data in near real-time. Formerly called Amazon Elasticsearch Service.
+
+<img src="img/analytics/image-8.png" alt="" width="100" height="100">
 
 ##### Architecture
 ```
@@ -964,6 +985,8 @@ A **managed search and analytics engine** (based on Elasticsearch/OpenSearch) �
 ##### What It Is
 A **serverless, cloud-native business intelligence (BI)** service — create and publish interactive dashboards and visualizations from data across AWS and external sources.
 
+<img src="img/analytics/image-9.png" alt="" width="100" height="100">
+
 ##### Architecture
 ```
 ┌──────────────────────────────────────────────────────────────────────┐
@@ -1033,6 +1056,8 @@ A **serverless, cloud-native business intelligence (BI)** service — create and
 
 ##### What It Is
 A **fully managed, petabyte-scale cloud data warehouse** — optimized for OLAP (Online Analytical Processing) workloads using columnar storage and massively parallel processing (MPP).
+
+<img src="img/analytics/image-10.png" alt="" width="100" height="100">
 
 ##### Architecture
 ```
@@ -2623,6 +2648,9 @@ A **self-service review tool** that helps you evaluate your workloads against **
 ##### What It Is
 A **managed client-based VPN service** that enables users to securely access AWS resources and on-premises networks from **any location** using an OpenVPN-based client.
 
+<img src="img/network/image.png" alt="" width="100" height="100">
+
+
 ##### Architecture
 ```
 ┌──────────────────────────────────────────────────────────────────────┐
@@ -2679,6 +2707,9 @@ A **managed client-based VPN service** that enables users to securely access AWS
 
 ##### What It Is
 AWS's **Content Delivery Network (CDN)** — distributes content globally via 400+ **edge locations** and **regional edge caches**, reducing latency for end users.
+
+<img src="img/network/image-1.png" alt="" width="100" height="100">
+
 
 ##### Architecture
 ```
@@ -2804,6 +2835,8 @@ AWS's **Content Delivery Network (CDN)** — distributes content globally via 40
 ##### What It Is
 A **dedicated private network connection** from your on-premises data center directly to AWS — bypasses the public internet entirely.
 
+<img src="img/network/image-2.png" alt="" width="100" height="100">
+
 ##### Architecture
 ```
 ┌──────────────────────────────────────────────────────────────────────┐
@@ -2876,6 +2909,8 @@ A **dedicated private network connection** from your on-premises data center dir
 
 ##### What It Is
 **Automatically distributes** incoming application traffic across multiple targets (EC2, containers, Lambda, IPs) in one or more AZs.
+
+<img src="img/network/image-3.png" alt="" width="100" height="100">
 
 ##### Load Balancer Types
 ```
@@ -2985,6 +3020,8 @@ A **dedicated private network connection** from your on-premises data center dir
 ##### What It Is
 A **networking service** that routes user traffic through AWS's **global private network** to reach your application endpoints — improving availability and performance for **global users**.
 
+<img src="img/network/image-4.png" alt="" width="100" height="100">
+
 ##### Architecture
 ```
 ┌──────────────────────────────────────────────────────────────────────┐
@@ -3057,6 +3094,8 @@ A **networking service** that routes user traffic through AWS's **global private
 ##### What It Is
 Enables **private connectivity between VPCs and services** without exposing traffic to the public internet — using **Interface Endpoints** and **Endpoint Services**.
 
+<img src="img/network/image-5.png" alt="" width="100" height="100">
+
 ##### Architecture
 ```
 ┌──────────────────────────────────────────────────────────────────────┐
@@ -3111,6 +3150,8 @@ Enables **private connectivity between VPCs and services** without exposing traf
 
 ### What It Is
 AWS's **highly available and scalable DNS** (Domain Name System) service — also handles domain registration, health checking, and traffic routing policies.
+
+<img src="img/network/image-6.png" alt="" width="100" height="100">
 
 ### Record Types
 | Record | Purpose |
@@ -3212,6 +3253,8 @@ AWS's **highly available and scalable DNS** (Domain Name System) service — als
 ##### What It Is
 An **encrypted IPSec VPN tunnel** over the public internet connecting your on-premises network to AWS VPCs.
 
+<img src="img/network/image-7.png" alt="" width="100" height="100">
+
 ##### Architecture
 ```
 ┌──────────────────────────────────────────────────────────────────────┐
@@ -3279,6 +3322,8 @@ An **encrypted IPSec VPN tunnel** over the public internet connecting your on-pr
 
 ##### What It Is
 A **network transit hub** that connects VPCs and on-premises networks through a single, centralized gateway — eliminating complex VPC peering meshes.
+
+<img src="img/network/image-8.png" alt="" width="100" height="100">
 
 ##### Architecture: Peering vs Transit Gateway
 ```
@@ -3350,6 +3395,8 @@ A **network transit hub** that connects VPCs and on-premises networks through a 
 
 ##### What It Is
 A **logically isolated section** of the AWS cloud where you launch resources in a virtual network you define — full control over IP ranges, subnets, routing, and security.
+
+<img src="img/network/image-9.png" alt="" width="100" height="100">
 
 ##### VPC Architecture
 ```
@@ -3499,7 +3546,7 @@ A **logically isolated section** of the AWS cloud where you launch resources in 
 
 ---
 
-#### Quick Comparison: Connectivity Options
+#### Quick Comparison: Netowrk Connectivity Options
 
 ##### Hybrid Connectivity
 | Need | Solution |
@@ -3530,7 +3577,7 @@ A **logically isolated section** of the AWS cloud where you launch resources in 
 | Route DNS traffic intelligently | **Route 53** |
 
 
-#### Common Exam Traps
+#### Common Exam Traps - Newtork Connectivity Options
 
 1. **NAT Gateway is AZ-specific** — deploy one per AZ for full HA; single NAT GW = AZ SPOF
 2. **NACLs are stateless** — must allow ephemeral ports (1024–65535) on outbound for inbound responses
