@@ -75,7 +75,7 @@ These domains represent the core competencies required for designing solutions o
 * [AWS Glue](#aws-glue)
 * [Amazon Kinesis](#amazon-kinesis)
 * [AWS Lake Formation](#aws-lake-formation)
-* [Amazon Managed Streaming for Apache Kafka (Amazon MSK)]
+* [Amazon Managed Streaming for Apache Kafka](#amazon-msk-managed-streaming-for-apache-kafka)
 * [Amazon OpenSearch Service](#amazon-opensearch-service)
 * [Amazon QuickSuite](#amazon-quicksight)
 * [Amazon Redshift](#amazon-redshift)
@@ -2614,6 +2614,944 @@ A **self-service review tool** that helps you evaluate your workloads against **
 14. **AWS Organizations Consolidated Billing** — Reserved Instances are shared across all accounts automatically
 15. **AWS Auto Scaling (scaling plans)** ≠ **EC2 Auto Scaling** — AWS Auto Scaling manages multiple resource types
 
+---
+
+### Networking & Content Delivery Study Guide
+
+#### AWS Client VPN
+
+##### What It Is
+A **managed client-based VPN service** that enables users to securely access AWS resources and on-premises networks from **any location** using an OpenVPN-based client.
+
+##### Architecture
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│                       AWS Client VPN                                  │
+│                                                                       │
+│  Remote Users (laptop, desktop)                                       │
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐                  │
+│  │  User A     │  │  User B     │  │  User C     │                  │
+│  │  (OpenVPN   │  │  (OpenVPN   │  │  (OpenVPN   │                  │
+│  │   client)   │  │   client)   │  │   client)   │                  │
+│  └──────┬──────┘  └──────┬──────┘  └──────┬──────┘                  │
+│         └────────────────┴────────────────┘                          │
+│                           │  TLS (443) over internet                  │
+│                           ▼                                           │
+│  ┌────────────────────────────────────────────────────────────────┐  │
+│  │  VPC                                                           │  │
+│  │  ┌──────────────────────────────────────────────────────────┐ │  │
+│  │  │  Client VPN Endpoint (ENI in subnet)                     │ │  │
+│  │  │  Client CIDR: 10.2.0.0/16  (separate from VPC CIDR)     │ │  │
+│  │  └──────────────────────────────────────────────────────────┘ │  │
+│  │            │                                                   │  │
+│  │  ┌─────────▼──────────┐   ┌──────────────────────────────┐   │  │
+│  │  │  Private Subnets   │   │  On-Premises (via VGW/DX)    │   │  │
+│  │  │  (EC2, RDS, etc.)  │   │                              │   │  │
+│  │  └────────────────────┘   └──────────────────────────────┘   │  │
+│  └────────────────────────────────────────────────────────────────┘  │
+└──────────────────────────────────────────────────────────────────────┘
+```
+
+##### Authentication Methods
+| Method | Description |
+|---|---|
+| **Active Directory** | AWS Managed Microsoft AD or on-prem AD via AD Connector |
+| **SAML 2.0 (Federated)** | External IdP (Okta, Azure AD) |
+| **Certificate-based (mutual TLS)** | Client + server certificates via ACM |
+
+##### Key Concepts
+| Concept | Description |
+|---|---|
+| **Client CIDR** | IP range assigned to VPN clients — must not overlap VPC CIDR |
+| **Target Network** | Subnet in VPC associated with VPN endpoint |
+| **Authorization Rules** | Control which users can access which network CIDRs |
+| **Split Tunnel** | Only VPC-destined traffic goes through VPN; internet traffic goes direct |
+| **Full Tunnel** | ALL traffic (including internet) goes through VPN endpoint |
+
+##### Exam Key Points 
+- **Split tunneling** reduces bandwidth usage — route only AWS traffic through VPN
+- Supports **MFA** when using AD or SAML authentication
+- Client VPN endpoint **billed per association + per connection hour**
+- Can access **on-premises** through Client VPN if VPC has VGW/Direct Connect
+- **Use when**: remote workforce needs secure access to AWS VPCs from anywhere
+
+#### Amazon CloudFront
+
+##### What It Is
+AWS's **Content Delivery Network (CDN)** — distributes content globally via 400+ **edge locations** and **regional edge caches**, reducing latency for end users.
+
+##### Architecture
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│                       Amazon CloudFront                               │
+│                                                                       │
+│  User (Mumbai) ──▶ Nearest Edge Location (Mumbai)                    │
+│                              │                                        │
+│                    Cache Hit? ──▶ YES ──▶ Return cached content      │
+│                              │                                        │
+│                              ▼ NO (Cache Miss)                        │
+│                    Regional Edge Cache                                │
+│                    (larger cache, fewer misses go to origin)         │
+│                              │                                        │
+│                              ▼ Still miss                             │
+│            ┌─────────────────────────────────────────┐               │
+│            │              Origins                     │               │
+│            │  ┌──────────┐  ┌──────────┐  ┌───────┐ │               │
+│            │  │    S3    │  │   ALB    │  │  EC2  │ │               │
+│            │  │  Bucket  │  │          │  │       │ │               │
+│            │  └──────────┘  └──────────┘  └───────┘ │               │
+│            │  ┌──────────────────────────────────┐   │               │
+│            │  │  Custom HTTP Origin (on-prem)    │   │               │
+│            │  └──────────────────────────────────┘   │               │
+│            └─────────────────────────────────────────┘               │
+└──────────────────────────────────────────────────────────────────────┘
+```
+
+##### Key Components
+
+###### Origins & Origin Groups
+| Origin Type | Notes |
+|---|---|
+| **S3 Bucket** | Static content; use OAC (Origin Access Control) to restrict direct S3 access |
+| **S3 Website** | Static website hosting endpoint |
+| **ALB / NLB** | Dynamic content, API responses |
+| **EC2** | Must have public IP or be behind ALB |
+| **Custom HTTP** | Any on-premises server; must be publicly reachable |
+
+**Origin Group** — primary + secondary origin for **failover**; CloudFront auto-switches on 5xx errors
+
+###### Distributions
+- **Web Distribution** — HTTP/HTTPS; most common
+- All distributions now unified (RTMP deprecated)
+
+###### Cache Behavior
+| Setting | Description |
+|---|---|
+| **Path Pattern** | Route `/api/*` to ALB, `/*` to S3 |
+| **Viewer Protocol Policy** | HTTP only, HTTPS only, Redirect HTTP→HTTPS |
+| **Allowed HTTP Methods** | GET/HEAD only, or include POST/PUT/PATCH/DELETE |
+| **Cache Policy** | TTL settings, what to include in cache key |
+| **Origin Request Policy** | What headers/cookies/query strings to forward to origin |
+| **Response Headers Policy** | Add security headers (HSTS, X-Frame-Options) |
+
+###### TTL & Cache Invalidation
+- **Default TTL**: 24 hours (86,400 seconds)
+- **Min TTL / Max TTL**: configurable per behavior
+- **Cache Invalidation**: `/*` or specific paths — costs per invalidation request (first 1,000/month free)
+- Origin can control with `Cache-Control: max-age=` headers
+
+##### CloudFront Security
+
+###### OAC (Origin Access Control) — Replaces OAI
+```
+  Users ──▶ CloudFront ──▶ S3 Bucket (bucket policy allows CF OAC only)
+         (signed request)   ❌ Direct S3 access blocked
+```
+- **OAC** = modern way to restrict S3 origin access; supports SSE-KMS
+- **OAI (Origin Access Identity)** = legacy; still tested on exam
+
+###### HTTPS & Certificates
+- **Viewer-facing**: ACM certificate (must be in **us-east-1**)
+- **Origin-facing**: Can use different cert; self-signed allowed for custom origins
+
+###### Geo Restriction
+- **Allowlist**: Only allow specified countries
+- **Blocklist**: Block specified countries
+- Based on IP geolocation database
+
+###### Signed URLs vs Signed Cookies
+| Feature | Signed URL | Signed Cookie |
+|---|---|---|
+| **Scope** | Single object/file | Multiple files |
+| **Use Case** | Premium video, specific download | Streaming, subscriber content |
+| **Client Change** | URL changes | Cookie set in browser |
+
+###### Field-Level Encryption
+- Encrypts **specific POST fields** (e.g., credit card number) at the edge
+- Data stays encrypted all the way to your application layer
+
+##### CloudFront Functions vs Lambda@Edge
+| Feature | CloudFront Functions | Lambda@Edge |
+|---|---|---|
+| **Runtime** | JavaScript only | Node.js, Python |
+| **Max Duration** | < 1ms | 5s (viewer) / 30s (origin) |
+| **Memory** | 2 MB | 128 MB – 10 GB |
+| **Triggers** | Viewer Request/Response | All 4 CloudFront events |
+| **Network access** | ❌ | ✅ |
+| **Cost** | ~1/6 of Lambda@Edge | Higher |
+| **Use Case** | Header rewrite, URL redirect, simple A/B | Auth, complex routing, API calls |
+
+##### CloudFront Pricing
+- **Price Classes**: reduce costs by limiting edge locations
+  - Price Class All — all edge locations (best performance)
+  - Price Class 200 — most regions (exclude expensive ones)
+  - Price Class 100 — cheapest regions only (NA + Europe)
+
+##### Exam Key Points
+- **OAC** is the modern way to secure S3 + CloudFront (OAI = legacy but still in exam)
+- **ACM cert for CloudFront must be in us-east-1** — always
+- **CloudFront does NOT replace API Gateway** — CF caches; API GW manages APIs
+- **Cache key**: URL + headers + cookies + query strings (configure carefully — over-forwarding = poor cache hit rate)
+- **Invalidations** cost money — use versioned file names (`image-v2.jpg`) instead
+- **Origin Group** = automatic failover between origins
+- **Geo Restriction** is CloudFront-native; WAF Geo Match is more flexible (per rule action)
+- **Real-Time Logs** → Kinesis Data Streams for live analytics
+- **CloudFront Access Logs** → S3 (delayed, not real-time)
+
+
+#### AWS Direct Connect (DX)
+
+##### What It Is
+A **dedicated private network connection** from your on-premises data center directly to AWS — bypasses the public internet entirely.
+
+##### Architecture
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│                      AWS Direct Connect                               │
+│                                                                       │
+│  On-Premises DC           DX Location              AWS               │
+│  ┌─────────────┐          ┌──────────┐          ┌──────────────┐    │
+│  │  Customer   │          │ AWS DX   │          │    VPC       │    │
+│  │  Router     │──────────│  Router  │──────────│  (via VGW)   │    │
+│  │             │  Cross   │          │  AWS     │              │    │
+│  └─────────────┘  Connect │          │ backbone │  AWS Public  │    │
+│         │          link   └──────────┘          │  Services    │    │
+│  Physical dedicated                              │  (S3, etc.)  │    │
+│  circuit (1/10/100 Gbps)                        └──────────────┘    │
+│                                                                       │
+│  Connection Types:                                                    │
+│  • Dedicated: 1, 10, 100 Gbps (from AWS directly)                   │
+│  • Hosted: 50 Mbps–10 Gbps (via DX Partner)                         │
+└──────────────────────────────────────────────────────────────────────┘
+```
+
+##### Virtual Interfaces (VIFs)
+| VIF Type | Purpose | VLAN |
+|---|---|---|
+| **Private VIF** | Connect to VPC resources (via VGW or DXGW) | Your VLAN |
+| **Public VIF** | Access AWS public services (S3, DynamoDB) via private link | AWS public IPs |
+| **Transit VIF** | Connect to Transit Gateway (via DXGW) | Your VLAN |
+
+##### Direct Connect Gateway (DXGW)
+- Connect **one DX connection** to **multiple VPCs** across **multiple regions**
+- VPCs connected via DXGW cannot communicate with each other (only to on-prem)
+
+```
+  On-Prem ──▶ DX ──▶ DXGW ──▶ VPC (us-east-1)
+                          ├──▶ VPC (eu-west-1)
+                          └──▶ VPC (ap-southeast-1)
+```
+
+##### Resiliency Options
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│                  DX Resiliency Patterns                               │
+│                                                                       │
+│  High Resiliency            Maximum Resiliency                        │
+│  ──────────────────         ──────────────────────────               │
+│  2 DX connections           2 DX connections                         │
+│  at 2 DX locations          at 2+ DX locations                       │
+│  (recommended minimum)       with separate devices                   │
+│                                                                       │
+│  + Site-to-Site VPN         (for mission-critical workloads)         │
+│    as backup                                                          │
+└──────────────────────────────────────────────────────────────────────┘
+```
+
+##### Encryption
+- DX is **NOT encrypted by default** (private but not encrypted)
+- For encryption: run **IPSec VPN over Public VIF** or use **MACsec** (dedicated connections)
+
+##### Exam Key Points 
+- **DX setup takes weeks** — not instant like VPN
+- **Not redundant by default** — need multiple DX connections or VPN backup
+- **Private VIF** → VPC resources; **Public VIF** → AWS public services (S3, Glacier)
+- **DX Gateway** spans multiple regions — one DX to many VPCs
+- **Transit VIF + Transit Gateway** = connect on-prem to many VPCs via TGW
+- **DX vs VPN**: DX = dedicated, consistent bandwidth, lower latency, more expensive; VPN = internet, variable, cheaper, faster to set up
+- **Hosted connection** (via partner) = faster provisioning, smaller bandwidth options
+- **MACsec** = Layer 2 encryption for dedicated connections (10/100 Gbps only)
+
+#### Elastic Load Balancing (ELB)
+
+##### What It Is
+**Automatically distributes** incoming application traffic across multiple targets (EC2, containers, Lambda, IPs) in one or more AZs.
+
+##### Load Balancer Types
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│                   ELB Types Comparison                                │
+│                                                                       │
+│  Feature        │  ALB (L7)   │  NLB (L4)   │  GWLB (L3)  │  CLB  │
+│  ───────────────┼─────────────┼─────────────┼─────────────┼─────── │
+│  Protocol       │  HTTP/HTTPS │  TCP/UDP/TLS│  IP (GENEVE)│ HTTP/  │
+│                 │  WebSocket  │             │             │ TCP    │
+│  Layer          │  7          │  4          │  3          │  4/7   │
+│  Targets        │  EC2, ECS,  │  EC2, ECS,  │  Appliances │ EC2   │
+│                 │  Lambda, IP │  Lambda, IP │  (firewalls)│       │
+│  Path routing   │  ✅          │  ❌          │  ❌          │  ❌   │
+│  Host routing   │  ✅          │  ❌          │  ❌          │  ❌   │
+│  WebSocket      │  ✅          │  ✅          │  ❌          │  ❌   │
+│  Static IP      │  ❌ (via GA) │  ✅          │  ✅          │  ❌   │
+│  Elastic IP     │  ❌          │  ✅          │  ❌          │  ❌   │
+│  SSL Offload    │  ✅          │  ✅ (TLS)    │  ❌          │  ✅   │
+│  Health checks  │  HTTP/HTTPS │  TCP/HTTP   │  TCP/HTTP   │ TCP/  │
+│                 │             │             │             │ HTTP  │
+│  Preserve Src IP│  X-Fwd-For  │  ✅ native   │  ✅ native   │  ❌   │
+│  gRPC           │  ✅          │  ❌          │  ❌          │  ❌   │
+│  Use Case       │  Web apps   │  Ultra-low  │  3rd-party  │Legacy │
+│                 │  microsvcs  │  latency    │  firewalls  │       │
+└──────────────────────────────────────────────────────────────────────┘
+```
+
+##### Application Load Balancer (ALB) — Deep Dive
+
+###### Routing Rules
+```
+  Listener (HTTPS:443)
+       │
+       ├── Rule 1: Host = api.example.com  ──▶  TG: API Servers
+       ├── Rule 2: Path = /images/*        ──▶  TG: Image Servers
+       ├── Rule 3: Header = X-Mobile: true ──▶  TG: Mobile Backend
+       ├── Rule 4: Query = ?version=2      ──▶  TG: V2 Servers
+       └── Default Rule                   ──▶  TG: Main App
+```
+
+###### ALB Target Groups
+- **EC2 instances** (HTTP)
+- **ECS tasks** (dynamic port mapping)
+- **Lambda functions** (HTTP request translated to JSON event)
+- **Private IP addresses** (on-premises via DX/VPN)
+
+###### ALB Features
+| Feature | Description |
+|---|---|
+| **Sticky Sessions** | Route same user to same target (cookie-based) |
+| **Slow Start Mode** | Gradually increase traffic to new targets |
+| **Authentication** | Cognito or OIDC IdP integration (HTTPS only) |
+| **WAF Integration** | Attach WAF Web ACL directly to ALB |
+| **gRPC** | Native gRPC protocol support |
+| **Redirect** | HTTP → HTTPS, URL redirects in listener rules |
+| **Fixed Response** | Return custom HTTP response without hitting target |
+
+##### Network Load Balancer (NLB) — Deep Dive
+- Handles **millions of requests per second** with ultra-low latency
+- **Static IP per AZ** — or assign **Elastic IP** to each AZ
+- **Preserves client source IP** natively (no X-Forwarded-For needed)
+- **TCP passthrough** — no TLS termination required (end-to-end encryption)
+- Target groups can include **ALB** — NLB in front of ALB (static IP + advanced routing)
+
+##### Gateway Load Balancer (GWLB)
+- Deploy, scale, and manage **third-party virtual network appliances** (firewalls, IDS/IPS, deep packet inspection)
+- Uses **GENEVE protocol** (port 6081)
+- Traffic flow: **Clients → GWLB → appliances → GWLB → destination** (bump-in-the-wire)
+
+##### Cross-Zone Load Balancing
+```
+  With Cross-Zone:                Without Cross-Zone:
+  ┌──────┐  ┌──────┐             ┌──────┐  ┌──────┐
+  │ AZ-a │  │ AZ-b │             │ AZ-a │  │ AZ-b │
+  │ 2 EC2│  │ 8 EC2│             │ 2 EC2│  │ 8 EC2│
+  │ 10%ea│  │10%ea │             │ 25%ea│  │6.25%e│
+  └──────┘  └──────┘             └──────┘  └──────┘
+  Traffic evenly distributed      Traffic split by AZ (50/50)
+```
+
+| LB Type | Cross-Zone Default | Cost |
+|---|---|---|
+| ALB | Always ON | Free |
+| NLB | OFF | Charged if enabled |
+| GWLB | OFF | Charged if enabled |
+| CLB | OFF | Free if enabled |
+
+##### Connection Draining / Deregistration Delay
+- Time to complete in-flight requests before target is removed (default: 300 seconds)
+- Set to low value (e.g., 30s) if sessions are short
+
+##### Exam Key Points 
+- **ALB** = L7, path/host/header routing, Lambda targets, WAF, Cognito auth
+- **NLB** = L4, ultra-low latency, static Elastic IPs, source IP preservation
+- **GWLB** = deploy 3rd-party firewalls/appliances inline
+- **CLB** = legacy — avoid in new architectures
+- **ALB does NOT have static IP** — use Global Accelerator or NLB for static IP
+- **NLB can have ALB as target** — get static IP + advanced routing
+- **Health checks**: unhealthy targets never receive traffic regardless of routing rules
+- **SNI (Server Name Indication)**: ALB and NLB support multiple SSL certs on one listener
+- **Access Logs** → S3 (ALB, NLB, CLB); use Athena for analysis
+
+
+#### AWS Global Accelerator
+
+##### What It Is
+A **networking service** that routes user traffic through AWS's **global private network** to reach your application endpoints — improving availability and performance for **global users**.
+
+##### Architecture
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│                    AWS Global Accelerator                             │
+│                                                                       │
+│  Users Worldwide                                                      │
+│       │                                                               │
+│       ▼  Enter AWS global network at nearest edge location           │
+│  ┌──────────────────────────────────────────────────────────────┐   │
+│  │         AWS Global Network (private backbone)                 │   │
+│  │                          │                                    │   │
+│  │   2 Static Anycast IPs ──┘                                    │   │
+│  └──────────────────────────────────────────────────────────────┘   │
+│                          │                                            │
+│          ┌───────────────┼───────────────┐                           │
+│          ▼               ▼               ▼                           │
+│     us-east-1        eu-west-1       ap-southeast-1                  │
+│     ┌──────────┐    ┌──────────┐    ┌──────────┐                    │
+│     │  ALB /   │    │  ALB /   │    │  ALB /   │                    │
+│     │  NLB /   │    │  NLB /   │    │  NLB /   │                    │
+│     │  EC2 /   │    │  EC2 /   │    │  EC2 /   │                    │
+│     │  EIP     │    │  EIP     │    │  EIP     │                    │
+│     └──────────┘    └──────────┘    └──────────┘                    │
+└──────────────────────────────────────────────────────────────────────┘
+```
+
+##### Key Features
+| Feature | Description |
+|---|---|
+| **2 Static Anycast IPs** | Fixed IPs globally; traffic routed to nearest healthy endpoint |
+| **Endpoint Groups** | Regional groups of endpoints; traffic % configurable |
+| **Endpoint Types** | ALB, NLB, EC2 Elastic IPs, EC2 instances |
+| **Traffic Dials** | Control % of traffic per endpoint group (blue/green deploys) |
+| **Weights** | Control traffic distribution within an endpoint group |
+| **Health Checks** | Automatic failover to healthy region |
+| **Client Affinity** | Route same client to same endpoint (source IP based) |
+
+##### Global Accelerator vs CloudFront
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│           Global Accelerator vs CloudFront                           │
+│                                                                       │
+│  Feature         │ Global Accelerator   │ CloudFront                │
+│  ────────────────┼──────────────────────┼────────────────────────── │
+│  Primary Use     │ TCP/UDP performance  │ Content caching / CDN     │
+│  Content Type    │ Non-cacheable        │ Cacheable (static/dynamic)│
+│  Protocols       │ TCP, UDP             │ HTTP/HTTPS only           │
+│  Edge Caching    │ ❌                   │ ✅                         │
+│  Static IPs      │ ✅ (2 Anycast IPs)   │ ❌                         │
+│  IP Whitelisting │ ✅ (fixed IPs)       │ ❌ (IPs change)           │
+│  Failover speed  │ < 1 minute           │ DNS TTL dependent         │
+│  Gaming/IoT/VoIP │ ✅                   │ ❌                         │
+│  HTTP apps       │ ✅ (no caching)      │ ✅ (with caching)         │
+└──────────────────────────────────────────────────────────────────────┘
+```
+
+##### Exam Key Points
+- **2 static Anycast IPs** — never change; whitelist in firewalls
+- Traffic enters **AWS backbone at nearest edge** — less internet hops, lower latency
+- **Not a CDN** — does not cache content (that's CloudFront)
+- **Automatic failover** across regions — faster than DNS-based failover (no TTL wait)
+- **Use when**: global gaming, VoIP, IoT, or any TCP/UDP app needing consistent performance
+- **Use when**: need fixed static IPs for a global application
+- **Blue/green deployment** using traffic dials (gradually shift %)
+- Supports **Client Affinity** — useful for stateful applications
+
+
+#### AWS PrivateLink
+
+##### What It Is
+Enables **private connectivity between VPCs and services** without exposing traffic to the public internet — using **Interface Endpoints** and **Endpoint Services**.
+
+##### Architecture
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│                       AWS PrivateLink                                 │
+│                                                                       │
+│  Consumer VPC                        Provider VPC                    │
+│  ┌──────────────────────┐            ┌──────────────────────────┐   │
+│  │                      │            │                          │   │
+│  │  ┌────────────────┐  │            │  ┌──────────────────┐   │   │
+│  │  │  Interface     │  │            │  │  NLB             │   │   │
+│  │  │  Endpoint      │  │            │  │  (in front of    │   │   │
+│  │  │  (ENI with     │◀─┼────────────┼──│   your service)  │   │   │
+│  │  │   private IP)  │  │  Private   │  └──────────────────┘   │   │
+│  │  └────────────────┘  │  link      │                          │   │
+│  │         │             │  (no IGW,  │  Your SaaS / Service    │   │
+│  │  ┌──────▼──────────┐  │   no VPN,  │  (EC2, ECS, Lambda)     │   │
+│  │  │  Your EC2/App   │  │   no TGW)  │                          │   │
+│  │  └─────────────────┘  │            └──────────────────────────┘   │
+│  └──────────────────────┘                                            │
+│                                                                       │
+│  VPC Endpoint Types:                                                  │
+│  • Interface Endpoint (PrivateLink) — for services, costs per hour   │
+│  • Gateway Endpoint — for S3 and DynamoDB only, free                 │
+│  • Gateway Load Balancer Endpoint — for GWLB appliances              │
+└──────────────────────────────────────────────────────────────────────┘
+```
+
+##### VPC Endpoint Types
+| Type | Services | Cost | How |
+|---|---|---|---|
+| **Interface Endpoint** | Most AWS services, SaaS | Per hour + per GB | ENI in your subnet |
+| **Gateway Endpoint** | S3 and DynamoDB ONLY | Free | Route table entry |
+| **GWLB Endpoint** | 3rd-party appliances | Per hour + per GB | ENI in your subnet |
+
+##### PrivateLink Benefits
+- Traffic stays **within AWS network** — never traverses internet
+- No need for **IGW, NAT Gateway, VPC Peering, or VPN**
+- VPCs can have **overlapping CIDRs** (unlike VPC Peering)
+- Provider and consumer can be **different AWS accounts**
+
+##### Exam Key Points 
+- **Gateway Endpoints** (S3, DynamoDB) are **free** and use route table entries
+- **Interface Endpoints** cost money but support many more services
+- **PrivateLink** is the technology behind Interface Endpoints
+- **Provider requires NLB**; consumer gets an ENI Interface Endpoint
+- Supports **cross-account** and **cross-region** (via endpoint + peering)
+- **VPC Peering vs PrivateLink**: Peering = full VPC connectivity (both ways); PrivateLink = one-directional service access (safer)
+- Use PrivateLink when: exposing SaaS to customers, accessing AWS services privately, multi-account service mesh
+
+
+#### Amazon Route 53
+
+### What It Is
+AWS's **highly available and scalable DNS** (Domain Name System) service — also handles domain registration, health checking, and traffic routing policies.
+
+### Record Types
+| Record | Purpose |
+|---|---|
+| **A** | Domain → IPv4 address |
+| **AAAA** | Domain → IPv6 address |
+| **CNAME** | Domain → another domain (not for zone apex/root domain) |
+| **Alias** | Domain → AWS resource; works at zone apex; free queries |
+| **NS** | Name server records for the hosted zone |
+| **MX** | Mail server records |
+| **TXT** | Text records (domain verification, SPF) |
+| **SRV** | Service location |
+| **PTR** | Reverse DNS lookup |
+
+##### Alias vs CNAME
+```
+  ┌─────────────────────────────────────────────────────────────┐
+  │  Alias Record                    CNAME Record               │
+  │  ─────────────────────────       ──────────────────────     │
+  │  Works at root domain ✅          Root domain ❌             │
+  │  (example.com → ALB)             (www.example.com → ALB) ✅ │
+  │  Free DNS queries ✅              Charged per query ✅        │
+  │  AWS resources only              Any hostname               │
+  │  Auto-updates with resource IP   Static target              │
+  └─────────────────────────────────────────────────────────────┘
+```
+
+##### Hosted Zones
+| Type | Description |
+|---|---|
+| **Public Hosted Zone** | Answers queries from internet |
+| **Private Hosted Zone** | Answers queries only within associated VPCs |
+
+##### Routing Policies
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│                   Route 53 Routing Policies                           │
+│                                                                       │
+│  Simple          ──  Single resource; no health check on routing     │
+│                                                                       │
+│  Weighted        ──  Split traffic by % (A/B testing, gradual shift) │
+│                      10% → v2, 90% → v1                              │
+│                                                                       │
+│  Latency-based   ──  Route to region with lowest latency for user    │
+│                      (not geographical distance)                     │
+│                                                                       │
+│  Failover        ──  Primary + Secondary; health check required      │
+│                      Active-Passive configuration                    │
+│                                                                       │
+│  Geolocation     ──  Route based on user's COUNTRY or CONTINENT      │
+│                      Must have default record (unmatched locations)  │
+│                                                                       │
+│  Geoproximity    ──  Route based on location of resources + users    │
+│                      Bias value shifts traffic boundaries            │
+│                      Requires Traffic Flow (visual editor)           │
+│                                                                       │
+│  Multi-Value     ──  Return multiple IPs; client-side load balance   │
+│                      Health check per record (only healthy returned) │
+│                      NOT a substitute for a load balancer            │
+│                                                                       │
+│  IP-based        ──  Route based on client's IP CIDR                 │
+│                      (e.g., ISP routing, on-prem traffic)            │
+└──────────────────────────────────────────────────────────────────────┘
+```
+
+##### Health Checks
+| Type | Description |
+|---|---|
+| **Endpoint Health Check** | HTTP, HTTPS, TCP to specific IP/hostname |
+| **Calculated Health Check** | Combine multiple health checks (AND/OR) |
+| **CloudWatch Alarm Health Check** | Monitor based on CW alarm state |
+
+- Health checkers are located globally (~15+ locations)
+- **Private resources**: create CW Metric + Alarm → health check on alarm
+- Unhealthy threshold: default 3 consecutive failures
+
+##### Route 53 Resolver
+| Feature | Description |
+|---|---|
+| **Inbound Endpoint** | On-premises DNS queries → resolve AWS private hosted zones |
+| **Outbound Endpoint** | AWS DNS queries → forward to on-premises DNS |
+| **Resolver Rules** | Define forwarding rules for specific domains |
+
+##### Exam Key Points
+- **Alias records are free** — always prefer Alias over CNAME for AWS resources
+- **CNAME cannot be used at zone apex** (example.com) — use Alias instead
+- **Geolocation ≠ Latency** — Geolocation = country/continent; Latency = actual measured latency
+- **Geoproximity** requires **Traffic Flow** and uses bias to shift routing boundaries
+- **Failover routing** requires health check on primary record
+- **Multi-Value** ≠ Load Balancer — it's client-side; max 8 records returned
+- **Private Hosted Zone** must be associated with VPC; enableDnsHostnames + enableDnsSupport on VPC
+- **TTL**: lower TTL = faster changes but more DNS queries (higher cost); raise TTL before migrations
+- **Route 53 is the only AWS service with 100% SLA**
+- **Domain registration** — Route 53 is also a registrar; TLD support varies
+
+
+#### AWS Site-to-Site VPN
+
+##### What It Is
+An **encrypted IPSec VPN tunnel** over the public internet connecting your on-premises network to AWS VPCs.
+
+##### Architecture
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│                    AWS Site-to-Site VPN                               │
+│                                                                       │
+│  On-Premises                              AWS                        │
+│  ┌────────────────────┐                ┌──────────────────────────┐  │
+│  │                    │                │         VPC              │  │
+│  │  Customer Gateway  │                │  ┌────────────────────┐  │  │
+│  │  Device (router/   │◀──── IPSec ───▶│  │  Virtual Private   │  │  │
+│  │   firewall)        │   Tunnel 1     │  │  Gateway (VGW)     │  │  │
+│  │                    │◀──── IPSec ───▶│  │  or               │  │  │
+│  │  CGW (config in    │   Tunnel 2     │  │  Transit Gateway   │  │  │
+│  │  Route 53)         │  (redundant)   │  └────────────────────┘  │  │
+│  └────────────────────┘                └──────────────────────────┘  │
+│                                                                       │
+│  Two tunnels per VPN connection (different AZs) — AWS requirement    │
+└──────────────────────────────────────────────────────────────────────┘
+```
+
+##### Components
+| Component | Description |
+|---|---|
+| **Customer Gateway (CGW)** | AWS resource representing your on-prem VPN device (IP/ASN) |
+| **Virtual Private Gateway (VGW)** | AWS side of VPN; attached to VPC |
+| **VPN Connection** | Logical connection with 2 IPSec tunnels |
+| **Transit Gateway** | Can replace VGW for hub-and-spoke VPN connectivity |
+
+##### VPN Types
+| Type | Description |
+|---|---|
+| **Static Routing** | Manual route configuration on both sides |
+| **Dynamic Routing (BGP)** | Automatic route exchange via BGP; recommended |
+
+##### VPN CloudHub
+- Connect **multiple on-premises sites** to a single VGW
+- Sites can communicate with each other through AWS (hub-and-spoke)
+- All sites must use **BGP**
+
+##### AWS VPN Accelerated
+- **Accelerated Site-to-Site VPN** — uses Global Accelerator to route VPN traffic over AWS backbone
+- Lower latency, higher throughput for VPN connections
+
+##### Site-to-Site VPN vs Direct Connect
+| Feature | Site-to-Site VPN | Direct Connect |
+|---|---|---|
+| **Setup time** | Minutes/Hours | Weeks/Months |
+| **Connection** | Over internet (encrypted) | Dedicated private circuit |
+| **Bandwidth** | Up to 1.25 Gbps per tunnel | 1, 10, 100 Gbps |
+| **Latency** | Variable (internet) | Consistent, low |
+| **Cost** | Low | High |
+| **Redundancy** | Dual tunnels per connection | Need multiple DX |
+| **Encryption** | IPSec (built-in) | Not by default |
+
+##### Exam Key Points 
+- **Two tunnels per VPN connection** — both should be configured for HA
+- **Max bandwidth ~1.25 Gbps** per tunnel — not suitable for high-bandwidth needs
+- **VPN over DX** — encrypt DX traffic using IPSec VPN over Public VIF
+- **VPN as DX backup** — common architecture for HA hybrid connectivity
+- **BGP required** for VPN CloudHub and dynamic routing
+- VPN uses **VGW** (single VPC) or **Transit Gateway** (multiple VPCs)
+
+
+#### AWS Transit Gateway (TGW)
+
+##### What It Is
+A **network transit hub** that connects VPCs and on-premises networks through a single, centralized gateway — eliminating complex VPC peering meshes.
+
+##### Architecture: Peering vs Transit Gateway
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│       VPC Peering (Mesh)              Transit Gateway (Hub & Spoke)  │
+│                                                                       │
+│   VPC-A ── VPC-B                      VPC-A                         │
+│     │  ╲  /  │                          │                            │
+│     │   ╲╱   │           ──────▶      TGW ── On-Prem (VPN/DX)       │
+│     │   ╱╲   │                          │                            │
+│   VPC-C ── VPC-D                      VPC-B                         │
+│                                          │                           │
+│  N*(N-1)/2 peering connections         VPC-C                         │
+│  (scales poorly, no transitive)                                      │
+│                                        1 attachment per VPC          │
+│                                        (scales easily, transitive)   │
+└──────────────────────────────────────────────────────────────────────┘
+```
+
+##### TGW Components
+| Component | Description |
+|---|---|
+| **Attachment** | VPC, VPN, DX, or peering connection attached to TGW |
+| **Route Table** | TGW-level routing table (separate from VPC route tables) |
+| **Association** | Link an attachment to a TGW route table |
+| **Propagation** | Auto-propagate attachment routes into TGW route table |
+
+##### TGW Route Tables
+```
+  Default behavior: all attachments share one route table (full mesh)
+
+  Custom route tables: isolate VPCs
+  ┌────────────────────────────────────────────────────────┐
+  │  Prod Route Table        │   Dev Route Table           │
+  │  VPC-Prod → attachment   │   VPC-Dev → attachment      │
+  │  On-Prem → attachment    │   (no on-prem route)        │
+  │  (Dev VPCs not included) │                             │
+  └────────────────────────────────────────────────────────┘
+```
+
+##### TGW Key Features
+| Feature | Description |
+|---|---|
+| **Cross-Region Peering** | Connect TGWs across regions (encrypted automatically) |
+| **Cross-Account (RAM)** | Share TGW with other accounts via AWS RAM |
+| **Multicast** | Support multicast traffic (unique to TGW) |
+| **ECMP (Equal Cost Multi-Path)** | Aggregate multiple VPN tunnels for higher bandwidth |
+| **Appliance Mode** | For stateful appliances — ensures symmetric routing |
+
+##### ECMP for VPN Bandwidth
+```
+  Each VPN tunnel: up to 1.25 Gbps
+  TGW + 2 VPN connections (4 tunnels) with ECMP:
+  → Up to 5 Gbps aggregate throughput
+```
+
+##### Exam Key Points
+- **Transitive routing** — VPC A can reach VPC B through TGW (impossible with peering)
+- **Share TGW via RAM** across accounts — centralized networking
+- **TGW peering** across regions is **encrypted** (no extra VPN needed)
+- **ECMP** aggregates multiple VPN connections — scale beyond 1.25 Gbps
+- **Multicast** support is unique to TGW — no other AWS service does this
+- **VPC Peering** is cheaper for simple 2-VPC connections; TGW better for 5+ VPCs
+- **TGW route tables** enable network segmentation (prod/dev isolation)
+- **Appliance Mode** on TGW attachment — ensures traffic goes to same AZ appliance (for stateful inspection)
+
+
+#### Amazon VPC (Virtual Private Cloud)
+
+##### What It Is
+A **logically isolated section** of the AWS cloud where you launch resources in a virtual network you define — full control over IP ranges, subnets, routing, and security.
+
+##### VPC Architecture
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│                     VPC (10.0.0.0/16)  — Region                      │
+│                                                                       │
+│  ┌───────────────────────────────┐ ┌──────────────────────────────┐  │
+│  │    Availability Zone A        │ │    Availability Zone B       │  │
+│  │                               │ │                              │  │
+│  │  ┌─────────────────────────┐  │ │  ┌──────────────────────┐   │  │
+│  │  │  Public Subnet          │  │ │  │  Public Subnet       │   │  │
+│  │  │  10.0.1.0/24            │  │ │  │  10.0.3.0/24        │   │  │
+│  │  │  ┌──────┐  ┌──────┐     │  │ │  └──────────────────────┘   │  │
+│  │  │  │  EC2 │  │ NAT  │     │  │ │                              │  │
+│  │  │  │(Web) │  │ GW   │     │  │ │  ┌──────────────────────┐   │  │
+│  │  │  └──────┘  └──────┘     │  │ │  │  Private Subnet      │   │  │
+│  │  └─────────────────────────┘  │ │  │  10.0.4.0/24        │   │  │
+│  │                               │ │  │  ┌──────┐  ┌──────┐  │   │  │
+│  │  ┌─────────────────────────┐  │ │  │  │  RDS │  │ EC2  │  │   │  │
+│  │  │  Private Subnet         │  │ │  │  └──────┘  └──────┘  │   │  │
+│  │  │  10.0.2.0/24            │  │ │  └──────────────────────┘   │  │
+│  │  │  ┌──────┐  ┌──────┐     │  │ └──────────────────────────────┘  │
+│  │  │  │  RDS │  │ EC2  │     │  │                               │  │
+│  │  │  └──────┘  └──────┘     │  │  ┌────────────────────────┐  │  │
+│  │  └─────────────────────────┘  │  │  Internet Gateway (IGW) │  │  │
+│  └───────────────────────────────┘  └────────────────────────┘  │  │
+└──────────────────────────────────────────────────────────────────────┘
+```
+
+##### VPC CIDR & Subnets
+- **VPC CIDR**: /16 to /28; cannot change after creation (can add secondary CIDRs)
+- **Subnet CIDR**: subset of VPC CIDR; **5 IPs reserved** per subnet:
+  - `.0` — Network address
+  - `.1` — VPC Router
+  - `.2` — AWS DNS
+  - `.3` — Reserved for future
+  - `.255` — Broadcast (not used by AWS)
+- **Public Subnet**: has route to IGW; resources need public/EIP
+- **Private Subnet**: no route to IGW; internet via NAT GW/instance
+
+##### Internet Connectivity
+
+###### Internet Gateway (IGW)
+- Horizontally scaled, redundant, HA — no bandwidth limit
+- **Attached to VPC** (one per VPC); enables public subnet internet access
+- Performs **NAT** for instances with public IPs
+
+###### NAT Gateway vs NAT Instance
+| Feature | NAT Gateway | NAT Instance |
+|---|---|---|
+| **Managed by** | AWS | You |
+| **Availability** | Highly available within AZ | Single EC2, manual HA |
+| **Bandwidth** | Up to 100 Gbps (auto-scales) | Instance type limited |
+| **Security Groups** | Cannot attach | Can attach |
+| **Cost** | Per hour + per GB | EC2 cost |
+| **Placement** | Public subnet | Public subnet |
+| **Bastion Host** | ❌ | ✅ (can double as) |
+
+> NAT Gateway is **AZ-specific** — deploy one per AZ for full HA
+
+###### Egress-Only Internet Gateway
+- For **IPv6** traffic — allows outbound internet, blocks inbound
+- Equivalent to NAT Gateway but for IPv6
+
+##### VPC Security
+
+###### Security Groups vs NACLs
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│              Security Groups vs Network ACLs                          │
+│                                                                       │
+│  Feature          │  Security Group          │  NACL                 │
+│  ─────────────────┼──────────────────────────┼───────────────────── │
+│  Level            │  Instance/ENI level      │  Subnet level        │
+│  State            │  Stateful                │  Stateless           │
+│  Rules            │  Allow only              │  Allow + Deny        │
+│  Rule Evaluation  │  All rules evaluated     │  In order (numbered) │
+│  Inbound default  │  Deny all                │  Allow all           │
+│  Outbound default │  Allow all               │  Allow all           │
+│  Association      │  Multiple SGs per ENI    │  One NACL per subnet │
+│  Return traffic   │  Automatically allowed   │  Must explicitly allow│
+│  Use case         │  Primary defense         │  Subnet-level block  │
+└──────────────────────────────────────────────────────────────────────┘
+```
+
+##### VPC Flow Logs
+- Capture **IP traffic metadata** for VPC, subnet, or ENI
+- Sent to: **CloudWatch Logs** or **S3**
+- Does NOT capture: DNS queries, DHCP, instance metadata (169.254.x.x), Windows license activation
+- **Log format**: srcAddr, dstAddr, srcPort, dstPort, protocol, packets, bytes, action (ACCEPT/REJECT)
+- **Athena** — query Flow Logs stored in S3
+
+##### VPC Peering
+- **Direct network connection** between two VPCs (same or different account/region)
+- Traffic stays on AWS backbone
+- **No transitive routing** — A↔B and B↔C does NOT mean A↔C
+- **No overlapping CIDRs** allowed
+- **One-to-one** relationship — no hub-and-spoke with peering alone
+
+### VPC Endpoints (recap)
+| Type | For | Cost |
+|---|---|---|
+| **Gateway** | S3, DynamoDB | Free |
+| **Interface (PrivateLink)** | Most AWS services | Per hour + GB |
+
+##### Bastion Host
+- EC2 in **public subnet** → SSH into private instances
+- Security group: allow SSH only from specific IPs
+- Modern alternative: **SSM Session Manager** (no bastion needed)
+
+##### VPC Design Patterns
+
+###### Three-Tier Architecture
+```
+  Internet → IGW → Public Subnet (ALB)
+                 → Private Subnet (App: EC2/ECS)
+                 → Private Subnet (DB: RDS)
+```
+
+###### VPC CIDR Planning
+- Reserve **large CIDRs** (/16) — subnets cannot be expanded later
+- Plan for **multi-AZ** — at least 2 subnets per tier
+- Reserve **IP space** for future growth
+
+##### IPv6 in VPC
+- VPC can have both IPv4 (required) and IPv6 (optional) CIDRs
+- IPv6 addresses are **public by default** (no NAT) — use Egress-Only IGW for outbound-only
+
+##### DNS in VPC
+| Setting | Description |
+|---|---|
+| **enableDnsSupport** | Enable DNS resolution via AWS DNS (169.254.169.253) |
+| **enableDnsHostnames** | Assign public DNS hostnames to public IP instances |
+| Both required | For **private hosted zones** to work in VPC |
+
+##### Exam Key Points 
+- **5 IPs reserved per subnet** — account for this in CIDR planning
+- **NAT Gateway per AZ** for high availability — single NAT GW = single point of failure
+- **Security Groups are stateful** — return traffic automatically allowed
+- **NACLs are stateless** — must explicitly allow both inbound and outbound (including ephemeral ports)
+- **VPC Peering is non-transitive** — use Transit Gateway for transitive routing
+- **Default VPC** exists in every region — has public subnets, IGW, default SG/NACL
+- **VPC Flow Logs** don't capture DNS, DHCP, metadata service traffic
+- **Overlapping CIDRs prevent** VPC Peering — plan IP ranges carefully
+- **Secondary CIDR blocks** can be added to VPC (same or different RFC1918 range)
+- **Gateway Endpoint** for S3/DynamoDB requires route table update; no SG needed
+
+---
+
+#### Quick Comparison: Connectivity Options
+
+##### Hybrid Connectivity
+| Need | Solution |
+|---|---|
+| Remote users → AWS (any location) | **Client VPN** |
+| On-prem network → AWS (encrypted, internet) | **Site-to-Site VPN** |
+| On-prem network → AWS (dedicated, private) | **Direct Connect** |
+| On-prem → multiple VPCs centrally | **DX Gateway + Transit VIF** |
+| Multiple on-prem sites connected via AWS | **VPN CloudHub** |
+| Encrypt DX traffic | **VPN over Public VIF** |
+
+##### VPC-to-VPC Connectivity
+| Need | Solution |
+|---|---|
+| 2 VPCs, simple connection | **VPC Peering** |
+| Many VPCs, transitive routing | **Transit Gateway** |
+| Access AWS service privately | **VPC Endpoint (Gateway/Interface)** |
+| Expose your service to other accounts | **PrivateLink (Interface Endpoint)** |
+
+##### Traffic Distribution & Acceleration
+| Need | Solution |
+|---|---|
+| Distribute HTTP/S traffic (L7) | **ALB** |
+| Ultra-low latency, static IP (L4) | **NLB** |
+| 3rd-party firewall inline | **GWLB** |
+| Cache and accelerate web content globally | **CloudFront** |
+| Accelerate TCP/UDP apps globally (no cache) | **Global Accelerator** |
+| Route DNS traffic intelligently | **Route 53** |
+
+
+#### Common Exam Traps
+
+1. **NAT Gateway is AZ-specific** — deploy one per AZ for full HA; single NAT GW = AZ SPOF
+2. **NACLs are stateless** — must allow ephemeral ports (1024–65535) on outbound for inbound responses
+3. **Security Groups allow only; NACLs allow AND deny** — use NACL to block specific IPs
+4. **VPC Peering is non-transitive** — A-B + B-C ≠ A-C; use Transit Gateway instead
+5. **CNAME cannot be used at zone apex** (naked domain) — use Alias record instead
+6. **Route 53 Latency ≠ Geolocation** — latency is measured; geolocation is by country/continent
+7. **ACM cert for CloudFront must be in us-east-1** — even if distribution is global
+8. **ALB has no static IP** — use NLB with Elastic IP, or Global Accelerator for static IPs
+9. **Global Accelerator ≠ CloudFront** — GA accelerates TCP/UDP apps; CloudFront caches HTTP content
+10. **Direct Connect is NOT encrypted by default** — run VPN over Public VIF or use MACsec for encryption
+11. **Gateway Endpoints (S3/DynamoDB) are free** — Interface Endpoints cost per hour
+12. **VPC Flow Logs do NOT capture DNS queries** or instance metadata traffic (169.254.169.254)
+13. **PrivateLink VPCs can have overlapping CIDRs** — unlike VPC Peering which requires unique CIDRs
+14. **CloudFront OAC replaces OAI** — OAI is legacy; OAC supports SSE-KMS and is more secure
+15. **DX setup takes weeks** — never recommend DX when fast setup is needed (use VPN instead)
+16. **Site-to-Site VPN has 2 tunnels** — both should be configured; max ~1.25 Gbps per tunnel
+17. **Transit Gateway supports multicast** — no other AWS networking service does
+18. **Route 53 Multi-Value ≠ Load Balancer** — client-side DNS; not a replacement for ELB
+19. **Geolocation routing MUST have a default record** — otherwise unmatched locations get no answer
+20. **5 IPs reserved per subnet** — always subtract 5 from your usable host count (e.g., /24 = 251 usable)
 
 ---
 
