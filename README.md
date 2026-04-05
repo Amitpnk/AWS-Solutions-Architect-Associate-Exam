@@ -81,7 +81,7 @@ These domains represent the core competencies required for designing solutions o
 * [Amazon QuickSuite](#amazon-quicksight)
 * [Amazon Redshift](#amazon-redshift)
 
-### [Application Integration](#application-integration)
+### [Application Integration](#application-integration-1)
 
 * Amazon AppFlow
 * AWS AppSync
@@ -1245,12 +1245,1321 @@ A **fully managed, petabyte-scale cloud data warehouse** — optimized for OLAP 
 
 ---
 
-### Application Integration
+### Application Integration Services 
+
+#### Amazon AppFlow
+
+##### What It Is
+A **fully managed integration service** that enables secure, automated data flows between **SaaS applications** and AWS services — without writing code or managing infrastructure.
+
+<img src="img/integration/image.png" alt="" width="100" height="100">
+
+##### Architecture
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│                        Amazon AppFlow                                 │
+│                                                                       │
+│  SaaS Sources                                                         │
+│  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐  │
+│  │Salesforce│ │  SAP     │ │  Slack   │ │ Zendesk  │ │ServiceNow│  │
+│  │          │ │          │ │          │ │          │ │          │  │
+│  └────┬─────┘ └────┬─────┘ └────┬─────┘ └────┬─────┘ └────┬─────┘  │
+│       └────────────┴────────────┴─────────────┴────────────┘        │
+│                                  │                                    │
+│             ┌────────────────────▼────────────────────┐              │
+│             │             AppFlow Flow                 │              │
+│             │                                          │              │
+│             │  ┌──────────────────────────────────┐   │              │
+│             │  │  Transformations & Filters        │   │              │
+│             │  │  • Field mapping                  │   │              │
+│             │  │  • Data masking (PII)             │   │              │
+│             │  │  • Filtering / validation         │   │              │
+│             │  │  • Aggregation / merging          │   │              │
+│             │  └──────────────────────────────────┘   │              │
+│             │                                          │              │
+│             │  Trigger: Schedule / Event / On-demand   │              │
+│             └──────────────────┬───────────────────────┘              │
+│                                │                                      │
+│    ┌───────────────────────────┼──────────────────────────┐          │
+│    ▼                           ▼                          ▼          │
+│  Amazon S3              Amazon Redshift            Amazon EventBridge │
+│                                                                       │
+│    ▼                           ▼                                     │
+│  Salesforce               Snowflake                                  │
+│  (bidirectional)        (3rd party dest.)                            │
+└──────────────────────────────────────────────────────────────────────┘
+```
+
+##### Key Concepts
+| Concept | Description |
+|---|---|
+| **Flow** | An integration between a source and destination |
+| **Connector** | Pre-built integration for a SaaS app or AWS service |
+| **Trigger** | When the flow runs: on-demand, scheduled, or event-based |
+| **Transformation** | Map, filter, mask, merge, or validate data mid-flow |
+| **Private Flow** | Uses PrivateLink — data never traverses the public internet |
+
+##### Supported Connectors (Examples)
+| Category | Examples |
+|---|---|
+| **CRM** | Salesforce, HubSpot, Marketo |
+| **Analytics** | Google Analytics, Amplitude |
+| **Support** | Zendesk, ServiceNow |
+| **Collaboration** | Slack, LinkedIn |
+| **ERP** | SAP, Veeva |
+| **AWS** | S3, Redshift, EventBridge |
+| **Custom** | Build with Connector SDK |
+
+##### 
+- **No-code SaaS integration** — replace custom ETL pipelines for SaaS data
+- **Data masking built-in** — PII protection during transfer
+- **Bidirectional flows** — Salesforce ↔ S3 (both source and destination)
+- **Private connectivity** via AWS PrivateLink — never exposes data to internet
+- Transfers up to **100 GB per flow run**
+- **AppFlow vs Glue**: AppFlow = SaaS connectors; Glue = AWS/JDBC data sources ETL
+- **Use when**: syncing Salesforce data to S3/Redshift, cross-SaaS data movement, replacing manual CSV exports
+
+
+#### AWS AppSync
+
+##### What It Is
+A **fully managed GraphQL and Pub/Sub API** service for building real-time, data-driven applications — already covered in the Serverless section.
+
+<img src="img/integration/image-1.png" alt="" width="100" height="100">
+
+> 📌 **See Serverless Study Guide** for full AppSync coverage including:
+> - GraphQL operations (Query, Mutation, Subscription)
+> - Data sources (DynamoDB, Lambda, RDS, HTTP, EventBridge)
+> - Resolvers (Unit, Pipeline, VTL/JS)
+> - Authentication methods (API Key, IAM, Cognito, OIDC, Lambda)
+> - Real-time WebSocket subscriptions
+> - Caching and offline sync
+
+##### AppSync in Application Integration Context
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│              AppSync as an Integration Hub                            │
+│                                                                       │
+│  Mobile / Web / IoT Client                                            │
+│         │                                                             │
+│         │  GraphQL (single endpoint)                                  │
+│         ▼                                                             │
+│  ┌──────────────────────────────────────────────────────────────┐   │
+│  │                    AWS AppSync API                            │   │
+│  │                                                               │   │
+│  │  Single query ──▶ fan out to multiple backends:               │   │
+│  │  • DynamoDB (user data)                                       │   │
+│  │  • Lambda (business logic)                                    │   │
+│  │  • RDS Aurora (relational data)                               │   │
+│  │  • HTTP API (3rd party)                                       │   │
+│  │  • EventBridge (publish events)                               │   │
+│  │                                                               │   │
+│  │  Subscriptions ──▶ real-time push to connected clients        │   │
+│  └──────────────────────────────────────────────────────────────┘   │
+└──────────────────────────────────────────────────────────────────────┘
+```
+
+##### 
+- **AppSync = GraphQL**; API Gateway = REST/HTTP/WebSocket
+- Key differentiator in App Integration: **real-time subscriptions** + **multiple data sources in one query**
+- **EventBridge as AppSync data source** — publish events from GraphQL mutations
+- **Use when**: mobile/web apps needing real-time data, multiple backend consolidation, offline-capable apps
+
+
+#### Amazon EventBridge
+
+##### What It Is
+A **serverless event bus** that connects applications using events — routes events from AWS services, custom apps, and SaaS applications to targets for automated processing.
+
+<img src="img/integration/image-2.png" alt="" width="100" height="100">
+
+##### Architecture
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│                       Amazon EventBridge                              │
+│                                                                       │
+│  Event Sources                                                        │
+│  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐  │
+│  │  AWS     │ │  Custom  │ │  SaaS    │ │ AppSync  │ │ Schedule │  │
+│  │ Services │ │   Apps   │ │(Zendesk, │ │ Mutations│ │ (cron)   │  │
+│  │(EC2,S3,  │ │  (SDK    │ │ Segment, │ │          │ │          │  │
+│  │  RDS...) │ │  PutEvent│ │ Datadog) │ │          │ │          │  │
+│  └────┬─────┘ └────┬─────┘ └────┬─────┘ └────┬─────┘ └────┬─────┘  │
+│       └────────────┴────────────┴─────────────┴────────────┘        │
+│                                  │                                    │
+│             ┌────────────────────▼─────────────────────┐             │
+│             │           Event Bus                        │             │
+│             │  ┌──────────────────────────────────────┐ │             │
+│             │  │  Rules (Event Pattern matching)       │ │             │
+│             │  │  {                                    │ │             │
+│             │  │    "source": ["aws.ec2"],             │ │             │
+│             │  │    "detail-type":["EC2 State Change"] │ │             │
+│             │  │  }                                    │ │             │
+│             │  └──────────────────────────────────────┘ │             │
+│             └──────────────────┬────────────────────────┘             │
+│                                │                                      │
+│   ┌──────┬──────┬──────┬───────┴──────┬──────┬──────┬────────┐      │
+│   ▼      ▼      ▼      ▼              ▼      ▼      ▼        ▼      │
+│ Lambda  SQS   SNS  Step Fns    Kinesis  EC2  ECS  API GW   Firehose │
+└──────────────────────────────────────────────────────────────────────┘
+```
+
+##### Event Buses
+| Bus Type | Description |
+|---|---|
+| **Default Event Bus** | Receives AWS service events automatically |
+| **Custom Event Bus** | For your own application events |
+| **Partner Event Bus** | Receive events from SaaS partners (Zendesk, Datadog, Auth0) |
+
+##### Rules
+| Component | Description |
+|---|---|
+| **Event Pattern** | JSON filter that matches specific events (source, type, detail) |
+| **Schedule** | Cron or rate expression — trigger on time basis |
+| **Target** | Where to send matching events (up to 5 targets per rule) |
+| **Input Transform** | Transform/reshape event before sending to target |
+| **Dead-letter Queue** | SQS DLQ for failed event deliveries |
+| **Retry Policy** | Configurable retry attempts and duration |
+
+##### EventBridge Pipes
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│                     EventBridge Pipes                                 │
+│                                                                       │
+│  Source ──▶ Filter ──▶ Enrichment ──▶ Target                        │
+│                        (Lambda/                                       │
+│  ┌────────────────┐     API GW/        ┌────────────────────────┐   │
+│  │  SQS, Kinesis  │     Stepfn)        │  EventBridge, Lambda   │   │
+│  │  DynamoDB      │ ──────────────────▶│  SQS, SNS, API GW,     │   │
+│  │  MSK, Kafka    │                    │  Step Functions, etc.  │   │
+│  └────────────────┘                    └────────────────────────┘   │
+│                                                                       │
+│  Point-to-point integration with optional enrichment — no code       │
+└──────────────────────────────────────────────────────────────────────┘
+```
+
+##### EventBridge Schema Registry
+- Auto-discovers and stores **event schemas**
+- Generates **code bindings** (Java, Python, TypeScript) for events
+- Enables discovery of event structure across your organization
+
+##### EventBridge vs CloudWatch Events
+- EventBridge **IS** CloudWatch Events (same underlying service, rebranded + extended)
+- EventBridge adds: **Partner events, Schema Registry, Pipes, Global Endpoints**
+
+##### EventBridge Global Endpoints
+- Route events to **multi-region** EventBridge buses for DR
+- Automatically fails over to secondary region
+- Used with Route 53 health checks
+
+##### 
+- **Default bus** = AWS service events; **Custom bus** = your app events; **Partner bus** = SaaS events
+- **Rules match event patterns** using JSON filter — must match all specified fields
+- **Up to 5 targets per rule** — fan-out to multiple services
+- **EventBridge Pipes** = point-to-point with enrichment (source → filter → enrich → target)
+- **Schema Registry** — auto-discover event schemas + code generation
+- **Retry with DLQ** — failed event deliveries retried then sent to SQS DLQ
+- **EventBridge ≠ SNS**: EventBridge = content-based routing by event pattern; SNS = topic-based fan-out
+- **EventBridge ≠ SQS**: EventBridge = event routing; SQS = decoupled queuing with persistence
+- **Use when**: event-driven architectures, react to AWS service changes, SaaS event integration, scheduled tasks
+
+#### Amazon MQ
+
+##### What It Is
+A **managed message broker service** for **Apache ActiveMQ and RabbitMQ** — for organizations migrating existing on-premises messaging to AWS without rewriting applications.
+
+<img src="img/integration/image-3.png" alt="" width="100" height="100">
+
+##### Architecture
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│                         Amazon MQ                                     │
+│                                                                       │
+│  On-Premises Apps                    Cloud Apps                      │
+│  (using JMS, AMQP,                   (using AMQP, MQTT,             │
+│   MQTT, STOMP,                        STOMP, OpenWire)               │
+│   OpenWire)                                    │                     │
+│        │                                       │                     │
+│        └──────────────────────────────────────┘                     │
+│                              │                                        │
+│              ┌───────────────▼────────────────┐                      │
+│              │         Amazon MQ Broker        │                      │
+│              │                                 │                      │
+│              │  ┌─────────────────────────┐   │                      │
+│              │  │  Active/Standby (HA)     │   │                      │
+│              │  │  Primary   │  Standby    │   │                      │
+│              │  │  (AZ-1a)   │  (AZ-1b)   │   │                      │
+│              │  └─────────────────────────┘   │                      │
+│              │                                 │                      │
+│              │  Protocols: JMS, NMS, AMQP,     │                      │
+│              │  STOMP, MQTT, OpenWire           │                      │
+│              └───────────────┬─────────────────┘                      │
+│                              │                                        │
+│         ┌────────────────────┼────────────────────┐                  │
+│         ▼                    ▼                    ▼                  │
+│     Consumers            Consumers            Consumers              │
+│     (on-prem)            (EC2)                (Lambda)               │
+└──────────────────────────────────────────────────────────────────────┘
+```
+
+##### Amazon MQ vs SQS/SNS
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│                  Amazon MQ vs SQS vs SNS                             │
+│                                                                       │
+│  Feature          │  Amazon MQ              │  SQS / SNS             │
+│  ─────────────────┼─────────────────────────┼────────────────────── │
+│  Protocol         │  JMS, AMQP, MQTT,       │  AWS proprietary SDK  │
+│                   │  STOMP, OpenWire         │  (HTTPS/API)          │
+│  Migration        │  Lift & shift from       │  New applications     │
+│                   │  on-prem MQ              │  (cloud-native)       │
+│  Management       │  Semi-managed (broker    │  Fully managed,       │
+│                   │  instances in VPC)       │  serverless           │
+│  Scaling          │  Manual (instance size)  │  Automatic            │
+│  HA               │  Active/Standby          │  Built-in, multi-AZ   │
+│  Message Size     │  Up to 64 MB (RabbitMQ) │  SQS: 256 KB          │
+│  Use Case         │  Existing apps with       │  New cloud-native     │
+│                   │  standard protocols      │  microservices        │
+└──────────────────────────────────────────────────────────────────────┘
+```
+
+##### Broker Types
+| Broker | Engine | Best For |
+|---|---|---|
+| **ActiveMQ** | Apache ActiveMQ | JMS-based Java apps; complex routing |
+| **RabbitMQ** | RabbitMQ | AMQP; lightweight, high-throughput |
+
+##### HA Options
+| Option | Description |
+|---|---|
+| **Single-instance** | Dev/test; no HA |
+| **Active/Standby** | Two brokers across AZs; automatic failover |
+| **RabbitMQ Cluster** | 3-node cluster across AZs (RabbitMQ only) |
+
+##### 
+- **Use Amazon MQ** when migrating **existing apps** that use standard protocols (JMS, AMQP, MQTT, STOMP)
+- **Use SQS/SNS** for **new cloud-native** applications
+- Amazon MQ runs on **dedicated broker instances** in your VPC — NOT serverless
+- Supports both **queues** (point-to-point) and **topics** (pub/sub) — like SQS + SNS combined
+- **Active/Standby** = HA across two AZs; automatic failover; shared EFS storage
+- Deployed inside a **VPC** — access via private endpoint or VPN/DX
+- **Use when**: "lift and shift" of on-premises messaging (IBM MQ, TIBCO, ActiveMQ, RabbitMQ)
+
+#### Amazon SNS (Simple Notification Service)
+
+##### What It Is
+A **fully managed pub/sub messaging service** for **fan-out** — send one message to a topic and deliver it to many subscribers simultaneously.
+
+<img src="img/integration/image-4.png" alt="" width="100" height="100">
+
+##### Architecture
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│                        Amazon SNS                                     │
+│                                                                       │
+│  Publishers                                                           │
+│  ┌──────────┐  ┌──────────┐  ┌──────────┐                           │
+│  │  Lambda  │  │CloudWatch│  │  EC2 App │                           │
+│  │          │  │  Alarm   │  │          │                           │
+│  └────┬─────┘  └────┬─────┘  └────┬─────┘                           │
+│       └─────────────┴────────────┘                                   │
+│                      │  Publish message                               │
+│                      ▼                                               │
+│              ┌───────────────┐                                       │
+│              │   SNS Topic   │                                       │
+│              │               │                                       │
+│              │  Standard or  │                                       │
+│              │    FIFO       │                                       │
+│              └───────┬───────┘                                       │
+│                      │  Fan-out to all subscribers                   │
+│       ┌──────────────┼──────────────┬──────────────┬─────────────┐  │
+│       ▼              ▼              ▼              ▼             ▼  │
+│    SQS Queue      Lambda         HTTP/S         Email          SMS  │
+│    (buffering)   (process)    (webhook)     (notification)  (mobile)│
+│                                                                       │
+│       ▼              ▼                                               │
+│   Kinesis         Amazon                                             │
+│   Firehose        EventBridge                                        │
+└──────────────────────────────────────────────────────────────────────┘
+```
+
+##### SNS Topic Types
+| Type | Ordering | Deduplication | Use Case |
+|---|---|---|---|
+| **Standard** | Best-effort | No | High throughput, any order |
+| **FIFO** | Strict (per group) | Yes (5-min window) | Ordered events, exactly-once |
+
+##### Message Filtering
+- **Subscription Filter Policies** — each subscriber gets only matching messages
+- Filter on **message attributes** (JSON policy)
+- Reduces subscriber processing of irrelevant messages
+
+```
+  SNS Topic
+       │
+       ├── SQS Queue A  [filter: {"event_type": ["ORDER_PLACED"]}]
+       ├── SQS Queue B  [filter: {"event_type": ["ORDER_SHIPPED"]}]
+       └── Lambda       [filter: {"priority": ["high"]}]
+```
+
+##### SNS Message Delivery
+| Protocol | Description |
+|---|---|
+| **SQS** | Queue-based; decouples delivery; most common |
+| **Lambda** | Direct invocation; synchronous processing |
+| **HTTP/HTTPS** | Webhook to any endpoint |
+| **Email / Email-JSON** | Human notification |
+| **SMS** | Mobile text messages |
+| **Mobile Push** | APNS (iOS), FCM (Android), ADM |
+| **Kinesis Firehose** | Stream to S3/Redshift/OpenSearch |
+| **EventBridge** | Route to EventBridge for further processing |
+
+##### SNS + SQS Fan-Out Pattern (Critical)
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│                    SNS + SQS Fan-Out Pattern                          │
+│                                                                       │
+│  Producer                                                             │
+│     │                                                                 │
+│     │ Publish once                                                    │
+│     ▼                                                                 │
+│  SNS Topic                                                            │
+│     │                                                                 │
+│     ├──────────────────▶  SQS Queue 1 ──▶  Consumer A               │
+│     │                     (independent processing,                   │
+│     ├──────────────────▶  SQS Queue 2    retries, ordering)          │
+│     │                     ──▶ Consumer B                             │
+│     └──────────────────▶  SQS Queue 3                               │
+│                           ──▶ Consumer C                             │
+│                                                                       │
+│  Benefits:                                                            │
+│  • Decoupled consumers — one slow consumer doesn't block others      │
+│  • Each SQS queue can have its own retention, DLQ, visibility        │
+│  • Works across accounts (cross-account SNS → SQS)                  │
+└──────────────────────────────────────────────────────────────────────┘
+```
+
+##### SNS Security
+| Feature | Description |
+|---|---|
+| **Encryption at rest** | SSE via KMS |
+| **Encryption in transit** | HTTPS |
+| **Access Policy** | Resource-based policy on topic |
+| **Cross-account** | Allow other accounts to publish/subscribe |
+| **VPC Endpoint** | Private SNS access from within VPC |
+
+##### 
+- **SNS = push model** — delivers to ALL subscribers simultaneously (fan-out)
+- **SNS FIFO** — strict ordering + deduplication; can only have **SQS FIFO** subscribers
+- **Subscription Filter Policy** — each subscriber receives only relevant messages (cost + performance optimization)
+- **SNS + SQS** = fan-out pattern — decouple multiple downstream processors
+- **Message size limit**: 256 KB (same as SQS)
+- SNS does **NOT persist messages** — if subscriber is down, message is lost (except SQS buffer)
+- **Dead-letter queue** — per subscription; failed deliveries go to SQS DLQ
+- **Use when**: real-time notifications, fan-out to multiple systems, alerts, mobile push notifications
+
+#### Amazon SQS (Simple Queue Service)
+
+##### What It Is
+A **fully managed message queuing service** — decouple and scale microservices, distributed systems, and serverless applications with a reliable, highly available queue.
+
+<img src="img/integration/image-5.png" alt="" width="100" height="100">
+
+##### Architecture
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│                         Amazon SQS                                    │
+│                                                                       │
+│  Producers                                                            │
+│  ┌──────────┐  ┌──────────┐  ┌──────────┐                           │
+│  │  EC2     │  │  Lambda  │  │  ECS     │                           │
+│  └────┬─────┘  └────┬─────┘  └────┬─────┘                           │
+│       └─────────────┴─────────────┘                                  │
+│                      │  SendMessage                                   │
+│                      ▼                                               │
+│  ┌──────────────────────────────────────────────────────────────┐   │
+│  │                     SQS Queue                                 │   │
+│  │                                                               │   │
+│  │  ┌──────────────────────────────────────────────────────┐   │   │
+│  │  │  [Msg1] [Msg2] [Msg3] [Msg4] [Msg5] [Msg6]          │   │   │
+│  │  └──────────────────────────────────────────────────────┘   │   │
+│  │                                                               │   │
+│  │  Retention: 1 min – 14 days (default 4 days)                 │   │
+│  └──────────────────────────────────────────────────────────────┘   │
+│                      │  ReceiveMessage (polling)                     │
+│                      ▼                                               │
+│  Consumers                                                           │
+│  ┌──────────┐  ┌──────────┐  ┌──────────┐                           │
+│  │  EC2     │  │  Lambda  │  │  ECS     │                           │
+│  │(poll SQS)│  │(ESM poll)│  │(poll SQS)│                           │
+│  └──────────┘  └──────────┘  └──────────┘                           │
+└──────────────────────────────────────────────────────────────────────┘
+```
+
+##### Queue Types
+
+###### Standard Queue
+- **Unlimited throughput** — nearly unlimited TPS
+- **At-least-once delivery** — message may be delivered more than once
+- **Best-effort ordering** — may be out of order
+- Consumers must be **idempotent** (handle duplicate messages)
+
+###### FIFO Queue
+- **Exactly-once processing** — deduplication (5-minute window)
+- **Strict ordering** — within message group
+- **300 TPS** (no batching) or **3,000 TPS** (with batching of 10)
+- Queue name must end in `.fifo`
+
+##### Key SQS Concepts
+
+###### Visibility Timeout
+```
+  Consumer receives message ──▶ Message becomes invisible (Visibility Timeout)
+                                         │
+                              Consumer processes successfully
+                                         │
+                              Consumer deletes message ──▶ Gone from queue
+                                         │
+                              OR Timeout expires ──▶ Message reappears
+                              (another consumer can pick it up)
+```
+- Default: 30 seconds; Max: 12 hours
+- Consumer must delete message after successful processing
+- If processing takes longer → `ChangeMessageVisibility` API to extend
+
+###### Message Lifecycle
+| Concept | Description |
+|---|---|
+| **Message Size** | Up to 256 KB (use S3 for larger payloads — Extended Client Library) |
+| **Retention** | 1 minute to 14 days (default: 4 days) |
+| **Delivery Delay** | 0–15 minutes delay before message is visible |
+| **Receive Wait Time** | Long polling: 1–20 seconds (reduces empty responses) |
+
+###### Dead Letter Queue (DLQ)
+```
+  SQS Queue ──▶ Consumer fails N times
+                       │
+                       ▼ (maxReceiveCount exceeded)
+               Dead Letter Queue (DLQ)
+                       │
+                       ▼
+               Alert + investigate + replay
+```
+- Separate SQS queue for messages that failed processing N times
+- **maxReceiveCount**: threshold before moving to DLQ
+- **DLQ Redrive**: replay messages from DLQ back to source queue (after fix)
+- DLQ must be same type (Standard → Standard DLQ, FIFO → FIFO DLQ)
+
+###### Long Polling vs Short Polling
+| Type | Behavior | Benefit |
+|---|---|---|
+| **Short Polling** | Returns immediately (even if empty) | Fast but wastes API calls |
+| **Long Polling** | Waits up to 20s for messages | Reduces cost, fewer empty responses |
+
+##### SQS with Lambda (Event Source Mapping)
+```
+  SQS Queue ◀────── Lambda polls automatically
+       │               │
+       │  Batch of msgs │  Process batch
+       └───────────────▶│
+                        │  Success: delete from queue
+                        │  Failure: return to queue or DLQ
+```
+- Lambda polls SQS in batches (1–10,000 messages per batch)
+- **Batch window**: accumulate messages up to 5 minutes
+- **`ReportBatchItemFailures`**: partial batch success — only failed items retry
+
+##### SQS Security
+| Feature | Description |
+|---|---|
+| **Encryption at rest** | SSE-SQS (managed) or SSE-KMS (customer key) |
+| **Encryption in transit** | HTTPS |
+| **Access Policy** | Resource-based; cross-account publishing |
+| **VPC Endpoint** | Interface endpoint for private access |
+
+##### SQS Extended Client Library
+- Send messages **larger than 256 KB** using S3
+- Actual payload stored in S3; message contains S3 reference pointer
+- Available for Java, Python
+
+##### Auto Scaling with SQS
+```
+  SQS Queue depth ──▶ CloudWatch Metric: ApproximateNumberOfMessages
+                                │
+                      ┌─────────▼─────────┐
+                      │  CloudWatch Alarm  │
+                      └─────────┬─────────┘
+                                │
+                      ┌─────────▼─────────┐
+                      │  EC2 Auto Scaling  │
+                      │  (scale consumers) │
+                      └───────────────────┘
+```
+- **`ApproximateNumberOfMessages`** — key metric for scaling consumer fleet
+- Use **Target Tracking** on this metric (e.g., 100 messages per consumer instance)
+
+##### SQS vs SNS vs EventBridge
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│              SQS vs SNS vs EventBridge                               │
+│                                                                       │
+│  Feature         │  SQS              │  SNS           │ EventBridge  │
+│  ────────────────┼───────────────────┼────────────────┼──────────── │
+│  Pattern         │  Queue (pull)      │  Pub/Sub (push)│ Event bus   │
+│  Consumers       │  One (competing)   │  Many (fan-out)│ Rule-based  │
+│  Routing         │  None             │  Topic-based   │ Content-    │
+│                  │                   │  + filter      │ based JSON  │
+│  Persistence     │  Yes (up to 14d)  │  No            │ No          │
+│  Ordering        │  FIFO optional    │  FIFO optional │ Best-effort │
+│  Trigger         │  Pull/Lambda ESM  │  Push          │ Push        │
+│  Best for        │  Decoupling,      │  Notifications,│ Event-driven│
+│                  │  buffering, retry │  fan-out       │ automation  │
+└──────────────────────────────────────────────────────────────────────┘
+```
+
+##### 
+- **SQS = pull model** (consumers poll); **SNS = push model** (delivers to subscribers)
+- **Standard** = at-least-once, best-effort order; **FIFO** = exactly-once, strict order
+- **Visibility timeout** — message hidden from others while being processed; must delete on success
+- **Long polling** (20s) reduces API calls and cost vs short polling
+- **DLQ** — capture poison-pill messages; use DLQ Redrive to replay after fixing
+- **SQS scales automatically** — no shard/capacity management needed
+- **`ApproximateNumberOfMessages`** — metric for Auto Scaling consumer fleet
+- **Lambda polls SQS** (event source mapping) — SQS does NOT push to Lambda
+- SQS messages can be **delayed** (0–15 minutes) at queue or message level
+- **Use when**: decoupling microservices, buffering requests, async task processing, workload leveling
+
+#### AWS Step Functions
+
+##### What It Is
+A **serverless workflow orchestration service** — coordinate multiple AWS services into visual, auditable workflows (state machines) with built-in error handling, retry logic, and parallelism.
+
+<img src="img/integration/image-6.png" alt="" width="100" height="100">
+
+##### Architecture
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│                      AWS Step Functions                               │
+│                                                                       │
+│  ┌────────────────────────────────────────────────────────────────┐  │
+│  │                    State Machine                                │  │
+│  │                                                                │  │
+│  │  ┌──────────┐    ┌──────────┐    ┌──────────┐    ┌─────────┐  │  │
+│  │  │  Task    │───▶│  Choice  │───▶│ Parallel │───▶│   End   │  │  │
+│  │  │ (Lambda) │    │  (if/    │    │  (fork/  │    │         │  │  │
+│  │  └──────────┘    │   else)  │    │   join)  │    └─────────┘  │  │
+│  │                  └──────────┘    └──────────┘                  │  │
+│  │                       │                │                       │  │
+│  │                  ┌────▼─────┐    ┌─────▼────┐                 │  │
+│  │                  │  Path A  │    │  Branch1 │                 │  │
+│  │                  │  Path B  │    │  Branch2 │                 │  │
+│  │                  └──────────┘    └──────────┘                 │  │
+│  └────────────────────────────────────────────────────────────────┘  │
+│                                                                       │
+│  Execution History: full audit of every state transition             │
+└──────────────────────────────────────────────────────────────────────┘
+```
+
+##### State Types
+| State | Description |
+|---|---|
+| **Task** | Perform work — invoke Lambda, ECS, SQS, SNS, Glue, EMR, Bedrock, etc. |
+| **Choice** | Conditional branching (if/else, switch) |
+| **Wait** | Pause for duration or until timestamp |
+| **Parallel** | Execute branches simultaneously; wait for ALL to complete |
+| **Map** | Iterate over array items (for-each loop) |
+| **Pass** | Pass input to output; transform data; no work done |
+| **Succeed** | End execution successfully |
+| **Fail** | End execution as failed with error + cause |
+
+##### Step Functions Workflow Types
+
+###### Standard Workflow
+| Feature | Detail |
+|---|---|
+| **Duration** | Up to **1 year** |
+| **Execution** | At-most-once (no duplicate execution) |
+| **Pricing** | Per state transition |
+| **History** | Full execution history (90 days) |
+| **Use case** | Long-running, auditable business processes |
+
+###### Express Workflow
+| Feature | Detail |
+|---|---|
+| **Duration** | Up to **5 minutes** |
+| **Execution** | At-least-once (may run multiple times) |
+| **Pricing** | Per execution + duration + memory |
+| **Throughput** | High throughput (100K+ TPS) |
+| **History** | CloudWatch Logs (no built-in history) |
+| **Use case** | High-volume, short-duration streaming/IoT workflows |
+
+##### Integrations — Service Integrations
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│                Step Functions Service Integrations                    │
+│                                                                       │
+│  Compute:   Lambda, ECS/Fargate, EC2, Batch, Glue                   │
+│  Database:  DynamoDB, RDS (Aurora Serverless)                        │
+│  Messaging: SNS, SQS, EventBridge, AppSync                          │
+│  ML:        SageMaker, Bedrock                                       │
+│  Analytics: Athena, EMR, Redshift                                    │
+│  APIs:      API Gateway, HTTP endpoint                               │
+│  Other:     S3, CodeBuild, CodePipeline, Step Functions (nested)     │
+└──────────────────────────────────────────────────────────────────────┘
+```
+
+##### Integration Patterns
+| Pattern | Description |
+|---|---|
+| **Request-Response** | Call service; continue immediately (fire-and-forget) |
+| **Sync (.sync:2)** | Call service; wait for it to complete |
+| **Wait for Token (`.waitForTaskToken`)** | Pause workflow; resume when external system sends back token |
+
+###### Wait for Task Token — Human Approval Pattern
+```
+  Step Functions
+       │
+       │  Start task with taskToken embedded in message
+       ▼
+  Send approval request to SQS / SNS / Email
+       │
+       │  (Workflow PAUSED — waiting for callback)
+       │
+  Human reviews → calls SendTaskSuccess/SendTaskFailure API
+  with original taskToken
+       │
+       ▼
+  Workflow resumes ──▶ next state
+```
+- Enables **human-in-the-loop** approval workflows
+- Integration point for **external systems** to resume workflows
+
+##### Error Handling
+| Feature | Description |
+|---|---|
+| **Retry** | Auto-retry failed states (configurable: max attempts, backoff rate, interval) |
+| **Catch** | Route to different state on specific error (fallback path) |
+| **ResultPath** | Control where task result is placed in state input |
+| **InputPath / OutputPath** | Filter/select portions of state input/output |
+
+##### Step Functions vs Lambda vs SQS
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│              When to Use Step Functions vs Lambda vs SQS             │
+│                                                                       │
+│  Lambda alone → simple, single function, short execution             │
+│                                                                       │
+│  SQS → decouple producer from consumer, buffer messages              │
+│                                                                       │
+│  Step Functions → multi-step workflows with:                         │
+│    • Sequential or parallel steps                                    │
+│    • Conditional branching                                           │
+│    • Error handling + retries                                        │
+│    • Human approval steps                                            │
+│    • Long-running (hours, days, up to 1 year)                        │
+│    • Audit/visibility of every step                                  │
+└──────────────────────────────────────────────────────────────────────┘
+```
+
+##### Common Step Functions Patterns
+| Pattern | Architecture |
+|---|---|
+| **ETL Pipeline** | S3 trigger → validate → transform → load → notify |
+| **Order Processing** | Place order → payment → inventory → shipping → notify |
+| **ML Pipeline** | Preprocess → train → evaluate → deploy → test |
+| **Human Approval** | Submit → review (wait token) → approve/reject → action |
+| **Parallel Processing** | Split dataset → Map state (parallel processing) → aggregate |
+
+##### 
+- **Standard** = long-running (1 year), exactly-once, full history — for business workflows
+- **Express** = high-volume (5 min max), at-least-once, CloudWatch logs — for streaming/IoT
+- **`.waitForTaskToken`** = pause workflow until external system responds — human approval
+- **Map state** = parallel iteration over array (like a for-each loop)
+- **Parallel state** = concurrent branches (fork/join); all branches must complete
+- **Catch + Retry** built into state machine — no try/catch in Lambda code needed
+- Step Functions is **visual** — see workflow execution in AWS console
+- Integrates with **100+ AWS services** natively — orchestrate without glue code
+- **Step Functions ≠ SWF** — SWF is legacy; Step Functions is the modern replacement
+- **Use when**: multi-step workflows, human approvals, error handling across services, replacing complex Lambda chaining
+
+---
+
+#### Quick Comparison: Application Integration Services
+
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│              Application Integration — Decision Framework             │
+│                                                                       │
+│  Scenario                                   Service                  │
+│  ──────────────────────────────────────     ──────────────────────  │
+│  Decouple services with buffering           SQS                      │
+│  Strictly ordered, exactly-once processing  SQS FIFO                 │
+│  Fan-out one message to many consumers      SNS                      │
+│  Fan-out + buffering each consumer          SNS → SQS (fan-out)      │
+│  React to AWS service events                EventBridge              │
+│  SaaS event routing (Zendesk, Datadog)      EventBridge Partner Bus  │
+│  Schedule recurring tasks                   EventBridge Scheduler    │
+│  Multi-step workflow with branching         Step Functions           │
+│  Human approval in workflow                 Step Functions + token   │
+│  Migrate on-prem messaging (JMS/AMQP)       Amazon MQ                │
+│  SaaS → AWS data integration (no-code)      Amazon AppFlow           │
+│  GraphQL API + real-time subscriptions      AWS AppSync              │
+│  High-volume event routing (JSON match)     EventBridge              │
+│  Long-running orchestration (days/weeks)    Step Functions Standard  │
+│  High-throughput short workflows            Step Functions Express   │
+└──────────────────────────────────────────────────────────────────────┘
+```
+
+##### Service Interaction Patterns
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│                  Common Integration Patterns                          │
+│                                                                       │
+│  1. Fan-Out Pattern                                                   │
+│     Publisher ──▶ SNS Topic ──▶ SQS Queue A (Consumer A)             │
+│                            ├──▶ SQS Queue B (Consumer B)             │
+│                            └──▶ Lambda (Consumer C)                  │
+│                                                                       │
+│  2. Event-Driven Automation                                           │
+│     AWS Event ──▶ EventBridge Rule ──▶ Lambda / Step Functions       │
+│                                                                       │
+│  3. Async Decoupling                                                  │
+│     API Gateway ──▶ SQS ──▶ Lambda Consumer (background)            │
+│                                                                       │
+│  4. Workflow Orchestration                                            │
+│     S3 Event ──▶ EventBridge ──▶ Step Functions State Machine        │
+│                 ──▶ Lambda (step 1) ──▶ ECS Task (step 2)            │
+│                 ──▶ SNS Notification (completion)                    │
+│                                                                       │
+│  5. SaaS Data Sync                                                    │
+│     Salesforce ──▶ AppFlow ──▶ S3 ──▶ Glue ETL ──▶ Redshift         │
+└──────────────────────────────────────────────────────────────────────┘
+```
+
+#### Common Exam Traps
+
+1. **SQS is pull-based** — consumers poll; Lambda polls SQS via event source mapping (SQS does NOT push to Lambda)
+2. **SNS is push-based** — delivers to all subscribers immediately (fan-out); messages NOT persisted
+3. **SNS FIFO can only have SQS FIFO subscribers** — not Lambda, HTTP, or email
+4. **SQS Standard = at-least-once** — consumer must be idempotent to handle duplicates
+5. **SQS FIFO = 300 TPS** (no batch) or **3,000 TPS** (with batch=10) — limited throughput vs Standard
+6. **Visibility timeout expired ≠ message deleted** — it reappears in queue for other consumers to receive
+7. **DLQ must match queue type** — Standard queue DLQ must be Standard; FIFO DLQ must be FIFO
+8. **Amazon MQ = lift & shift** for existing apps with JMS/AMQP; new apps should use SQS/SNS
+9. **Step Functions Standard** = at-most-once (1 year); **Express** = at-least-once (5 min)
+10. **EventBridge vs SNS**: EventBridge = content/JSON pattern routing; SNS = topic + filter attribute routing
+11. **SQS Long Polling** (up to 20s) reduces empty responses and cost — always prefer over short polling
+12. **`ApproximateNumberOfMessages`** = SQS metric for Auto Scaling consumer EC2 fleet
+13. **Step Functions `.waitForTaskToken`** = pause workflow for external/human input — NOT just for humans
+14. **AppFlow vs Glue**: AppFlow = SaaS connectors; Glue = AWS/database ETL
+15. **SNS does NOT persist messages** — if no subscriber or subscriber unavailable, message is lost; use SQS to buffer
+16. **EventBridge Pipes** ≠ EventBridge Rules — Pipes = point-to-point with enrichment; Rules = fan-out routing
+17. **SQS message size limit = 256 KB** — use S3 + Extended Client Library for larger payloads
+18. **Step Functions Map state** = iterate array items; **Parallel state** = concurrent independent branches
+19. **FIFO queue name must end in `.fifo`** — easy to forget; queue creation fails without it
+20. **EventBridge default bus** receives AWS service events automatically — custom apps use custom bus
+
 
 
 ---
 
 ### AWS Cost Management
+
+### AWS Cost Management
+
+#### Overview: AWS Cost Management Tools
+
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│                  AWS Cost Management Ecosystem                        │
+│                                                                       │
+│  ┌─────────────────────────────────────────────────────────────┐    │
+│  │  AWS Cost & Usage Report (CUR)                               │    │
+│  │  Most granular raw billing data → S3 → Athena / Redshift     │    │
+│  └─────────────────────────────────────────────────────────────┘    │
+│                              ▲                                        │
+│                    Raw data feeds into                                │
+│                              │                                        │
+│  ┌──────────────────┐  ┌─────┴────────────┐  ┌──────────────────┐   │
+│  │  AWS Cost        │  │  AWS Cost        │  │  AWS Budgets     │   │
+│  │  Explorer        │  │  and Usage       │  │                  │   │
+│  │  (visualize +    │  │  Report (CUR)    │  │  (alerts when    │   │
+│  │   forecast)      │  │  (raw data)      │  │   limits hit)    │   │
+│  └──────────────────┘  └──────────────────┘  └──────────────────┘   │
+│                                                                       │
+│  ┌─────────────────────────────────────────────────────────────┐    │
+│  │  Savings Plans                                               │    │
+│  │  Commitment-based discounts across compute services          │    │
+│  └─────────────────────────────────────────────────────────────┘    │
+└──────────────────────────────────────────────────────────────────────┘
+```
+
+#### AWS Budgets
+
+##### What It Is
+Set **custom cost and usage budgets** that alert you — via SNS or email — when your actual or forecasted spending exceeds defined thresholds.
+
+<img src="img/cost-explorer/image.png" alt="" width="100" height="100">
+
+##### Architecture
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│                          AWS Budgets                                  │
+│                                                                       │
+│  ┌──────────────────────────────────────────────────────────────┐   │
+│  │  Budget Definition                                            │   │
+│  │                                                               │   │
+│  │  Type:    Cost / Usage / Savings Plans / RI Coverage         │   │
+│  │  Period:  Daily / Monthly / Quarterly / Annually             │   │
+│  │  Amount:  $500/month                                         │   │
+│  │  Filters: Service, Account, Tag, Region, AZ, Purchase Type   │   │
+│  └──────────────────────────────────────────────────────────────┘   │
+│                              │                                        │
+│              ┌───────────────┼───────────────┐                       │
+│              ▼               ▼               ▼                       │
+│        Actual 80%      Actual 100%    Forecasted 110%                │
+│         Threshold       Threshold        Threshold                   │
+│              │               │               │                       │
+│              └───────────────┴───────────────┘                       │
+│                              │  Alert                                │
+│                              ▼                                        │
+│              ┌───────────────────────────────┐                       │
+│              │  SNS Topic ──▶ Email / Slack   │                       │
+│              │                               │                       │
+│              │  AWS Chatbot ──▶ Teams / Slack │                       │
+│              └───────────────────────────────┘                       │
+│                              │                                        │
+│                    Optional: Budget Actions                           │
+│              ┌───────────────▼───────────────┐                       │
+│              │  Apply IAM Policy             │                       │
+│              │  Apply SCP                    │                       │
+│              │  Target EC2/RDS instances     │                       │
+│              └───────────────────────────────┘                       │
+└──────────────────────────────────────────────────────────────────────┘
+```
+
+##### Budget Types
+| Type | What It Tracks | Example |
+|---|---|---|
+| **Cost Budget** | Dollar amount spent | Alert when EC2 spend > $500/month |
+| **Usage Budget** | Service usage units | Alert when EC2 hours > 1,000/month |
+| **RI Utilization Budget** | % of Reserved Instances used | Alert when RI utilization < 80% |
+| **RI Coverage Budget** | % of usage covered by RIs | Alert when RI coverage < 70% |
+| **Savings Plans Utilization** | % of Savings Plans commitment used | Alert when utilization < 80% |
+| **Savings Plans Coverage** | % of usage covered by Savings Plans | Alert when coverage < 70% |
+
+##### Alert Types
+| Alert | Trigger |
+|---|---|
+| **Actual** | When real spend crosses threshold percentage |
+| **Forecasted** | When projected spend is predicted to exceed threshold |
+
+- Up to **5 alert thresholds** per budget (e.g., 50%, 80%, 100%, 110% forecasted)
+- Alerts sent to: **email** (up to 10 addresses), **SNS topic**, **AWS Chatbot**
+
+##### Budget Actions
+Automatically **take action** when a budget threshold is breached:
+
+| Action Type | Description |
+|---|---|
+| **Apply IAM Policy** | Restrict permissions (e.g., deny EC2 launches) |
+| **Apply SCP** | Apply Service Control Policy to OUs/accounts |
+| **Target EC2/RDS** | Stop EC2 instances or RDS instances |
+
+- Actions can be **automatic** or require **manual approval** (via email/console)
+- Use with **AWS Organizations** for org-wide budget enforcement
+
+##### Budgets Filters
+Filter budgets to specific:
+- **AWS Service** (EC2, S3, RDS, etc.)
+- **Linked Accounts** (in Organizations)
+- **Region / AZ**
+- **Instance Type**
+- **Usage Type**
+- **Tags** (cost allocation tags)
+- **Purchase Option** (On-Demand, Spot, Reserved)
+
+##### Pricing
+- **First 2 budgets**: Free
+- **Beyond 2**: $0.02 per budget per day (~$0.62/month per budget)
+- Budget Actions: $0.10 per action per day
+
+##### Exam Key Points 
+- **Budgets = proactive alerting** — get notified BEFORE or WHEN you overspend
+- **Forecasted alerts** — warned before budget is actually exceeded
+- **Budget Actions** — automatically stop resources or restrict permissions when budget is hit
+- Budgets use data from **Cost Explorer** — up to **8–12 hours** delay (not real-time)
+- Requires **Cost Explorer enabled** to use forecasting
+- Integrates with **AWS Organizations** — budget at management account level, filter by member account
+- **Use when**: financial governance, alerting teams of overspend, enforcing cost controls in multi-account environments
+
+
+#### AWS Cost and Usage Report (CUR)
+
+##### What It Is
+The **most comprehensive and granular** billing dataset available — a detailed CSV/Parquet file of every AWS charge, usage hour, and resource-level cost, delivered to S3.
+
+<img src="img/cost-explorer/image-1.png" alt="" width="100" height="100">
+
+##### Architecture
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│                  AWS Cost and Usage Report (CUR)                      │
+│                                                                       │
+│  AWS Billing System                                                   │
+│       │  Generates daily/hourly/monthly report                       │
+│       ▼                                                               │
+│  ┌──────────────────────────────────────────────────────────────┐   │
+│  │  CUR File (CSV or Parquet)                                    │   │
+│  │                                                               │   │
+│  │  Columns include:                                             │   │
+│  │  lineItem/UsageAccountId     lineItem/ProductCode             │   │
+│  │  lineItem/UsageType          lineItem/UnblendedCost           │   │
+│  │  lineItem/BlendedCost        lineItem/UsageAmount             │   │
+│  │  reservation/ReservationARN  savingsPlan/SavingsPlanARN       │   │
+│  │  resourceTags/user:*         product/region                   │   │
+│  └──────────────────────────────────────────────────────────────┘   │
+│                      │  Delivered to S3                               │
+│                      ▼                                               │
+│  ┌──────────────────────────────────────────────────────────────┐   │
+│  │  S3 Bucket (designated)                                       │   │
+│  └───────────────────────┬──────────────────────────────────────┘   │
+│                           │                                           │
+│         ┌─────────────────┼──────────────────┐                       │
+│         ▼                 ▼                  ▼                       │
+│   Amazon Athena     AWS Glue ETL       Amazon Redshift               │
+│   (SQL queries      (transform)        (data warehouse               │
+│    on CUR)                              analytics)                   │
+│         ▼                                                             │
+│   QuickSight / BI tools (visualization)                              │
+└──────────────────────────────────────────────────────────────────────┘
+```
+
+##### CUR Configuration Options
+| Option | Choices |
+|---|---|
+| **Time granularity** | Hourly, Daily, Monthly |
+| **File format** | CSV (gzip) or Parquet |
+| **Report versioning** | Overwrite or create new version |
+| **Integration** | Amazon Athena (auto-partition + Glue Crawler) |
+| **Resource IDs** | Include specific resource ARN/ID per line item |
+
+##### Key Data in CUR
+| Column Group | Examples |
+|---|---|
+| **Line Item** | Unblended cost, usage type, operation, usage amount |
+| **Product** | Service name, region, instance type, feature |
+| **Pricing** | Rate, unit, term, offer type |
+| **Reservation** | RI ARN, amortized upfront fee, recurring fee |
+| **Savings Plans** | SP ARN, amortized commitment, effective cost |
+| **Resource Tags** | All cost allocation tags (user:Environment, etc.) |
+
+##### Cost Types in CUR
+| Cost Type | Description |
+|---|---|
+| **Unblended Cost** | Actual on-demand rate charged per line item |
+| **Blended Cost** | Average rate across reserved and on-demand (for consolidated billing) |
+| **Amortized Cost** | Upfront RI/SP fees spread across the usage period |
+| **Net Cost** | After credits, discounts, and EDP |
+
+##### CUR + Athena Pattern
+```
+  CUR report ──▶ S3 bucket
+                    │
+        AWS creates Glue Database + Table (Athena integration)
+                    │
+  Athena SQL: SELECT product_productname, SUM(line_item_unblended_cost)
+              FROM cur_table
+              WHERE line_item_usage_account_id = '123456789'
+              GROUP BY resource_tags_user_environment
+```
+
+##### Exam Key Points 
+- **CUR = most granular billing data** — every resource, every hour, every charge
+- Delivered to **S3** — you own and control the data
+- Supports **resource-level reporting** (individual EC2 instance IDs, S3 bucket names)
+- Best used with **Athena** for SQL queries or **Redshift** for large-scale analytics
+- **Hourly granularity** = largest file size; required for RI/SP amortization analysis
+- **Parquet format** with Athena integration = best performance + partition management
+- **Blended vs Unblended vs Amortized** — exam may test understanding of cost types
+- **Use when**: building custom cost dashboards, chargeback/showback, detailed RI/SP analysis, cost allocation by tag
+
+---
+
+#### AWS Cost Explorer
+
+##### What It Is
+An **interactive visualization and analysis tool** for understanding your AWS costs and usage — with built-in filtering, grouping, and 12-month forecasting using ML.
+
+<img src="img/cost-explorer/image-2.png" alt="" width="100" height="100">
+
+##### Architecture
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│                       AWS Cost Explorer                               │
+│                                                                       │
+│  Data Source: AWS Billing data (up to 12 months history + forecast)  │
+│                                                                       │
+│  ┌──────────────────────────────────────────────────────────────┐   │
+│  │  Cost Explorer Console / API                                  │   │
+│  │                                                               │   │
+│  │  Dimensions (Group By / Filter):                              │   │
+│  │  Service  Account  Region  Instance Type  Usage Type          │   │
+│  │  Tag      AZ       Purchase Option        API Operation       │   │
+│  │                                                               │   │
+│  │  ┌────────────────────────────────────────────────────────┐  │   │
+│  │  │  Time Range: Daily / Monthly                           │  │   │
+│  │  │  ████████░░░░░░░░░░░░░░░░░░░░░ Actual cost over time  │  │   │
+│  │  │  ░░░░░░░░░░░░░░░░▓▓▓▓▓▓▓▓▓▓▓▓ Forecast (12 months)   │  │   │
+│  │  └────────────────────────────────────────────────────────┘  │   │
+│  └──────────────────────────────────────────────────────────────┘   │
+│                                                                       │
+│  ┌──────────────────┐  ┌──────────────────┐  ┌──────────────────┐   │
+│  │  Cost Explorer   │  │  RI/SP           │  │  Cost Anomaly    │   │
+│  │  Reports         │  │  Recommendations │  │  Detection       │   │
+│  └──────────────────┘  └──────────────────┘  └──────────────────┘   │
+└──────────────────────────────────────────────────────────────────────┘
+```
+
+##### Key Features
+
+###### Cost and Usage Visualization
+| Feature | Description |
+|---|---|
+| **Time range** | Last 12 months historical + 12 months forecast |
+| **Granularity** | Daily or Monthly view |
+| **Group by** | Service, Account, Region, Tag, Instance Type, etc. |
+| **Filter** | Narrow by any dimension combination |
+| **Chart types** | Bar, line, stacked bar |
+
+###### RI and Savings Plans Recommendations
+- Analyzes **past 7, 30, or 60 days** of On-Demand usage
+- Recommends optimal RI/SP purchase based on usage patterns
+- Shows estimated **monthly savings** and **break-even point**
+- Configurable by: payment option, term (1yr/3yr), lookback period
+
+###### Cost Anomaly Detection
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│                   Cost Anomaly Detection                              │
+│                                                                       │
+│  ML model learns baseline spending pattern                            │
+│       │                                                               │
+│       ▼                                                               │
+│  Detects unexpected spend spikes above baseline                      │
+│       │                                                               │
+│       ▼                                                               │
+│  Anomaly Monitor types:                                               │
+│  • AWS services monitor (all services)                               │
+│  • Linked account monitor                                            │
+│  • Cost category monitor                                             │
+│  • Tag monitor (e.g., monitor by team tag)                           │
+│       │                                                               │
+│       ▼                                                               │
+│  Alert via SNS → email / Slack / PagerDuty                           │
+│  Minimum anomaly threshold: $0 (alert on any deviation)              │
+└──────────────────────────────────────────────────────────────────────┘
+```
+
+###### Cost Categories
+- Define **custom grouping rules** to categorize costs
+- Example: group all `prod-*` tagged resources as "Production"
+- Appears as dimension in Cost Explorer and CUR
+- Up to 50 cost categories per account
+
+###### Cost Allocation Tags
+| Type | Description |
+|---|---|
+| **AWS-generated tags** | Automatically created (e.g., `aws:createdBy`) |
+| **User-defined tags** | Tags you apply to resources (Environment, Team, Project) |
+
+- Must be **activated** in Billing Console to appear in Cost Explorer / CUR
+- Up to 24 hours for new tags to appear
+- Only resources tagged after activation are included
+
+##### Cost Explorer vs CUR
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│               Cost Explorer vs Cost and Usage Report                 │
+│                                                                       │
+│  Feature          │  Cost Explorer          │  CUR                  │
+│  ─────────────────┼─────────────────────────┼───────────────────── │
+│  Interface        │  Console + API          │  S3 file (CSV/Parquet)│
+│  Granularity      │  Daily / Monthly        │  Hourly / Daily /     │
+│                   │                         │  Monthly              │
+│  Data depth       │  Aggregated / filtered  │  Raw line-item level  │
+│  Resource level   │  Limited                │  Full (every resource)│
+│  Forecasting      │  Yes (12-month ML)      │  No                   │
+│  Recommendations  │  Yes (RI / SP)          │  No                   │
+│  Custom analysis  │  Limited (UI filters)   │  Full SQL with Athena │
+│  Cost             │  Free (first enable)    │  S3 storage + query   │
+│  Best for         │  Quick insights,        │  Custom dashboards,   │
+│                   │  forecasts, RI recs     │  chargeback, deep dive│
+└──────────────────────────────────────────────────────────────────────┘
+```
+
+##### Exam Key Points 
+- **Must enable Cost Explorer** before using it — takes 24 hours for data to appear initially
+- **12 months** of historical data + **12 months** of forecast
+- **RI/SP Recommendations** — built into Cost Explorer based on past usage
+- **Cost Anomaly Detection** = ML-based; alert on unusual spend spikes (not threshold-based)
+- **Cost Allocation Tags** must be activated to filter costs by tag
+- **Cost Explorer API** is used programmatically by other tools and services
+- **Free** to enable; charged per API request ($0.01 per paginated request)
+- **Use when**: understanding where money is going, forecasting future costs, getting RI/SP purchase recommendations, identifying cost anomalies
+
+
+#### Savings Plans
+
+##### What It Is
+A **flexible pricing model** offering lower prices (up to 72% vs On-Demand) in exchange for a **commitment to a consistent amount of usage** (measured in $/hour) for 1 or 3 years.
+
+<img src="img/cost-explorer/image-3.png" alt="" width="100" height="100">
+
+##### Savings Plans Types
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│                      Savings Plans Types                              │
+│                                                                       │
+│  ┌────────────────────────────────────────────────────────────────┐  │
+│  │  Compute Savings Plans                 Most Flexible           │  │
+│  │  ──────────────────────────────────────────────────────────    │  │
+│  │  • Any EC2 instance family, size, AZ, region, OS, tenancy     │  │
+│  │  • Fargate (ECS + EKS)                                        │  │
+│  │  • Lambda                                                      │  │
+│  │  • Discount: up to 66% vs On-Demand                           │  │
+│  │  • Change instance family freely (M5 → C5, etc.)              │  │
+│  └────────────────────────────────────────────────────────────────┘  │
+│                                                                       │
+│  ┌────────────────────────────────────────────────────────────────┐  │
+│  │  EC2 Instance Savings Plans             Higher Discount        │  │
+│  │  ──────────────────────────────────────────────────────────    │  │
+│  │  • Specific instance family in specific region                │  │
+│  │    (e.g., M5 in us-east-1)                                    │  │
+│  │  • Flexible: AZ, size, OS, tenancy within family + region     │  │
+│  │  • Discount: up to 72% vs On-Demand                           │  │
+│  │  • Cannot change instance family or region                    │  │
+│  └────────────────────────────────────────────────────────────────┘  │
+│                                                                       │
+│  ┌────────────────────────────────────────────────────────────────┐  │
+│  │  SageMaker Savings Plans                                       │  │
+│  │  ──────────────────────────────────────────────────────────    │  │
+│  │  • SageMaker instances for ML workloads                       │  │
+│  │  • Discount: up to 64% vs On-Demand                           │  │
+│  └────────────────────────────────────────────────────────────────┘  │
+└──────────────────────────────────────────────────────────────────────┘
+```
+
+##### Savings Plans vs Reserved Instances
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│                Savings Plans vs Reserved Instances                    │
+│                                                                       │
+│  Feature            │  Savings Plans         │  Reserved Instances   │
+│  ───────────────────┼────────────────────────┼─────────────────────  │
+│  Commitment unit    │  $/hour spend          │  Instance count       │
+│  Flexibility        │  High (Compute SP)     │  Low (Standard RI) /  │
+│                     │                        │  Medium (Convertible) │
+│  Services covered   │  EC2, Fargate, Lambda  │  EC2, RDS, Redshift,  │
+│                     │  (Compute SP)          │  ElastiCache, etc.    │
+│  Term               │  1 or 3 years          │  1 or 3 years         │
+│  Max discount       │  Up to 72%             │  Up to 72%            │
+│  Payment options    │  All upfront, partial, │  All upfront, partial,│
+│                     │  no upfront            │  no upfront           │
+│  Instance family    │  Flexible (Compute SP) │  Standard: locked     │
+│  change             │                        │  Convertible: allowed │
+│  Region change      │  Yes (Compute SP)      │  No (regional RI)     │
+│  Marketplace sale   │  No                    │  Yes (Standard RIs)   │
+│  Applies to         │  Automatically applied │  Automatically applied│
+└──────────────────────────────────────────────────────────────────────┘
+```
+
+##### How Savings Plans Work
+```
+  You commit: $10/hour for 1 year (Compute Savings Plans)
+       │
+       ▼
+  Each hour, AWS applies SP discount rate to your compute usage
+  until the committed $10/hour is consumed.
+       │
+       ├── If usage < $10/hr commitment → you still pay $10/hr (committed)
+       └── If usage > $10/hr commitment → excess charged at On-Demand rate
+```
+
+##### Payment Options
+| Option | Upfront | Discount Level |
+|---|---|---|
+| **All Upfront** | 100% paid upfront | Highest discount |
+| **Partial Upfront** | ~50% upfront + monthly | Medium discount |
+| **No Upfront** | Monthly payments only | Lowest discount (still savings vs On-Demand) |
+
+##### Purchasing Savings Plans
+1. Review **Cost Explorer → Savings Plans Recommendations**
+2. Select type, term, payment option
+3. Commit to $/hour amount
+4. Discount applied **automatically** — no instance tagging needed
+
+##### Savings Plans in AWS Organizations
+- Purchased in **any account**; shared across the organization by default
+- **Management account** can disable sharing per linked account
+- Discount applied org-wide (like RI sharing in consolidated billing)
+
+##### Exam Key Points 
+- **Compute SP** = most flexible — EC2 (any family/region/OS), Fargate, Lambda; up to 66%
+- **EC2 Instance SP** = locked to family + region; higher discount up to 72%
+- Commitment is in **$/hour** (not instance count like RIs)
+- **Cost Explorer provides SP recommendations** based on past usage
+- Savings Plans **automatically apply** to matching usage — no manual assignment
+- **Cannot sell Savings Plans** on AWS Marketplace (unlike Standard RIs which CAN be sold)
+- Savings Plans are shared across org by default (like RI sharing)
+- **SP vs RI**: SPs are more flexible and cover more services; RIs support services SPs do not cover (RDS, Redshift, ElastiCache, OpenSearch, DynamoDB)
+- **Use when**: consistent compute usage, want flexibility to change instance types, covering Fargate + Lambda spend
+
+---
+
+#### Quick Comparison: Cost Management Tools
+
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│               Cost Management — When to Use What                     │
+│                                                                       │
+│  Need                                      Tool                      │
+│  ─────────────────────────────────────     ──────────────────────   │
+│  Alert when spend exceeds $X               AWS Budgets               │
+│  Alert when spend FORECAST to exceed       AWS Budgets (forecasted)  │
+│  Auto-stop resources when budget hit       AWS Budgets Actions       │
+│  Visualize and explore costs over time     Cost Explorer             │
+│  Forecast next 12 months of costs          Cost Explorer             │
+│  Get RI/SP purchase recommendations        Cost Explorer             │
+│  Detect unexpected cost spikes (ML)        Cost Anomaly Detection    │
+│  Raw hourly data for every resource        Cost and Usage Report     │
+│  Build custom cost dashboard               CUR + Athena + QuickSight │
+│  Chargeback / showback by team/project     CUR + Cost Allocation Tags│
+│  Reduce On-Demand EC2 costs flexibly       Compute Savings Plans     │
+│  Reduce EC2 costs for specific family      EC2 Instance Savings Plans│
+│  Cover EC2 + Fargate + Lambda spend        Compute Savings Plans     │
+│  Cover RDS / Redshift / ElastiCache        Reserved Instances        │
+└──────────────────────────────────────────────────────────────────────┘
+```
+
+#### Common Exam Traps - AWS Cost Management
+
+1. **Budgets are NOT real-time** — data has up to 8–12 hour delay; not instantaneous alerts
+2. **First 2 budgets are free** — beyond that, $0.02/budget/day; Budget Actions add cost
+3. **Cost Explorer must be enabled** before using Budgets forecasting or Anomaly Detection — 24 hour delay on first use
+4. **CUR is the most granular** billing dataset — Cost Explorer shows aggregated views, not raw line items
+5. **Cost Allocation Tags must be activated** in Billing Console — just applying tags to resources is NOT enough for them to appear in Cost Explorer or CUR
+6. **Compute Savings Plans vs EC2 Instance Savings Plans** — Compute covers EC2 (any family/region), Fargate, Lambda; EC2 Instance is locked to one family and region for a higher discount
+7. **Savings Plans cannot be sold** on AWS Marketplace — Standard Reserved Instances CAN be sold
+8. **Savings Plans commitment = $/hour** (not instance count like RIs); unused commitment is still charged
+9. **RDS, Redshift, ElastiCache, OpenSearch, DynamoDB** only support Reserved Instances — no Savings Plans for these services
+10. **Budget Actions** can apply SCPs or IAM policies automatically — powerful guardrail for enforcing spend limits
+11. **Cost Anomaly Detection** uses ML baseline — NOT threshold-based like Budgets; alerts on pattern deviation vs your normal spend
+12. **Blended vs Unblended costs in CUR** — Blended averages RI + On-Demand for consolidated billing; Unblended = actual rate charged per line item
+13. **Savings Plans apply automatically** — no tagging or manual linking needed after purchase; AWS applies them to eligible usage first
+14. **Cost Explorer API** charges per request — free in console; $0.01 per paginated API call when accessed programmatically
+
+
 ---
 
 
@@ -1762,6 +3071,662 @@ Embeds AWS compute and storage services **within 5G telecommunications networks*
 ---
 
 ### Containers
+
+
+#### Container Ecosystem Overview
+
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│                   AWS Container Services Map                          │
+│                                                                       │
+│  Registry                Orchestration             Compute            │
+│  ┌─────────────┐   ┌──────────────────────┐   ┌──────────────────┐  │
+│  │  Amazon ECR │   │  Amazon ECS          │   │  AWS Fargate     │  │
+│  │             │   │  (AWS-native)        │   │  (Serverless)    │  │
+│  │  Store and  │   ├──────────────────────┤   ├──────────────────┤  │
+│  │  distribute │   │  Amazon EKS          │   │  EC2 Instances   │  │
+│  │  container  │   │  (Kubernetes)        │   │  (Self-managed)  │  │
+│  │  images     │   └──────────────────────┘   └──────────────────┘  │
+│  └─────────────┘                                                      │
+│                                                                       │
+│  Hybrid / On-Premises                                                 │
+│  ┌─────────────────────┐  ┌──────────────┐  ┌─────────────────────┐ │
+│  │  ECS Anywhere       │  │  EKS Anywhere│  │  EKS Distro (EKS-D)│ │
+│  │  (ECS on any infra) │  │  (K8s on any)│  │  (K8s distribution)│ │
+│  └─────────────────────┘  └──────────────┘  └─────────────────────┘ │
+└──────────────────────────────────────────────────────────────────────┘
+```
+
+
+#### Amazon ECR (Elastic Container Registry)
+
+##### What It Is
+A **fully managed container image registry** — store, manage, scan, and deploy Docker and OCI container images securely.
+
+<img src="img/containers/image.png" alt="" width="100" height="100">
+
+##### Architecture
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│                       Amazon ECR                                      │
+│                                                                       │
+│  Developer Workflow                                                   │
+│  ┌──────────────────────────────────────────────────────────────┐   │
+│  │  docker build -t my-app:v1 .                                  │   │
+│  │  docker tag my-app:v1 123456789.dkr.ecr.us-east-1.amazonaws  │   │
+│  │              .com/my-app:v1                                   │   │
+│  │  aws ecr get-login-password | docker login ...                │   │
+│  │  docker push 123456789.dkr.ecr.us-east-1.amazonaws.com/      │   │
+│  │              my-app:v1                                        │   │
+│  └──────────────────────────────────────────────────────────────┘   │
+│                                  │                                    │
+│                                  ▼                                    │
+│  ┌──────────────────────────────────────────────────────────────┐   │
+│  │                    ECR Registry                               │   │
+│  │                                                               │   │
+│  │  ┌──────────────────────┐  ┌──────────────────────────────┐  │   │
+│  │  │  Private Repository  │  │   Public Repository          │  │   │
+│  │  │  (default)           │  │   (ECR Public Gallery)       │  │   │
+│  │  │                      │  │                              │  │   │
+│  │  │  my-app              │  │   Public images anyone       │  │   │
+│  │  │   :v1                │  │   can pull                   │  │   │
+│  │  │   :v2                │  │                              │  │   │
+│  │  │   :latest            │  │                              │  │   │
+│  │  └──────────────────────┘  └──────────────────────────────┘  │   │
+│  └──────────────────────────────────────────────────────────────┘   │
+│                                  │                                    │
+│           ┌──────────────────────┼──────────────────────┐            │
+│           ▼                      ▼                      ▼            │
+│       ECS Tasks              EKS Pods             Lambda             │
+│       (pull image)           (pull image)         (container images) │
+└──────────────────────────────────────────────────────────────────────┘
+```
+
+##### Key Features
+
+###### Repository Types
+| Type | Access | Use Case |
+|---|---|---|
+| **Private** | IAM-controlled, same/cross account | Production workloads |
+| **Public (ECR Public)** | Anyone can pull anonymously | Open-source images, public tools |
+
+###### Image Scanning
+| Scan Type | Description |
+|---|---|
+| **Basic Scanning** | Scans on push; uses CVE database (OS-level) |
+| **Enhanced Scanning** | Continuous scanning via Amazon Inspector; OS + language packages |
+
+###### Lifecycle Policies
+- Automatically **expire and delete** old images based on rules
+- Example: keep only last 10 tagged images, delete untagged images older than 7 days
+- Reduces storage cost and clutter
+
+###### Image Replication
+| Type | Description |
+|---|---|
+| **Cross-Region** | Replicate images to other AWS regions |
+| **Cross-Account** | Replicate to repositories in other AWS accounts |
+
+###### Immutable Tags
+- Prevent image tags from being overwritten
+- Enforce **immutability** — `latest` tag cannot be silently replaced
+- Best practice for production environments
+
+##### ECR Security
+| Feature | Description |
+|---|---|
+| **IAM Authentication** | `aws ecr get-login-password` — all ECR access is IAM-controlled |
+| **Resource Policy** | Repository-level policy for cross-account access |
+| **Encryption at rest** | KMS encryption (AWS-managed or customer-managed) |
+| **Encryption in transit** | HTTPS for all push/pull operations |
+| **VPC Endpoint** | Interface endpoint — pull images without internet access |
+
+##### ECR Pricing
+- Storage: per GB per month
+- Data transfer: inbound free; outbound to ECS/EKS in same region free
+
+##### Exam Key Points
+- **ECR is region-specific** — images stored per region; use replication for multi-region
+- **IAM controls access** — no separate login system; use `get-login-password` with Docker CLI
+- **ECS Task Execution Role** must include `ecr:GetAuthorizationToken`, `ecr:BatchGetImage` permissions to pull images
+- **Enhanced Scanning** uses **Amazon Inspector** — continuously rescans as new CVEs are discovered
+- **Lifecycle Policies** prevent unbounded storage growth — always configure for production
+- **Immutable tags** = production best practice; prevents accidental overwrite of image versions
+- **VPC Endpoint** for ECR = private image pulls within VPC (no NAT Gateway needed)
+- **Use when**: any Docker/OCI containerized workload on AWS (ECS, EKS, Lambda container images)
+
+
+#### Amazon ECS (Elastic Container Service)
+
+##### What It Is
+AWS's **native container orchestration service** — run, stop, and manage Docker containers on a cluster without managing Kubernetes control plane complexity.
+
+<img src="img/containers/image-1.png" alt="" width="100" height="100">
+
+##### Architecture
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│                       Amazon ECS                                      │
+│                                                                       │
+│  ┌─────────────────────────────────────────────────────────────┐    │
+│  │                     ECS Cluster                              │    │
+│  │                                                              │    │
+│  │  ┌─────────────────────────────────────────────────────┐   │    │
+│  │  │                  ECS Service                         │   │    │
+│  │  │  (Long-running; maintains desired task count)        │   │    │
+│  │  │                                                      │   │    │
+│  │  │  ┌──────────────────┐  ┌──────────────────┐         │   │    │
+│  │  │  │  Task (Running)  │  │  Task (Running)  │  ...    │   │    │
+│  │  │  │  ┌────────────┐  │  │  ┌────────────┐  │         │   │    │
+│  │  │  │  │ Container A│  │  │  │ Container A│  │         │   │    │
+│  │  │  │  │ Container B│  │  │  │ Container B│  │         │   │    │
+│  │  │  │  └────────────┘  │  │  └────────────┘  │         │   │    │
+│  │  │  └──────────────────┘  └──────────────────┘         │   │    │
+│  │  └──────────────────────────────────────────────────────┘   │    │
+│  │                                                              │    │
+│  │  Launch Type:  Fargate (serverless)  OR  EC2 (self-managed) │    │
+│  └─────────────────────────────────────────────────────────────┘    │
+│                           │                                           │
+│              ┌────────────▼─────────────┐                            │
+│              │   ALB / NLB / CloudMap   │                            │
+│              │   (load balancing +      │                            │
+│              │    service discovery)    │                            │
+│              └──────────────────────────┘                            │
+└──────────────────────────────────────────────────────────────────────┘
+```
+
+##### Core ECS Concepts
+
+###### Task Definition
+The **blueprint** for your container(s):
+| Field | Description |
+|---|---|
+| **Docker image** | ECR URI or Docker Hub image |
+| **CPU / Memory** | Allocated resources (hard/soft limits) |
+| **Network mode** | awsvpc, bridge, host, none |
+| **Task Role** | IAM role for container to call AWS services |
+| **Task Execution Role** | IAM role for ECS agent (pull image, write logs) |
+| **Port mappings** | Container-to-host port mapping |
+| **Environment variables** | Config passed to containers |
+| **Log configuration** | CloudWatch Logs, Firehose, etc. |
+| **Volumes** | EFS, EBS (EC2 only), bind mounts |
+
+###### ECS Launch Types
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│                  ECS Launch Types Comparison                          │
+│                                                                       │
+│  EC2 Launch Type                Fargate Launch Type                  │
+│  ────────────────────────────   ────────────────────────────────     │
+│  You manage EC2 instances       No instances to manage               │
+│  Choose instance type           Choose task CPU/memory               │
+│  Pay per EC2 instance           Pay per task (vCPU + memory/sec)     │
+│  EBS + EFS storage              EFS + ephemeral storage              │
+│  SSH access to hosts            No host access                       │
+│  Cluster capacity management    Auto-provisioned                     │
+│  Use Spot Instances             Use Fargate Spot                     │
+│  Better for predictable load    Better for variable/burst load       │
+└──────────────────────────────────────────────────────────────────────┘
+```
+
+###### ECS Network Modes
+| Mode | Description | Launch Type |
+|---|---|---|
+| **awsvpc** | Each task gets own ENI + private IP | EC2 + Fargate |
+| **bridge** | Docker's virtual network; port mapping needed | EC2 only |
+| **host** | Container shares host network namespace | EC2 only |
+| **none** | No external networking | EC2 only |
+
+> Fargate **only** supports `awsvpc` mode
+
+###### ECS Service Features
+| Feature | Description |
+|---|---|
+| **Desired Count** | Target number of running tasks |
+| **Service Auto Scaling** | Scale tasks based on CPU, memory, ALB requests, custom metrics |
+| **Deployment Types** | Rolling update, Blue/Green (via CodeDeploy), External |
+| **Load Balancer** | ALB (L7 routing), NLB (L4 static IP), CLB (legacy) |
+| **Service Discovery** | AWS Cloud Map — DNS-based service discovery |
+| **Circuit Breaker** | Auto-rollback on deployment failure (health check failures) |
+
+###### ECS Auto Scaling
+```
+  Scale ECS Tasks:
+  CloudWatch Metric (CPU, Memory, ALB RequestCount) ──▶ ECS Service Auto Scaling
+       │
+       ▼ (if EC2 launch type)
+  Scale EC2 Instances:
+  ECS Cluster Capacity Provider + Auto Scaling Group
+       │
+       ▼
+  Target Tracking or Step Scaling on ECS Cluster reservation metrics
+```
+
+##### IAM Roles for ECS
+| Role | Purpose | Who Uses It |
+|---|---|---|
+| **Task Role** | Permissions for containers (call S3, DynamoDB, etc.) | Container code |
+| **Task Execution Role** | Permissions for ECS agent (pull ECR image, write to CloudWatch) | ECS control plane |
+| **EC2 Instance Role** | Permissions for EC2 host (EC2 launch type only) | ECS agent on host |
+
+##### ECS Data Volumes
+| Volume Type | Launch Type | Use Case |
+|---|---|---|
+| **EFS** | EC2 + Fargate | Persistent shared storage across tasks |
+| **EBS** | EC2 only | High-performance block storage per task |
+| **Bind Mount** | EC2 + Fargate | Share data between containers in same task |
+| **Docker Volume** | EC2 only | Managed by Docker daemon |
+
+##### ECS Logging
+- **awslogs driver** → CloudWatch Logs (most common)
+- **FireLens** → Route container logs to multiple destinations (Firehose, S3, OpenSearch) using Fluent Bit/Fluentd
+- **Splunk, Datadog, etc.** — via FireLens routing
+
+##### Exam Key Points
+- **awsvpc** network mode = task gets own ENI; security groups applied at task level (not instance)
+- **Task Role** (container app) vs **Task Execution Role** (ECS agent) — must understand both
+- **Fargate** = no EC2 to manage; **EC2 launch type** = you manage cluster instances
+- **ECS Service Auto Scaling** scales tasks; **Cluster Capacity Provider** scales EC2 instances
+- **ALB dynamic port mapping** with bridge mode — multiple tasks on same host, different host ports
+- **ECS Anywhere** (covered below) extends ECS to on-premises
+- **Circuit Breaker** = auto-rollback deployment if health checks fail
+- **EFS for persistence** in Fargate — ephemeral storage is lost when task stops
+- **Use when**: containerized microservices, web apps, APIs — simpler than Kubernetes
+
+#### Amazon ECS Anywhere
+
+##### What It Is
+Run **ECS tasks on your own infrastructure** (on-premises servers, edge locations, other clouds) — same ECS API, console, and tooling you use in AWS.
+
+
+##### Architecture
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│                      Amazon ECS Anywhere                              │
+│                                                                       │
+│  AWS Cloud                            On-Premises / Edge              │
+│  ┌──────────────────────┐             ┌────────────────────────────┐ │
+│  │  ECS Control Plane   │             │  Customer Data Center       │ │
+│  │  (API, Console,      │◀── HTTPS ──▶│                            │ │
+│  │   Scheduling)        │  (outbound) │  ┌──────────────────────┐  │ │
+│  │                      │             │  │  External Instance    │  │ │
+│  │  AWS Systems Manager │             │  │                      │  │ │
+│  │  (for registration   │             │  │  SSM Agent           │  │ │
+│  │   and communication) │             │  │  ECS Agent           │  │ │
+│  └──────────────────────┘             │  │  Docker Runtime      │  │ │
+│                                       │  └──────────────────────┘  │ │
+│                                       └────────────────────────────┘ │
+└──────────────────────────────────────────────────────────────────────┘
+```
+
+##### How It Works
+1. **Register** on-premises servers with **AWS Systems Manager** (SSM)
+2. Install **ECS Agent** and **Docker** on the server
+3. Server appears as an **EXTERNAL instance** in ECS cluster
+4. Deploy ECS tasks to external instances — same task definitions
+5. Management via ECS console, CLI, or API
+
+##### Key Characteristics
+| Feature | Description |
+|---|---|
+| **Network** | Outbound HTTPS to AWS SSM + ECS endpoints (no inbound required) |
+| **No VPC required** | Runs outside AWS VPC; uses SSM for control channel |
+| **IAM auth** | External instances authenticated via SSM activation keys |
+| **Task networking** | Bridge or host mode only (no awsvpc outside AWS) |
+| **No ELB integration** | No direct ALB/NLB; manage external load balancing yourself |
+
+##### Exam Key Points
+- **ECS Anywhere = ECS on your hardware** — consistent control plane everywhere
+- Requires **SSM Agent + ECS Agent + Docker** installed on external servers
+- Instances are called **EXTERNAL** in the ECS cluster (not EC2, not Fargate)
+- **No awsvpc** network mode — bridge or host only on external instances
+- **No native ALB/NLB** — must manage your own load balancing for on-prem
+- **Use when**: data residency requirements, latency-sensitive edge workloads, gradual cloud migration, hybrid container workloads
+
+
+#### Amazon EKS (Elastic Kubernetes Service)
+
+##### What It Is
+A **fully managed Kubernetes service** — AWS manages the Kubernetes control plane (API server, etcd, scheduler) so you focus on running workloads.
+
+<img src="img/containers/image-2.png" alt="" width="100" 
+
+##### Architecture
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│                       Amazon EKS Cluster                              │
+│                                                                       │
+│  ┌─────────────────────────────────────────────────────────────┐    │
+│  │  EKS Control Plane (AWS Managed — multi-AZ, HA)             │    │
+│  │  • Kubernetes API Server                                     │    │
+│  │  • etcd (cluster state)                                      │    │
+│  │  • Scheduler, Controller Manager                             │    │
+│  └──────────────────────────┬──────────────────────────────────┘    │
+│                             │  API calls                             │
+│  ┌──────────────────────────▼──────────────────────────────────┐    │
+│  │  Worker Nodes (Data Plane)                                   │    │
+│  │                                                              │    │
+│  │  ┌────────────────────┐  ┌────────────────────────────────┐ │    │
+│  │  │  Managed Node Group │  │       Fargate Profile          │ │    │
+│  │  │                     │  │                                │ │    │
+│  │  │  EC2 Auto Scaling   │  │  Serverless pods              │ │    │
+│  │  │  Group managed      │  │  (no EC2 nodes)               │ │    │
+│  │  │  by AWS             │  │                               │ │    │
+│  │  │                     │  │  Pod ──▶ Fargate              │ │    │
+│  │  │  Node ──▶ Kubelet   │  │  (matches Fargate Profile)    │ │    │
+│  │  │  Node ──▶ Kubelet   │  │                               │ │    │
+│  │  └────────────────────┘  └────────────────────────────────┘ │    │
+│  │                                                              │    │
+│  │  ┌────────────────────────────────────────────────────────┐ │    │
+│  │  │  Self-Managed Node Group                               │ │    │
+│  │  │  (EC2 instances you manage fully — AMI, ASG, etc.)     │ │    │
+│  │  └────────────────────────────────────────────────────────┘ │    │
+│  └─────────────────────────────────────────────────────────────┘    │
+└──────────────────────────────────────────────────────────────────────┘
+```
+
+##### EKS Node Group Types
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│                    EKS Node Group Comparison                          │
+│                                                                       │
+│  Feature          │ Managed Node Group │ Self-Managed │ Fargate      │
+│  ─────────────────┼────────────────────┼─────────────┼─────────────  │
+│  Node mgmt        │ AWS manages        │ You manage  │ No nodes     │
+│  AMI updates      │ Automated          │ Manual      │ N/A          │
+│  Instance types   │ Any EC2 type       │ Any EC2     │ N/A          │
+│  Spot support     │ Yes                │ Yes         │ Fargate Spot │
+│  Custom AMI       │ Limited            │ Full        │ N/A          │
+│  GPU support      │ Yes                │ Yes         │ No           │
+│  On-prem          │ No                 │ No          │ No           │
+│  Cordoning/drain  │ Automatic          │ Manual      │ N/A          │
+└──────────────────────────────────────────────────────────────────────┘
+```
+
+##### Key EKS Concepts
+
+###### Kubernetes Workloads in EKS
+| Resource | Description |
+|---|---|
+| **Pod** | Smallest unit — one or more containers sharing network/storage |
+| **Deployment** | Manages ReplicaSet; rolling updates |
+| **StatefulSet** | Ordered, persistent pods (databases) |
+| **DaemonSet** | One pod per node (logging agents, monitoring) |
+| **Job / CronJob** | Run-to-completion / scheduled tasks |
+| **Namespace** | Logical isolation within cluster |
+
+###### EKS Networking
+| Feature | Tool |
+|---|---|
+| **Pod networking (CNI)** | Amazon VPC CNI — pods get real VPC IP addresses |
+| **Service types** | ClusterIP, NodePort, LoadBalancer (creates ALB/NLB), ExternalName |
+| **Ingress controller** | AWS Load Balancer Controller → creates ALB per Ingress |
+| **Service mesh** | AWS App Mesh or Istio |
+| **DNS** | CoreDNS (managed add-on) |
+
+###### EKS IAM Integration
+| Feature | Description |
+|---|---|
+| **IRSA (IAM Roles for Service Accounts)** | Bind IAM role to Kubernetes Service Account — pods get AWS credentials |
+| **aws-auth ConfigMap** | Map IAM users/roles to Kubernetes RBAC |
+| **EKS Access Entries** | Modern replacement for aws-auth (cluster access management) |
+
+###### EKS Add-ons
+AWS-managed Kubernetes components:
+- **Amazon VPC CNI** — pod networking
+- **CoreDNS** — cluster DNS
+- **kube-proxy** — network routing
+- **AWS Load Balancer Controller** — ALB/NLB integration
+- **Amazon EBS CSI Driver** — persistent volumes on EBS
+- **Amazon EFS CSI Driver** — persistent volumes on EFS
+
+###### EKS Storage
+| Storage | CSI Driver | Use Case |
+|---|---|---|
+| **EBS** | EBS CSI Driver | High-performance block storage; single pod |
+| **EFS** | EFS CSI Driver | Shared persistent storage; multiple pods |
+| **S3** | Mountpoint for S3 | Large-scale object storage in pods |
+| **FSx for Lustre** | FSx CSI Driver | HPC/ML high-performance workloads |
+
+###### EKS Auto Scaling
+| Scaler | What It Scales | Mechanism |
+|---|---|---|
+| **Cluster Autoscaler** | EC2 nodes (ASG) | Scales based on pending pods |
+| **Karpenter** | EC2 nodes (directly) | AWS-native; faster, more flexible |
+| **HPA (Horizontal Pod Autoscaler)** | Pod replicas | CPU/memory/custom metrics |
+| **VPA (Vertical Pod Autoscaler)** | Pod resource requests | Right-size pod requests |
+| **KEDA** | Pod replicas | Event-driven (SQS, Kinesis, etc.) |
+
+###### EKS Fargate
+- Run Kubernetes **pods** on Fargate — no EC2 worker nodes
+- Define **Fargate Profiles**: namespace + label selectors → pods matching go to Fargate
+- Each pod runs in its own isolated compute environment
+- **Limitations**: no DaemonSets, no stateful workloads requiring EBS, no GPU
+
+##### ECS vs EKS
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│                       ECS vs EKS                                      │
+│                                                                       │
+│  Feature          │  Amazon ECS              │  Amazon EKS           │
+│  ─────────────────┼──────────────────────────┼───────────────────── │
+│  Orchestrator     │  AWS proprietary         │  Kubernetes (CNCF)   │
+│  Complexity       │  Simpler                 │  More complex        │
+│  Learning curve   │  Low (AWS concepts)      │  High (K8s concepts) │
+│  Portability      │  AWS-specific            │  Portable (K8s std)  │
+│  Ecosystem        │  AWS integrations        │  CNCF ecosystem      │
+│  Fargate          │  ✅                      │  ✅                  │
+│  Spot support     │  ✅                      │  ✅                  │
+│  Windows          │  ✅                      │  ✅ (Windows nodes)  │
+│  Control plane    │  AWS fully manages       │  AWS manages K8s CP  │
+│  Pricing          │  No cluster fee          │  $0.10/hr per cluster│
+│  Use when         │  Simpler workloads,      │  Existing K8s apps,  │
+│                   │  AWS-native teams        │  multi-cloud, CNCF   │
+└──────────────────────────────────────────────────────────────────────┘
+```
+
+##### Exam Key Points
+- **EKS control plane is managed** by AWS — you manage worker nodes (unless Fargate)
+- **EKS costs $0.10/hour** per cluster (control plane charge) — unlike ECS which is free
+- **IRSA (IAM Roles for Service Accounts)** = grant AWS permissions to pods (not nodes)
+- **Amazon VPC CNI** = pods get real VPC IP addresses (not overlay network)
+- **Managed Node Groups** = easiest; AWS handles patching and updates
+- **Fargate on EKS** = serverless pods; requires Fargate Profile per namespace/label
+- **Karpenter** replaces Cluster Autoscaler — faster, more efficient node provisioning
+- **EKS Anywhere** and **EKS Distro** (covered below) for hybrid/on-prem use
+- **Use when**: existing Kubernetes workloads, need CNCF portability, large teams with K8s expertise
+
+
+#### Amazon EKS Anywhere
+
+##### What It Is
+Run **Kubernetes clusters on your own infrastructure** (on-premises, edge, other clouds) using the same EKS tooling and AWS support — powered by EKS Distro.
+
+##### Architecture
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│                      Amazon EKS Anywhere                              │
+│                                                                       │
+│  AWS Cloud (Optional)                 On-Premises / Edge             │
+│  ┌──────────────────────┐             ┌────────────────────────────┐ │
+│  │  EKS Connector       │             │  EKS Anywhere Cluster      │ │
+│  │  (register cluster   │◀── Register ─│                           │ │
+│  │   for visibility in  │             │  ┌──────────────────────┐  │ │
+│  │   EKS console)       │             │  │  Control Plane VMs   │  │ │
+│  │                      │             │  │  (eksa manages)      │  │ │
+│  │  AWS Marketplace     │             │  └──────────────────────┘  │ │
+│  │  (curated packages)  │             │  ┌──────────────────────┐  │ │
+│  │                      │             │  │  Worker Node VMs     │  │ │
+│  └──────────────────────┘             │  └──────────────────────┘  │ │
+│                                       │                              │ │
+│                                       │  Supported Providers:        │ │
+│                                       │  VMware vSphere              │ │
+│                                       │  Bare metal (Tinkerbell)     │ │
+│                                       │  Nutanix, Apache CloudStack  │ │
+│                                       │  Snow (AWS Snowball Edge)    │ │
+│                                       └────────────────────────────┘ │
+└──────────────────────────────────────────────────────────────────────┘
+```
+
+##### Key Features
+| Feature | Description |
+|---|---|
+| **eksa CLI** | CLI tool to create and manage EKS Anywhere clusters |
+| **Curated packages** | AWS-vetted add-ons (CoreDNS, Cilium, Harbor, Prometheus) |
+| **AWS Support** | Optional paid support from AWS for clusters |
+| **EKS Connector** | Register cluster in EKS console for visibility (optional) |
+| **GitOps** | Flux CD integration for GitOps workflows |
+| **Fully disconnected** | Can run completely air-gapped from internet |
+
+##### EKS Anywhere vs ECS Anywhere
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│                EKS Anywhere vs ECS Anywhere                          │
+│                                                                       │
+│  Feature          │  EKS Anywhere            │  ECS Anywhere         │
+│  ─────────────────┼──────────────────────────┼───────────────────── │
+│  Orchestrator     │  Kubernetes              │  Amazon ECS           │
+│  Control plane    │  On-premises (you manage)│  AWS Cloud (managed)  │
+│  Connectivity     │  Can be fully offline    │  Requires AWS SSM     │
+│  Infra providers  │  vSphere, bare metal...  │  Any Linux server     │
+│  AWS dependency   │  Optional (EKS Connector)│  Required (SSM)       │
+│  Complexity       │  Higher (K8s)            │  Lower                │
+│  Use when         │  Full K8s on-prem,       │  ECS workloads on-prem│
+│                   │  air-gapped environments │  with AWS connectivity │
+└──────────────────────────────────────────────────────────────────────┘
+```
+
+##### Exam Key Points
+- **EKS Anywhere = full Kubernetes on your hardware** — you manage the control plane
+- Based on **EKS Distro** (see below) under the hood
+- **No AWS SSM required** — can run fully disconnected (unlike ECS Anywhere)
+- Supports **VMware vSphere, bare metal, Nutanix, Snowball Edge**
+- **EKS Connector** = optional link to AWS console for visibility
+- **Use when**: air-gapped environments, strict data sovereignty, on-prem K8s with AWS-supported distribution
+
+
+#### Amazon EKS Distro (EKS-D)
+
+##### What It Is
+The **same Kubernetes distribution** that AWS uses in Amazon EKS — packaged for you to run **anywhere** you want, including on-premises, other clouds, or your own infrastructure.
+
+##### What It Provides
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│                    Amazon EKS Distro (EKS-D)                         │
+│                                                                       │
+│  EKS-D is a Kubernetes distribution that includes:                   │
+│                                                                       │
+│  ┌────────────────────────────────────────────────────────────────┐  │
+│  │  • Kubernetes (same version as EKS)                            │  │
+│  │  • etcd                                                        │  │
+│  │  • CoreDNS                                                     │  │
+│  │  • CNI plugins (Amazon VPC CNI compatible)                     │  │
+│  │  • CSI drivers                                                 │  │
+│  │  • AWS-security-patched components                             │  │
+│  │  • AWS-tested and validated                                    │  │
+│  └────────────────────────────────────────────────────────────────┘  │
+│                                                                       │
+│  Distributed as:                                                      │
+│  • Container images (on ECR Public)                                  │
+│  • GitHub releases (open source)                                     │
+│  • Helm charts                                                        │
+│                                                                       │
+│  You are responsible for:                                             │
+│  • Installation and upgrades                                         │
+│  • Infrastructure management                                         │
+│  • Cluster operations                                                │
+│                                                                       │
+│  Powers:    EKS (in AWS)    EKS Anywhere (on-prem/edge)             │
+└──────────────────────────────────────────────────────────────────────┘
+```
+
+##### EKS-D vs EKS vs EKS Anywhere
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│              EKS vs EKS Anywhere vs EKS Distro                       │
+│                                                                       │
+│  Feature         │  EKS           │  EKS Anywhere   │  EKS Distro   │
+│  ────────────────┼────────────────┼─────────────────┼────────────── │
+│  Where it runs   │  AWS Cloud     │  On-prem / Edge │  Anywhere     │
+│  Control plane   │  AWS manages   │  You manage     │  You manage   │
+│  Tooling         │  AWS console   │  eksa CLI       │  DIY          │
+│  Curated pkgs    │  ✅            │  ✅             │  ❌           │
+│  AWS support     │  ✅ (included) │  ✅ (optional)  │  ❌           │
+│  Automation      │  High          │  Medium         │  Low (DIY)    │
+│  Distribution    │  Managed SaaS  │  Managed distro │  Raw K8s distro│
+│  Who uses it     │  AWS customers │  On-prem + AWS  │  Builders/DIY │
+└──────────────────────────────────────────────────────────────────────┘
+```
+
+##### Exam Key Points
+- **EKS-D is the foundation** — EKS uses it in the cloud; EKS Anywhere uses it on-prem
+- **Open source** — available on GitHub; AWS-maintained
+- **No managed tooling** — just the distribution; you install, configure, and operate
+- **Security patches** from AWS applied to all components
+- **Use when**: building your own Kubernetes platform, need AWS-validated K8s without managed tooling, integrating into custom automation
+
+---
+
+#### Quick Comparison: All Container Services
+
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│                Container Services Decision Framework                  │
+│                                                                       │
+│  Scenario                                   Service                  │
+│  ─────────────────────────────────────────  ──────────────────────  │
+│  Store Docker images securely               Amazon ECR               │
+│  Run containers, AWS-native, simple API     Amazon ECS               │
+│  Run containers, serverless (no EC2)        ECS + Fargate            │
+│  Run containers, EC2 for more control       ECS + EC2 launch type    │
+│  Run containers on-premises (ECS API)       ECS Anywhere             │
+│  Run Kubernetes, AWS-managed control plane  Amazon EKS               │
+│  Run Kubernetes, serverless pods            EKS + Fargate            │
+│  Run Kubernetes on-prem / edge (full)       EKS Anywhere             │
+│  Kubernetes distribution (build your own)   EKS Distro (EKS-D)      │
+│  Need CNCF portability / existing K8s       Amazon EKS               │
+│  Simpler orchestration, AWS-only teams      Amazon ECS               │
+│  Air-gapped, fully disconnected K8s         EKS Anywhere             │
+└──────────────────────────────────────────────────────────────────────┘
+```
+
+##### Location Spectrum
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│               Where Can You Run Container Workloads?                  │
+│                                                                       │
+│                      AWS Cloud         │     Your Infrastructure     │
+│  ─────────────────────────────────────────────────────────────────  │
+│  ECS + EC2         ✅                  │                             │
+│  ECS + Fargate     ✅                  │                             │
+│  EKS + Managed NG  ✅                  │                             │
+│  EKS + Fargate     ✅                  │                             │
+│  ECS Anywhere      ✅ (control plane)  │  ✅ (workloads run here)    │
+│  EKS Anywhere      ✅ (optional view)  │  ✅ (everything runs here)  │
+│  EKS Distro        —                   │  ✅ (everything runs here)  │
+└──────────────────────────────────────────────────────────────────────┘
+```
+
+
+#### Common Exam Traps - Containers
+
+1. **ECR is region-specific** — you must configure cross-region replication; images don't auto-replicate
+2. **Task Execution Role vs Task Role** — Execution Role = ECS agent pulls image and writes logs; Task Role = what YOUR containers call (S3, DynamoDB, etc.)
+3. **Fargate only supports awsvpc network mode** — bridge and host modes are EC2-only
+4. **ECS has no cluster charge** — you pay only for EC2 or Fargate resources; EKS charges $0.10/hour per cluster
+5. **ECS Anywhere requires SSM** — must have outbound HTTPS to AWS; not for air-gapped environments
+6. **EKS Anywhere can run fully disconnected** — unlike ECS Anywhere which requires AWS SSM connectivity
+7. **EKS IRSA** (IAM Roles for Service Accounts) = IAM permissions for pods; NOT the node IAM role
+8. **Fargate on EKS does NOT support DaemonSets** — DaemonSets require real nodes; use managed/self-managed node groups
+9. **EKS Distro is DIY** — no managed tooling, no AWS support, no curated packages; just the K8s distribution
+10. **ECR Enhanced Scanning** uses **Amazon Inspector** (continuous); Basic Scanning is on-push only
+11. **ECS bridge mode** — dynamic port mapping allows multiple tasks per EC2 host; awsvpc = one ENI per task
+12. **EKS control plane spans multiple AZs automatically** — AWS manages HA of API server and etcd
+13. **Karpenter vs Cluster Autoscaler** — Karpenter is the modern, faster AWS-native node scaler; Cluster Autoscaler uses ASG
+14. **ECS Service Circuit Breaker** — auto-rolls back failed deployments; not enabled by default; must be configured
+15. **EKS Fargate Profile** is required — pods only run on Fargate if they match a namespace/label selector in a Fargate Profile
+
 
 ---
 
@@ -4069,7 +6034,7 @@ A **serverless compute engine for containers** — run ECS or EKS containers wit
 - Use **AWS Lambda Power Tuning** (open-source Step Functions state machine) to find optimal memory
 - Billed per **GB-second**: (memory in GB) × (duration in seconds)
 
-### Exam Key Points ✅
+### Exam Key Points
 - **Max timeout = 15 minutes** — for longer jobs use Fargate, Batch, or EC2
 - **Max memory = 10 GB** — CPU scales proportionally
 - **Ephemeral storage (/tmp)** = up to 10 GB — shared across same execution context within warm invocations
