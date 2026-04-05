@@ -3736,6 +3736,305 @@ The **same Kubernetes distribution** that AWS uses in Amazon EKS — packaged fo
 
 ### Developer Tools
 
+#### AWS X-Ray
+
+##### What It Is
+A **distributed tracing service** that helps developers **analyze and debug production applications** — especially microservices and serverless architectures — by providing an end-to-end view of requests as they travel through your application.
+
+<img src="img/dev-tools/image.png" alt="" width="100" height="100">
+
+
+##### Architecture
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│                         AWS X-Ray                                     │
+│                                                                       │
+│  Incoming Request                                                     │
+│       │                                                               │
+│       ▼                                                               │
+│  ┌──────────┐    ┌──────────┐    ┌──────────┐    ┌──────────────┐   │
+│  │  Client  │───▶│  API GW  │───▶│  Lambda  │───▶│  DynamoDB    │   │
+│  │          │    │          │    │          │    │              │   │
+│  │          │    │[Segment] │    │[Segment] │    │ [Subsegment] │   │
+│  └──────────┘    └──────────┘    └──────────┘    └──────────────┘   │
+│                       │               │                  │           │
+│                       └───────────────┴──────────────────┘           │
+│                                       │ Trace data (async)            │
+│                                       ▼                               │
+│                           ┌──────────────────────┐                   │
+│                           │  X-Ray Daemon         │                   │
+│                           │  (UDP :2000 buffer)   │                   │
+│                           └──────────┬────────────┘                   │
+│                                      │ HTTPS batch                    │
+│                                      ▼                               │
+│                           ┌──────────────────────┐                   │
+│                           │  X-Ray Service        │                   │
+│                           │                       │                   │
+│                           │  • Service Map        │                   │
+│                           │  • Trace Timeline     │                   │
+│                           │  • Analytics          │                   │
+│                           └──────────────────────┘                   │
+└──────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+##### Core Concepts
+
+###### Traces, Segments, and Subsegments
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│                   X-Ray Trace Anatomy                                 │
+│                                                                       │
+│  Trace (one complete request end-to-end)                             │
+│  ┌─────────────────────────────────────────────────────────────┐    │
+│  │  Trace ID: 1-abc123...                                       │    │
+│  │                                                              │    │
+│  │  Segment: API Gateway          [============================]│    │
+│  │                                                              │    │
+│  │  Segment: Lambda Function      [========================]    │    │
+│  │  │                                                           │    │
+│  │  ├─ Subsegment: DynamoDB read  [======]                      │    │
+│  │  ├─ Subsegment: S3 put         [====]                        │    │
+│  │  └─ Subsegment: HTTP call      [========]                    │    │
+│  │                                                              │    │
+│  │  Segment: RDS                  [========]                    │    │
+│  └─────────────────────────────────────────────────────────────┘    │
+│                                                                       │
+│  Annotations: Key-value pairs indexed for search (filter traces)     │
+│  Metadata:    Any data attached to segment (NOT indexed)             │
+└──────────────────────────────────────────────────────────────────────┘
+```
+
+| Concept | Description |
+|---|---|
+| **Trace** | End-to-end path of a single request through your application |
+| **Segment** | Data emitted by each service that handles the request |
+| **Subsegment** | Granular timing within a segment (DB query, HTTP call, function) |
+| **Trace ID** | Unique identifier propagated via HTTP header `X-Amzn-Trace-Id` |
+| **Annotations** | Indexed key-value pairs — searchable via `GetTraceSummaries` |
+| **Metadata** | Non-indexed data attached to segment — for debugging only |
+| **Errors / Faults / Throttles** | 4xx = error; 5xx = fault; 429 = throttle |
+
+---
+
+##### X-Ray Sampling
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│                      X-Ray Sampling Rules                             │
+│                                                                       │
+│  Default Rule:                                                        │
+│  • First request per second: ALWAYS recorded (reservoir = 1)         │
+│  • Additional requests: 5% sampled (fixed_rate = 0.05)               │
+│                                                                       │
+│  Custom Rules (priority-based):                                       │
+│  • Match by: service name, HTTP method, URL path, host               │
+│  • Set: reservoir size + fixed rate per matched rule                 │
+│                                                                       │
+│  Why Sampling?                                                        │
+│  • High-traffic apps would generate enormous trace data              │
+│  • Sampling reduces cost and storage while preserving insights        │
+│  • Can set 100% sampling for dev/test environments                   │
+└──────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+##### X-Ray Daemon
+- A **lightweight software agent** that runs alongside your application
+- Listens on **UDP port 2000** for trace data from the X-Ray SDK
+- Buffers and **batch-sends** trace segments to the X-Ray service via HTTPS
+- Required on: **EC2**, **ECS** (as sidecar container), **on-premises**
+- **NOT required for**: Lambda, Elastic Beanstalk, API Gateway — these integrate natively
+
+```
+  Application Code
+       │  X-Ray SDK sends segments via UDP
+       ▼
+  X-Ray Daemon (UDP :2000)
+       │  Batches + sends via HTTPS
+       ▼
+  X-Ray API
+```
+
+---
+
+##### Integration with AWS Services
+
+###### Native Integrations (No Daemon Needed)
+| Service | X-Ray Support |
+|---|---|
+| **AWS Lambda** | Enable Active Tracing in function config; auto-instruments incoming |
+| **API Gateway** | Enable X-Ray tracing per stage; traces from client through backend |
+| **Elastic Beanstalk** | Enable via `.ebextensions` config or console toggle |
+| **ECS / Fargate** | Run X-Ray daemon as **sidecar container** in task definition |
+| **SNS / SQS** | Propagates trace context through messages |
+| **App Mesh** | Built-in tracing for service mesh |
+
+###### SDK Instrumentation
+- Add **X-Ray SDK** to application code (Java, Python, Node.js, .NET, Go, Ruby)
+- SDK auto-instruments: **incoming HTTP requests, AWS SDK calls, SQL queries**
+- Manually add subsegments for custom code blocks
+
+---
+
+##### Service Map
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│                      X-Ray Service Map                                │
+│                                                                       │
+│  Visual graph of all services and their connections                   │
+│                                                                       │
+│  [Client] ──▶ [API Gateway] ──▶ [Lambda] ──▶ [DynamoDB]            │
+│                                    │                                  │
+│                                    └──────────▶ [S3]                 │
+│                                    │                                  │
+│                                    └──────────▶ [SQS] ──▶ [Lambda2] │
+│                                                                       │
+│  Each node shows:                                                     │
+│  • Request rate (req/s)                                               │
+│  • Error rate (%)                                                     │
+│  • Latency (avg / p99)                                                │
+│  • Health (green / yellow / red)                                      │
+│                                                                       │
+│  Helps answer:                                                        │
+│  "Which service is causing high latency?"                            │
+│  "Where are errors occurring in the call chain?"                     │
+└──────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+##### X-Ray Analytics & Groups
+
+###### Trace Filter Expressions
+- Filter traces by **annotations**, URL, status code, response time, service name
+- Example: find all traces where `user_id = "abc"` and response time > 2s
+
+###### X-Ray Groups
+- Save filter expressions as **named groups**
+- Group-level metrics in CloudWatch: error rate, fault rate, latency
+- Set CloudWatch Alarms on group metrics
+
+###### X-Ray Insights
+- **Automatically detect anomalies** in traces (error spikes, latency regression)
+- Creates **Insight events** when anomaly detected and when resolved
+- Sends notification via EventBridge or CloudWatch
+
+---
+
+##### IAM Permissions for X-Ray
+```
+  Application / Instance Role needs:
+  • xray:PutTraceSegments      (send segments)
+  • xray:PutTelemetryRecords   (send telemetry)
+  • xray:GetSamplingRules      (retrieve sampling config)
+  • xray:GetSamplingTargets    (dynamic sampling)
+
+  Read/Analysis needs:
+  • xray:GetTraceSummaries
+  • xray:BatchGetTraces
+  • xray:GetServiceGraph
+```
+
+---
+
+##### X-Ray with Containers (ECS / EKS)
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│              X-Ray Daemon as ECS Sidecar Pattern                      │
+│                                                                       │
+│  ECS Task Definition:                                                 │
+│  ┌─────────────────────────────────────────────────────────────┐    │
+│  │  Container 1: Your Application                               │    │
+│  │  X-Ray SDK → UDP :2000 → localhost                          │    │
+│  │                                                              │    │
+│  │  Container 2: X-Ray Daemon (sidecar)                         │    │
+│  │  Image: amazon/aws-xray-daemon                               │    │
+│  │  Port: 2000 UDP                                              │    │
+│  │  Links to: Application container                             │    │
+│  └─────────────────────────────────────────────────────────────┘    │
+│                                                                       │
+│  Task Role must have xray:PutTraceSegments permission                │
+└──────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+##### X-Ray vs CloudWatch vs CloudTrail
+
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│            X-Ray vs CloudWatch vs CloudTrail                         │
+│                                                                       │
+│  Tool          │  What It Answers             │  Data Type           │
+│  ──────────────┼──────────────────────────────┼───────────────────  │
+│  X-Ray         │  Why is my request slow?     │  Distributed traces  │
+│                │  Which service has errors?    │  (latency, errors)   │
+│                │  What's the call graph?       │                      │
+│  CloudWatch    │  Is my service healthy?       │  Metrics, logs,      │
+│                │  CPU/memory/throughput?       │  alarms              │
+│                │  What do my logs say?         │                      │
+│  CloudTrail    │  Who did what in my account? │  API audit log       │
+│                │  Which IAM role made a call?  │  (who, what, when)   │
+└──────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+##### Common X-Ray Patterns for the Exam
+
+###### Lambda + X-Ray
+```
+  Lambda function:
+  • Set Tracing: Active in console or SAM template
+  • Add X-Ray SDK for custom subsegments
+  • Lambda creates segment automatically; SDK adds subsegments
+  • NO daemon needed — Lambda runtime handles it
+```
+
+###### API Gateway + Lambda + X-Ray
+```
+  Client ──▶ API Gateway (tracing ON) ──▶ Lambda (active tracing ON)
+                    │                           │
+              [Segment]                   [Segment]
+                                              │
+                                         [Subsegment: DDB]
+                                         [Subsegment: S3]
+```
+
+###### ECS + X-Ray Daemon Sidecar
+- **awsvpc** network mode: daemon on localhost (UDP 2000)
+- **bridge** mode: use Docker links or environment variable `AWS_XRAY_DAEMON_ADDRESS`
+
+---
+
+##### Exam Key Points
+- **X-Ray = distributed tracing** — end-to-end visibility of requests across services
+- **Segment** = emitted by each service; **Subsegment** = granular within a service; **Trace** = all segments for one request
+- **Annotations** = indexed, searchable; **Metadata** = NOT indexed (for debugging only)
+- **X-Ray Daemon** required on EC2, ECS (sidecar), on-premises; NOT needed for Lambda, API GW, Beanstalk
+- **Sampling** reduces cost — default: 1 req/s guaranteed + 5% of remaining
+- **Service Map** = visual dependency graph showing latency, error rates, and connections
+- **Active Tracing on Lambda** — enable in console; no daemon required
+- **ECS X-Ray** = sidecar container (amazon/aws-xray-daemon) in same task
+- **X-Ray Groups + CloudWatch** = alarms on trace-level metrics (error rate, latency)
+- **X-Ray Insights** = ML-based automatic anomaly detection in traces
+- **Trace context propagated** via `X-Amzn-Trace-Id` HTTP header
+- **IAM permission needed**: `xray:PutTraceSegments` on execution role
+- **Use when**: debugging microservices latency, finding error root cause in distributed systems, understanding service dependencies, performance bottleneck analysis
+
+
+##### Common Exam Traps
+1. **X-Ray Daemon is NOT needed for Lambda** — Lambda has native X-Ray integration; just enable Active Tracing
+2. **Annotations are indexed; Metadata is not** — use Annotations for filtering traces; Metadata for rich debugging data only
+3. **Sampling does not mean 100% of traces are captured** — default is 1/s + 5%; configure custom rules for higher rates
+4. **X-Ray ≠ CloudWatch Logs** — X-Ray traces requests end-to-end; CloudWatch captures metrics and log output
+5. **ECS X-Ray sidecar** must share network namespace with app container — use `localhost` for UDP connection in awsvpc mode
+6. **Service Map is read-only** — it shows your architecture; you cannot control routing from it
+7. **X-Ray does NOT replace CloudTrail** — CloudTrail = API audit; X-Ray = application performance tracing
+
+
 ---
 
 ### Front-End Web and Mobile
