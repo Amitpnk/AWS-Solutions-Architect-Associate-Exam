@@ -83,20 +83,20 @@ These domains represent the core competencies required for designing solutions o
 
 ### [Application Integration](#application-integration-1)
 
-* Amazon AppFlow
-* AWS AppSync
-* Amazon EventBridge
-* Amazon MQ
-* Amazon SNS
-* Amazon SQS
-* AWS Step Functions
+* [Amazon AppFlow](#amazon-appflow)
+* [AWS AppSync](#aws-appsync)
+* [Amazon EventBridge](#amazon-eventbridge)
+* [Amazon MQ](#amazon-mq)
+* [Amazon SNS](#amazon-sns-simple-notification-service)
+* [Amazon SQS](#amazon-sqs-simple-queue-service)
+* [AWS Step Functions](#aws-step-functions)
 
 ### [AWS Cost Management](#aws-cost-management)
 
 * [AWS Budgets](#aws-budgets)
-* AWS Cost and Usage Report
-* AWS Cost Explorer
-* Savings Plans
+* [AWS Cost and Usage Report](#aws-cost-and-usage-report-cur)
+* [AWS Cost Explorer](#aws-cost-explorer)
+* [Savings Plans](#savings-plans)
 
 ### [Compute](#compute)
 
@@ -111,12 +111,12 @@ These domains represent the core competencies required for designing solutions o
 
 ### [Containers](#containers)
 
-* Amazon ECR
-* Amazon ECS
-* Amazon ECS Anywhere
-* Amazon EKS
-* Amazon EKS Anywhere
-* Amazon EKS Distro
+* [Amazon ECR](#amazon-ecr-elastic-container-registry)
+* [Amazon ECS](#amazon-ecs-elastic-container-service)
+* [Amazon ECS Anywhere](#amazon-ecs-anywhere)
+* [Amazon EKS](#amazon-eks-elastic-kubernetes-service)
+* [Amazon EKS Anywhere](#amazon-eks-anywher)
+* [Amazon EKS Distro](#amazon-eks-distro-eks-d)
 
 ### [Database](#database)
 
@@ -3389,7 +3389,7 @@ Run **ECS tasks on your own infrastructure** (on-premises servers, edge location
 ##### What It Is
 A **fully managed Kubernetes service** — AWS manages the Kubernetes control plane (API server, etcd, scheduler) so you focus on running workloads.
 
-<img src="img/containers/image-2.png" alt="" width="100" 
+<img src="img/containers/image-2.png" alt="" width="100" >
 
 ##### Architecture
 ```
