@@ -67,7 +67,7 @@ These domains represent the core competencies required for designing solutions o
 
 ## Core AWS Services (In-scope AWS services and features)
 
-### Analytics
+### [Analytics](#analytics)
 
 * [Amazon Athena](#amazon-athena)
 * [AWS Data Exchange](#aws-data-exchange)
@@ -81,7 +81,7 @@ These domains represent the core competencies required for designing solutions o
 * [Amazon QuickSuite](#amazon-quicksight)
 * [Amazon Redshift](#amazon-redshift)
 
-### Application Integration
+### [Application Integration](#application-integration)
 
 * Amazon AppFlow
 * AWS AppSync
@@ -91,14 +91,14 @@ These domains represent the core competencies required for designing solutions o
 * Amazon SQS
 * AWS Step Functions
 
-### AWS Cost Management
+### [AWS Cost Management](#aws-cost-management)
 
 * [AWS Budgets](#aws-budgets)
 * AWS Cost and Usage Report
 * AWS Cost Explorer
 * Savings Plans
 
-### Compute
+### [Compute](#compute)
 
 * [AWS Batch](#aws-batch)
 * [Amazon EC2](#amazon-ec2-elastic-compute-cloud)
@@ -109,7 +109,7 @@ These domains represent the core competencies required for designing solutions o
 * [VMware Cloud on AWS](#vmware-cloud-on-aws)
 * [AWS Wavelength](#aws-wavelength)
 
-### Containers
+### [Containers](#containers)
 
 * Amazon ECR
 * Amazon ECS
@@ -118,7 +118,7 @@ These domains represent the core competencies required for designing solutions o
 * Amazon EKS Anywhere
 * Amazon EKS Distro
 
-### Database
+### [Database](#database)
 
 * Amazon Aurora
 * Amazon Aurora Serverless
@@ -130,7 +130,7 @@ These domains represent the core competencies required for designing solutions o
 * Amazon RDS
 * Amazon Redshift
 
-### Developer Tools
+### [Developer Tools](#developer-tools)
 
 AWS X-Ray
 
@@ -1245,6 +1245,15 @@ A **fully managed, petabyte-scale cloud data warehouse** — optimized for OLAP 
 
 ---
 
+### Application Integration
+
+
+---
+
+### AWS Cost Management
+---
+
+
 ### Compute
 
 #### AWS Batch
@@ -1752,6 +1761,25 @@ Embeds AWS compute and storage services **within 5G telecommunications networks*
 
 ---
 
+### Containers
+
+---
+
+### Database
+
+---
+
+### Developer Tools
+
+---
+
+### Front-End Web and Mobile
+
+---
+
+### Machine Learning
+
+---
 ### Management and Governance
 
 #### AWS Auto Scaling
@@ -3496,7 +3524,7 @@ A **logically isolated section** of the AWS cloud where you launch resources in 
 - **No overlapping CIDRs** allowed
 - **One-to-one** relationship — no hub-and-spoke with peering alone
 
-### VPC Endpoints (recap)
+##### VPC Endpoints (recap)
 | Type | For | Cost |
 |---|---|---|
 | **Gateway** | S3, DynamoDB | Free |
@@ -3815,7 +3843,7 @@ A **serverless compute engine for containers** — run ECS or EKS containers wit
 
 ---
 
-## λ 3. AWS Lambda
+## AWS Lambda
 
 ### What It Is
 **Serverless compute** — run code in response to events without provisioning or managing servers. AWS handles scaling, patching, and availability automatically.
