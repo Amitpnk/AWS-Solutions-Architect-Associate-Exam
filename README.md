@@ -4895,10 +4895,399 @@ A **distributed tracing service** that helps developers **analyze and debug prod
 6. **Service Map is read-only** — it shows your architecture; you cannot control routing from it
 7. **X-Ray does NOT replace CloudTrail** — CloudTrail = API audit; X-Ray = application performance tracing
 
+---
+
+### Front-End Web & Mobile Services
+
+#### Services Overview
+
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│                Front-End Web & Mobile Services                        │
+│                                                                       │
+│  ┌──────────────────────────────────────────────────────────────┐   │
+│  │  AWS Amplify                                                  │   │
+│  │  Full-stack web & mobile app development + hosting platform   │   │
+│  └──────────────────────────────────────────────────────────────┘   │
+│                                                                       │
+│  ┌──────────────────────────────────────────────────────────────┐   │
+│  │  Amazon API Gateway                                           │   │
+│  │  Managed REST, HTTP, and WebSocket API creation + management  │   │
+│  └──────────────────────────────────────────────────────────────┘   │
+│                                                                       │
+│  ┌──────────────────────────────────────────────────────────────┐   │
+│  │  AWS Device Farm                                              │   │
+│  │  App testing on real mobile devices and browsers in the cloud │   │
+│  └──────────────────────────────────────────────────────────────┘   │
+└──────────────────────────────────────────────────────────────────────┘
+```
+
+#### AWS Amplify
+
+##### What It Is
+A **complete development platform** for building, deploying, and hosting **full-stack web and mobile applications** — ties together AWS backend services with a developer-friendly CLI, libraries, and CI/CD hosting.
+
+<img src="img/front-end-web/image.png" alt="" width="100" height="100">
+
+##### Architecture
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│                          AWS Amplify                                  │
+│                                                                       │
+│  Development Tools                                                    │
+│  ┌────────────────┐  ┌────────────────┐  ┌──────────────────────┐   │
+│  │  Amplify CLI   │  │  Amplify Studio│  │  Amplify Libraries   │   │
+│  │  (provision &  │  │  (visual UI    │  │  (JS, iOS, Android,  │   │
+│  │   deploy)      │  │   builder)     │  │   Flutter, React)    │   │
+│  └────────────────┘  └────────────────┘  └──────────────────────┘   │
+│                                                                       │
+│  Backend (auto-provisioned AWS services)                              │
+│  ┌────────┐ ┌────────┐ ┌──────────┐ ┌────────┐ ┌────────────────┐  │
+│  │Cognito │ │AppSync │ │  Lambda  │ │  S3    │ │  DynamoDB /    │  │
+│  │(auth)  │ │(GraphQL│ │(APIs)    │ │(storage│ │  Aurora        │  │
+│  │        │ │  API)  │ │          │ │)       │ │  Serverless    │  │
+│  └────────┘ └────────┘ └──────────┘ └────────┘ └────────────────┘  │
+│                                                                       │
+│  Amplify Hosting (Frontend)                                           │
+│  ┌──────────────────────────────────────────────────────────────┐   │
+│  │  Git Repo ──▶ Amplify CI/CD ──▶ CloudFront + S3             │   │
+│  │  (GitHub, GitLab, Bitbucket, CodeCommit)                     │   │
+│  │                                                               │   │
+│  │  • Auto-deploy on push                                        │   │
+│  │  • Branch-based deployments (prod, staging, PR previews)      │   │
+│  │  • Custom domains + SSL (ACM)                                 │   │
+│  │  • SSR support (Next.js, Nuxt.js)                             │   │
+│  └──────────────────────────────────────────────────────────────┘   │
+└──────────────────────────────────────────────────────────────────────┘
+```
+
+##### Core Amplify Components
+
+###### Amplify Hosting
+| Feature | Description |
+|---|---|
+| **Git-based CI/CD** | Connect repo → auto-build and deploy on every push |
+| **Branch deployments** | `main` → production; `dev` → staging; PR → preview URL |
+| **Global CDN** | Served via CloudFront edge locations worldwide |
+| **Custom domains** | Bring your own domain; ACM handles SSL automatically |
+| **SSR / SSG / SPA** | Next.js, Nuxt, Gatsby, React, Vue, Angular all supported |
+| **Environment variables** | Per branch; separate prod/staging configs |
+| **PR Previews** | Unique URL for every pull request — test before merge |
+
+###### Amplify Backend Features
+| Category | AWS Service Used | What It Provides |
+|---|---|---|
+| **Authentication** | Amazon Cognito | Sign-up, sign-in, MFA, social login |
+| **API (GraphQL)** | AWS AppSync | Real-time GraphQL API + subscriptions |
+| **API (REST)** | API Gateway + Lambda | REST endpoints |
+| **Storage** | Amazon S3 | File uploads, user-specific storage |
+| **Database** | DynamoDB / Aurora Serverless | NoSQL / SQL data storage |
+| **Functions** | AWS Lambda | Custom serverless logic |
+| **Analytics** | Amazon Pinpoint | User engagement, campaign analytics |
+| **AI/ML** | Rekognition, Comprehend, Translate | AI features without ML expertise |
+| **Notifications** | Amazon Pinpoint | Push notifications, in-app messages |
+| **Geo** | Amazon Location Service | Maps, geofencing, routing |
+
+###### Amplify Studio
+- **Visual development environment** — build UI components, data models, and auth flows
+- Auto-generates **React components** from Figma designs
+- Visual data model editor that provisions DynamoDB automatically
+- No-code auth flow builder
+
+##### Exam Key Points
+- **Amplify = one-stop shop** for full-stack web/mobile on AWS — frontend + backend + CI/CD
+- **Amplify Hosting** deploys to **CloudFront + S3** under the hood — globally distributed
+- **Git-based deployments** — connect GitHub/GitLab/Bitbucket; auto-deploys on push
+- **Branch-based environments** — production, staging, preview URLs per branch/PR
+- **SSR support** via Next.js (Amplify provisions compute for server-side rendering)
+- **Amplify ≠ Elastic Beanstalk** — Amplify targets frontend/mobile; Beanstalk targets backend apps
+- Uses **Cognito** for auth, **AppSync** for GraphQL, **S3** for storage — all provisioned automatically
+- **Use when**: rapidly building and deploying web/mobile apps, startups, hackathons, frontend teams that don't want to manage infrastructure
+
+
+#### Amazon API Gateway
+
+##### What It Is
+A **fully managed service** for creating, publishing, maintaining, monitoring, and securing **REST, HTTP, and WebSocket APIs** at any scale — the front door to your backend services.
+
+<img src="img/front-end-web/image-1.png" alt="" width="100" height="100">
+
+##### API Gateway Types
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│                    API Gateway Types                                   │
+│                                                                       │
+│  ┌────────────────────────────────────────────────────────────────┐  │
+│  │  REST API (v1)                                                  │  │
+│  │  • Full-featured: stages, caching, usage plans, API keys      │  │
+│  │  • Request/response transformation, validation                 │  │
+│  │  • Supports all endpoint types (Edge, Regional, Private)       │  │
+│  │  • Higher cost; more features                                  │  │
+│  └────────────────────────────────────────────────────────────────┘  │
+│                                                                       │
+│  ┌────────────────────────────────────────────────────────────────┐  │
+│  │  HTTP API (v2) — Recommended for most new use cases            │  │
+│  │  • Low latency, cheaper (~70% less than REST API)              │  │
+│  │  • JWT auth (Cognito, Auth0) built-in                          │  │
+│  │  • CORS support built-in                                       │  │
+│  │  • Lambda, HTTP integrations only                              │  │
+│  │  • No caching, no usage plans, no API keys                     │  │
+│  └────────────────────────────────────────────────────────────────┘  │
+│                                                                       │
+│  ┌────────────────────────────────────────────────────────────────┐  │
+│  │  WebSocket API                                                  │  │
+│  │  • Persistent, two-way communication                           │  │
+│  │  • Stateful connections; route messages by content             │  │
+│  │  • Use: chat apps, real-time dashboards, multiplayer games     │  │
+│  └────────────────────────────────────────────────────────────────┘  │
+└──────────────────────────────────────────────────────────────────────┘
+```
+
+##### API Gateway Architecture
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│                   API Gateway Architecture                            │
+│                                                                       │
+│  Client ──▶ API Gateway ──▶ Integration Backends                     │
+│                                                                       │
+│  Endpoint Types (REST API only):                                      │
+│  ┌────────────────┐ ┌────────────────┐ ┌────────────────────────┐   │
+│  │  Edge-Optimized│ │    Regional    │ │       Private          │   │
+│  │                │ │                │ │                        │   │
+│  │  CloudFront    │ │  In AWS region │ │  VPC only (PrivateLink)│   │
+│  │  edge locations│ │  no CDN        │ │  No internet access    │   │
+│  │  Global clients│ │  Same-region   │ │  Internal microsvcs    │   │
+│  └────────────────┘ └────────────────┘ └────────────────────────┘   │
+│                                                                       │
+│  Integration Types:                                                   │
+│  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐  │
+│  │  Lambda  │ │  HTTP    │ │  AWS     │ │  Mock    │ │  VPC Link│  │
+│  │  Function│ │  Backend │ │ Service  │ │ (testing)│ │ (private)│  │
+│  └──────────┘ └──────────┘ └──────────┘ └──────────┘ └──────────┘  │
+└──────────────────────────────────────────────────────────────────────┘
+```
+
+##### Key API Gateway Features
+
+###### Stages and Deployments
+| Concept | Description |
+|---|---|
+| **Stage** | Named environment (dev, test, prod); each has own URL |
+| **Deployment** | Snapshot of API config; must deploy to make changes live |
+| **Stage Variables** | Environment-specific config (like env vars — e.g., Lambda alias) |
+| **Canary Deployment** | Route X% of traffic to new stage version; gradually shift |
+
+###### Caching (REST API Only)
+- Response cache per stage; TTL 0–3600 seconds (default 300s)
+- Reduces backend calls; cache keyed on method + path + query params
+- Cache size: 0.5 GB to 237 GB
+- Can be **invalidated** by clients with `Cache-Control: max-age=0` header (requires permission)
+
+###### Throttling and Quotas
+| Setting | Description |
+|---|---|
+| **Account limit** | 10,000 RPS default (soft limit, can increase) |
+| **Burst limit** | 5,000 concurrent requests (token bucket) |
+| **Per-stage throttle** | Limit specific stage (e.g., dev has lower limit) |
+| **Per-method throttle** | Different limits per route |
+| **Usage Plans + API Keys** | Control per-client rate limits and quotas |
+
+###### Security and Authorization
+| Method | Description |
+|---|---|
+| **IAM Authorization** | Sign requests with SigV4 — IAM users/roles |
+| **Cognito Authorizer** | Validate Cognito JWT tokens |
+| **Lambda Authorizer (Custom)** | Custom auth logic (token or request-based) |
+| **API Keys** | Simple key-based access; used with Usage Plans |
+| **Resource Policies** | Control who can invoke API (IP, VPC, account) |
+| **WAF** | Attach WAF Web ACL to REST API |
+| **mTLS** | Mutual TLS — client certificate authentication |
+
+###### Lambda Authorizer
+```
+  Client ──▶ API Gateway ──▶ Lambda Authorizer ──▶ IAM Policy
+                                                     │
+                                          ALLOW ──▶ Integration backend
+                                          DENY  ──▶ 403 response
+```
+- **Token-based**: receives bearer token (JWT, OAuth); returns IAM policy
+- **Request-based**: receives full request context; returns IAM policy
+- Result **cached** by API Gateway (TTL configurable — up to 3600s)
+
+###### VPC Link
+- Connect API Gateway to **private resources** in VPC (EC2, ECS, ALB)
+- REST API: VPC Link → NLB → private resources
+- HTTP API: VPC Link → ALB/NLB/Cloud Map → private resources
+
+###### API Gateway + Lambda Proxy Integration
+```
+  Client request ──▶ API Gateway ──▶ Lambda (event object)
+  {
+    "httpMethod": "GET",
+    "path": "/users/123",
+    "headers": {...},
+    "queryStringParameters": {...},
+    "body": "..."
+  }
+                              ◀── Lambda response
+  {
+    "statusCode": 200,
+    "headers": {...},
+    "body": "..."
+  }
+```
+
+###### WebSocket API Key Concepts
+| Route | Description |
+|---|---|
+| **$connect** | Client establishes WebSocket connection |
+| **$disconnect** | Client or server closes connection |
+| **$default** | Catch-all for unmatched messages |
+| **Custom routes** | Route messages by content (e.g., `action: "chat"`) |
+| **Connection management** | Use DynamoDB to store connection IDs |
+| **Send to client** | `POST /@connections/{connectionId}` via management API |
+
+##### REST API vs HTTP API vs WebSocket
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│           API Gateway: REST vs HTTP vs WebSocket                      │
+│                                                                       │
+│  Feature            │  REST API      │  HTTP API     │  WebSocket   │
+│  ───────────────────┼────────────────┼───────────────┼──────────── │
+│  Protocol           │  HTTP/HTTPS    │  HTTP/HTTPS   │  WS/WSS      │
+│  Communication      │  Request/resp  │  Request/resp │  Bidirection │
+│  Caching            │  ✅            │  ❌           │  ❌          │
+│  Usage Plans/Keys   │  ✅            │  ❌           │  ❌          │
+│  WAF                │  ✅            │  ✅           │  ❌          │
+│  JWT auth built-in  │  ❌ (Lambda)   │  ✅ native    │  ❌          │
+│  Price              │  $3.50/million │  $1.00/million│  $1/million  │
+│  Latency            │  Higher        │  Lower        │  Persistent  │
+│  Private endpoint   │  ✅            │  ✅           │  ❌          │
+│  Mock integration   │  ✅            │  ❌           │  ❌          │
+│  AWS integrations   │  Many          │  Lambda+HTTP  │  Lambda      │
+└──────────────────────────────────────────────────────────────────────┘
+```
+
+##### Exam Key Points
+- **REST API** = full-featured (caching, usage plans, request transforms); higher cost
+- **HTTP API** = cheaper (~70%), lower latency, built-in JWT auth; no caching or usage plans
+- **WebSocket API** = real-time bidirectional; chat, gaming, dashboards
+- **Edge-Optimized** = uses CloudFront (global users); **Regional** = same-region clients; **Private** = VPC only
+- **Lambda Authorizer** = custom auth logic; result is cached as IAM policy
+- **Cognito Authorizer** = validates JWT tokens from Cognito User Pool
+- **Usage Plans + API Keys** = rate limiting per client/customer (monetization use case)
+- **Caching** reduces backend load; only available on REST API; per-stage
+- **VPC Link** = connect API Gateway to private resources without internet exposure
+- **Canary deployments** = route % of traffic to new version; shift gradually
+- **API Gateway is not for WebSocket broadcasting** — use a DynamoDB table to store connection IDs and iterate to broadcast
+- **Use when**: serverless REST API (Lambda + API GW), public-facing web API, internal microservices API, WebSocket real-time apps
+
+
+#### AWS Device Farm
+
+##### What It Is
+An **application testing service** that lets you test your **iOS, Android, and web apps** on **real physical devices** — and test web apps on desktop browsers — in the AWS cloud. No device lab maintenance required.
+
+<img src="img/front-end-web/image-2.png" alt="" width="100" height="100">
+
+##### Architecture
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│                       AWS Device Farm                                 │
+│                                                                       │
+│  Your App (APK / IPA / Web App)                                      │
+│       │                                                               │
+│       ▼  Upload + configure test                                      │
+│  ┌──────────────────────────────────────────────────────────────┐   │
+│  │  Device Farm                                                  │   │
+│  │                                                               │   │
+│  │  ┌────────────────────────────────────────────────────────┐  │   │
+│  │  │  Physical Device Fleet                                  │  │   │
+│  │  │                                                         │  │   │
+│  │  │  iOS Devices        Android Devices     Browsers        │  │   │
+│  │  │  iPhone 12, 13, 14  Galaxy S21, S22     Chrome, Firefox │  │   │
+│  │  │  iPad Pro           Pixel 6, 7          Safari, Edge    │  │   │
+│  │  │  iPod Touch         OnePlus, Xiaomi                     │  │   │
+│  │  └────────────────────────────────────────────────────────┘  │   │
+│  │                                                               │   │
+│  │  Test Results:                                                │   │
+│  │  • Screenshots + video recording per test                     │   │
+│  │  • Device logs + crash reports                                │   │
+│  │  • Performance metrics (CPU, memory, network)                 │   │
+│  │  • Pass / Fail per device per test                            │   │
+│  └──────────────────────────────────────────────────────────────┘   │
+└──────────────────────────────────────────────────────────────────────┘
+```
+
+##### Testing Modes
+| Mode | Description |
+|---|---|
+| **Automated Testing** | Run test scripts against many devices in parallel |
+| **Remote Access** | Interactive real-device access in browser (manual testing) |
+
+##### Supported Test Frameworks
+| Platform | Frameworks |
+|---|---|
+| **Android** | Appium, Espresso, XCTest (via Appium), Built-in (Fuzz) |
+| **iOS** | Appium, XCTest, Built-in (Fuzz) |
+| **Web** | Appium, Selenium WebDriver |
+
+##### Key Features
+| Feature | Description |
+|---|---|
+| **Real devices** | Not simulators/emulators — actual physical hardware |
+| **Parallel execution** | Run tests on multiple devices simultaneously |
+| **Device slots** | Purchase device minutes; unmetered plans available |
+| **Artifacts** | Screenshots, videos, logs, performance data per run |
+| **VPCE / Private** | Run tests in VPC for apps that need private network access |
+| **Built-in tests** | Fuzz testing (no test code needed) |
+
+##### Exam Key Points
+- **Real physical devices** — not emulators or simulators (this is the key differentiator)
+- Tests run in **parallel** across many devices simultaneously — fast feedback
+- Supports **iOS, Android, and web browsers**
+- **Remote access** = interactive manual testing session on a real device via browser
+- **Use when**: QA for mobile apps, cross-device compatibility testing, CI/CD pipeline mobile testing, regression testing across device matrix
+- **Least tested** of the three in this domain — know the concept and key differentiator (real devices)
 
 ---
 
-### Front-End Web and Mobile
+#### Quick Comparison - Front-End Web
+
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│            Front-End Web & Mobile — When to Use What                 │
+│                                                                       │
+│  Scenario                                   Service                  │
+│  ─────────────────────────────────────────  ──────────────────────  │
+│  Build + deploy full-stack web/mobile app   AWS Amplify              │
+│  Host static/SSR frontend with CI/CD        Amplify Hosting          │
+│  Expose Lambda/backend as REST API          API Gateway (REST/HTTP)  │
+│  Build real-time bidirectional API          API Gateway (WebSocket)  │
+│  Throttle and monetize API per customer     API Gateway + Usage Plans│
+│  Private API inside VPC                     API Gateway (Private)    │
+│  Cache API responses at edge                API Gateway REST + Cache │
+│  Custom auth logic for API                  API GW Lambda Authorizer │
+│  Test mobile app on real devices            AWS Device Farm          │
+│  Interactive manual mobile testing          Device Farm Remote Access│
+└──────────────────────────────────────────────────────────────────────┘
+```
+
+
+#### Common Exam Traps - Front-End Web
+
+1. **HTTP API is cheaper and lower latency than REST API** but has no caching, usage plans, or request transformation — choose based on feature needs
+2. **API Gateway caching is REST API only** — HTTP API does not support server-side caching
+3. **Edge-Optimized ≠ CloudFront distribution** — the API endpoint is CloudFront-fronted, but you don't manage a CloudFront distribution; it's built-in to the API type
+4. **Lambda Authorizer response is cached** — same token returns cached policy for TTL duration; set TTL=0 to disable caching
+5. **Private API endpoint requires VPC endpoint (PrivateLink)** — not accessible from internet; requires Interface Endpoint with resource policy
+6. **WebSocket API does NOT broadcast natively** — you must store connection IDs (in DynamoDB) and use the management API to send messages to each connection individually
+7. **Amplify Hosting uses CloudFront + S3** under the hood — don't confuse with manually setting up CloudFront
+8. **Device Farm uses real physical devices** — not simulators or emulators; this is the primary differentiator vs local testing tools
+9. **API Gateway timeout is 29 seconds max** — Lambda functions called by API Gateway cannot exceed 29 seconds (even though Lambda max is 15 min); use async patterns for long jobs
+10. **REST API requires explicit deployment to stages** — changes are NOT live until you deploy to a stage; HTTP API deploys automatically
+
+
 
 ---
 
