@@ -307,7 +307,7 @@ function App() {
               <h2>Exam Completed</h2>
               {examTimedOut && <p className="alert-text">Time expired and the exam ended automatically.</p>}
               <p>
-                Score: <strong>{score}</strong> / <strong>{selectedExam.questions.length}</strong>
+                Score: <strong>{score}</strong> / <strong>{selectedExam.questions.length}</strong> {`(${((score / selectedExam.questions.length) * 100).toFixed(2)}%)`  }
               </p>
               <div className="results-actions">
                 <button className="primary-button" onClick={handleRestart}>Back to Home</button>
