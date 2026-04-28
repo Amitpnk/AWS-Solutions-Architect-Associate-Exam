@@ -168,6 +168,8 @@ function App() {
               </div>
             </div>
 
+           
+
             <div className="question-card">
               <h3>{currentQuestion.prompt}</h3>
               <div className="options-grid">
@@ -187,6 +189,9 @@ function App() {
             </div>
 
             <div className="quiz-controls">
+              <button className="secondary-button" onClick={handleRestart}>
+                Main Page
+              </button>
               <button className="secondary-button" onClick={handlePrev} disabled={currentQuestionIndex === 0}>
                 Previous
               </button>
@@ -196,6 +201,25 @@ function App() {
               <button className="danger-button" onClick={handleFinish}>
                 End Exam
               </button>
+            </div>
+
+             <div className="question-nav">
+              <span>Jump to question:</span>
+              <div className="question-nav-grid">
+                {selectedExam.questions.map((question, index) => {
+                  const isAnswered = answers[question.id] !== undefined;
+                  return (
+                    <button
+                      key={question.id}
+                      className={`question-nav-button ${index === currentQuestionIndex ? 'active' : ''} ${isAnswered ? 'answered' : ''}`}
+                      onClick={() => setCurrentQuestionIndex(index)}
+                      type="button"
+                    >
+                      {index + 1}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
           </section>
         )}
