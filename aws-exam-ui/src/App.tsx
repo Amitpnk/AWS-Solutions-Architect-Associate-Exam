@@ -5,6 +5,7 @@ import { exams } from './data/exams';
 type ViewState = 'home' | 'quiz' | 'results';
 
 type AnswerMap = Record<string, number>;
+type SkippedMap = Record<string, boolean>;
 
 function formatTime(seconds: number) {
   const minutes = Math.floor(seconds / 60);
@@ -17,6 +18,7 @@ function App() {
   const [selectedExamId, setSelectedExamId] = useState<string | null>(null);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [answers, setAnswers] = useState<AnswerMap>({});
+  const [skippedQuestions, setSkippedQuestions] = useState<SkippedMap>({});
   const [timerEnabled, setTimerEnabled] = useState(true);
   const [timeLeft, setTimeLeft] = useState(0);
   const [examTimedOut, setExamTimedOut] = useState(false);
@@ -68,6 +70,7 @@ function App() {
     setSelectedExamId(examId);
     setCurrentQuestionIndex(0);
     setAnswers({});
+    setSkippedQuestions({});
     setExamTimedOut(false);
     setView('quiz');
     setTimeLeft(timerEnabled && exam.durationSeconds ? exam.durationSeconds : 0);
@@ -97,8 +100,25 @@ function App() {
     }
   };
 
+  const handleSkipQuestion = () => {
+    if (!currentQuestion || !selectedExam) {
+      return;
+    }
+    setSkippedQuestions((prev) => ({ ...prev, [currentQuestion.id]: true }));
+    if (currentQuestionIndex + 1 < selectedExam.questions.length) {
+      setCurrentQuestionIndex(currentQuestionIndex + 1);
+    }
+  };
+
   const handleFinish = () => {
     setView('results');
+  };
+
+  const handleMainPageClick = () => {
+    const shouldLeave = window.confirm('Are you sure you want to leave the exam and return to the main page? Your progress will be reset.');
+    if (shouldLeave) {
+      handleRestart();
+    }
   };
 
   const handleRestart = () => {
@@ -189,11 +209,14 @@ function App() {
             </div>
 
             <div className="quiz-controls">
-              <button className="secondary-button" onClick={handleRestart}>
+              <button className="mainpage-button" onClick={handleMainPageClick}>
                 Main Page
               </button>
               <button className="secondary-button" onClick={handlePrev} disabled={currentQuestionIndex === 0}>
                 Previous
+              </button>
+              <button className="secondary-button" onClick={handleSkipQuestion}>
+                Skip & Return Later
               </button>
               <button className="secondary-button" onClick={handleNext}>
                 {currentQuestionIndex + 1 < selectedExam.questions.length ? 'Next' : 'Finish'}
@@ -208,10 +231,11 @@ function App() {
               <div className="question-nav-grid">
                 {selectedExam.questions.map((question, index) => {
                   const isAnswered = answers[question.id] !== undefined;
+                  const isSkipped = skippedQuestions[question.id] && answers[question.id] === undefined;
                   return (
                     <button
                       key={question.id}
-                      className={`question-nav-button ${index === currentQuestionIndex ? 'active' : ''} ${isAnswered ? 'answered' : ''}`}
+                      className={`question-nav-button ${index === currentQuestionIndex ? 'active' : ''} ${isAnswered ? 'answered' : ''} ${isSkipped ? 'skipped' : ''}`}
                       onClick={() => setCurrentQuestionIndex(index)}
                       type="button"
                     >

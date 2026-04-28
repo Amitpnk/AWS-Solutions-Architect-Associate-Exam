@@ -76,6 +76,7 @@
 
 .primary-button,
 .secondary-button,
+.mainpage-button,
 .danger-button,
 .option-button {
   border: none;
@@ -95,6 +96,11 @@
   color: #0f172a;
 }
 
+.mainpage-button {
+  background: #f59e0b;
+  color: white;
+}
+
 .danger-button {
   background: #dc2626;
   color: white;
@@ -102,6 +108,7 @@
 
 .primary-button:hover,
 .secondary-button:hover,
+.mainpage-button:hover,
 .danger-button:hover,
 .option-button:hover {
   transform: translateY(-1px);
@@ -186,6 +193,11 @@
 .question-nav-button.answered {
   background: #e0f2fe;
   border-color: #bae6fd;
+}
+
+.question-nav-button.skipped {
+  background: #fde68a;
+  border-color: #fbbf24;
 }
 
 .question-nav-button.active {
