@@ -336,10 +336,12 @@ function App() {
                         ? selectedIndexes.map((optionIndex) => question.options[optionIndex]).join(', ')
                         : 'No answer selected'}
                     </div>
-                    <div className="review-answer">
-                      <strong>Correct answer{correctIndexes.length > 1 ? 's' : ''}:</strong>{' '}
-                      {correctIndexes.map((optionIndex) => question.options[optionIndex]).join(', ')}
-                    </div>
+                    {!isCorrect && (
+                      <div className="review-answer">
+                        <strong>Correct answer{correctIndexes.length > 1 ? 's' : ''}:</strong>{' '}
+                        {correctIndexes.map((optionIndex) => question.options[optionIndex]).join(', ')}
+                      </div>
+                    )}
                     {question.explanation && <p className="explanation">{question.explanation}</p>}
                   </article>
                 );
