@@ -1,16 +1,35 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import './App.css';
-import { exams } from './data/exams';
+import { exams, ExamQuestion } from './data/exams';
 
 type ViewState = 'home' | 'quiz' | 'results';
 
-type AnswerMap = Record<string, number>;
+type AnswerMap = Record<string, number | number[]>;
 type SkippedMap = Record<string, boolean>;
 
 function formatTime(seconds: number) {
   const minutes = Math.floor(seconds / 60);
   const remainder = seconds % 60;
   return `${minutes}:${remainder.toString().padStart(2, '0')}`;
+}
+
+function normalizeAnswer(answer: number | number[] | undefined) {
+  if (Array.isArray(answer)) {
+    return answer;
+  }
+  if (typeof answer === 'number') {
+    return [answer];
+  }
+  return [];
+}
+
+function getCorrectIndexes(question: ExamQuestion) {
+  return question.correctOptionIndexes ?? (question.correctOptionIndex !== undefined ? [question.correctOptionIndex] : []);
+}
+
+function isAnswerCorrect(question: ExamQuestion, selected: number[]) {
+  const correct = getCorrectIndexes(question);
+  return correct.length > 0 && correct.length === selected.length && correct.every((index) => selected.includes(index));
 }
 
 function App() {
@@ -58,7 +77,8 @@ function App() {
       return 0;
     }
     return selectedExam.questions.reduce((count, question) => {
-      return answers[question.id] === question.correctOptionIndex ? count + 1 : count;
+      const selectedAnswers = normalizeAnswer(answers[question.id]);
+      return isAnswerCorrect(question, selectedAnswers) ? count + 1 : count;
     }, 0);
   }, [selectedExam, answers]);
 
@@ -80,7 +100,27 @@ function App() {
     if (!currentQuestion) {
       return;
     }
-    setAnswers((prev) => ({ ...prev, [currentQuestion.id]: optionIndex }));
+
+    const multiSelect = !!currentQuestion.correctOptionIndexes;
+    if (!multiSelect) {
+      setAnswers((prev) => ({ ...prev, [currentQuestion.id]: optionIndex }));
+      return;
+    }
+
+    setAnswers((prev) => {
+      const existing = normalizeAnswer(prev[currentQuestion.id]);
+      const nextAnswers = existing.includes(optionIndex)
+        ? existing.filter((id) => id !== optionIndex)
+        : [...existing, optionIndex];
+
+      if (nextAnswers.length === 0) {
+        const updated = { ...prev };
+        delete updated[currentQuestion.id];
+        return updated;
+      }
+
+      return { ...prev, [currentQuestion.id]: nextAnswers };
+    });
   };
 
   const handleNext = () => {
@@ -192,17 +232,30 @@ function App() {
 
             <div className="question-card">
               <h3>{currentQuestion.prompt}</h3>
+              {currentQuestion.correctOptionIndexes && <p className="multi-select-note">Select all that apply.</p>}
               <div className="options-grid">
                 {currentQuestion.options.map((option, optionIndex) => {
-                  const isSelected = answers[currentQuestion.id] === optionIndex;
+                  const selectedAnswer = answers[currentQuestion.id];
+                  const selectedIndexes = normalizeAnswer(selectedAnswer);
+                  const isSelected = selectedIndexes.includes(optionIndex);
+                  const isMultiSelect = !!currentQuestion.correctOptionIndexes;
+                  const inputType = isMultiSelect ? 'checkbox' : 'radio';
+                  const inputName = isMultiSelect ? undefined : currentQuestion.id;
+
                   return (
-                    <button
+                    <label
                       key={option}
                       className={`option-button ${isSelected ? 'selected' : ''}`}
-                      onClick={() => handleAnswer(optionIndex)}
                     >
+                      <input
+                        type={inputType}
+                        name={inputName}
+                        value={optionIndex}
+                        checked={isSelected}
+                        onChange={() => handleAnswer(optionIndex)}
+                      />
                       {option}
-                    </button>
+                    </label>
                   );
                 })}
               </div>
@@ -266,8 +319,10 @@ function App() {
 
             <div className="review-list">
               {selectedExam.questions.map((question, index) => {
-                const selectedIndex = answers[question.id];
-                const isCorrect = selectedIndex === question.correctOptionIndex;
+                const selectedAnswer = answers[question.id];
+                const selectedIndexes = normalizeAnswer(selectedAnswer);
+                const correctIndexes = getCorrectIndexes(question);
+                const isCorrect = isAnswerCorrect(question, selectedIndexes);
                 return (
                   <article key={question.id} className={`review-card ${isCorrect ? 'correct' : 'incorrect'}`}>
                     <div className="review-header">
@@ -276,12 +331,14 @@ function App() {
                     </div>
                     <p>{question.prompt}</p>
                     <div className="review-answer">
-                      <strong>Your answer:</strong>{' '}
-                      {selectedIndex !== undefined ? question.options[selectedIndex] : 'No answer selected'}
+                      <strong>Your answer{selectedIndexes.length > 1 ? 's' : ''}:</strong>{' '}
+                      {selectedIndexes.length > 0
+                        ? selectedIndexes.map((optionIndex) => question.options[optionIndex]).join(', ')
+                        : 'No answer selected'}
                     </div>
                     <div className="review-answer">
-                      <strong>Correct answer:</strong>{' '}
-                      {question.options[question.correctOptionIndex]}
+                      <strong>Correct answer{correctIndexes.length > 1 ? 's' : ''}:</strong>{' '}
+                      {correctIndexes.map((optionIndex) => question.options[optionIndex]).join(', ')}
                     </div>
                     {question.explanation && <p className="explanation">{question.explanation}</p>}
                   </article>

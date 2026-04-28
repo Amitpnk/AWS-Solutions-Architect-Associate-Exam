@@ -2,7 +2,8 @@ export interface ExamQuestion {
     id: string;
     prompt: string;
     options: string[];
-    correctOptionIndex: number;
+    correctOptionIndex?: number;
+    correctOptionIndexes?: number[];
     explanation?: string;
 }
 
@@ -741,7 +742,7 @@ export const exams: ExamDefinition[] = [
     },
     {
         id: 'exam2',
-        title: 'SAA-C03 Practice Set 2',
+        title: 'SAA-C03 Practice Set 2 (Easy Single Choice)',
         description: 'Additional SAA-C03 simulation to expand your readiness with another question set.',
         durationSeconds: 7800,
         questions: [
@@ -1535,6 +1536,86 @@ export const exams: ExamDefinition[] = [
                 ],
                 "correctOptionIndex": 0,
                 "explanation": "Route 53 with multi-region ensures global failover."
+            }
+        ],
+    },
+    {
+        id: 'exam3',
+        title: 'SAA-C03 Scenario-Based Practice Set 3',
+        description: 'Scenario-driven practice with multi-select questions to reflect real SAA-C03 decisions.',
+        durationSeconds: 7800,
+        questions: [
+            {
+                id: 'q1',
+                prompt: 'A media company needs to store raw video uploads, transcode to multiple formats, and deliver outputs globally. Which services should be used? (Choose two.)',
+                options: [
+                    'Amazon S3 for storage',
+                    'AWS Elemental MediaConvert for transcoding',
+                    'Amazon RDS for metadata',
+                    'AWS Lambda for video delivery'
+                ],
+                correctOptionIndexes: [0, 1],
+                explanation: 'S3 stores media assets and MediaConvert handles video transcoding; the other options are not core to the media workflow.'
+            },
+            {
+                id: 'q2',
+                prompt: 'A retail application requires a highly available relational database with automatic failover and read replicas for reporting. Which services should be used? (Choose two.)',
+                options: [
+                    'Amazon RDS Multi-AZ',
+                    'Amazon DynamoDB',
+                    'Amazon Aurora read replicas',
+                    'Amazon S3'
+                ],
+                correctOptionIndexes: [0, 2],
+                explanation: 'RDS Multi-AZ provides failover and Aurora read replicas support reporting workloads.'
+            },
+            {
+                id: 'q3',
+                prompt: 'A company needs secure global content delivery for a customer portal and application-layer protection. Which services should be used? (Choose two.)',
+                options: [
+                    'Amazon CloudFront',
+                    'AWS WAF',
+                    'Amazon RDS',
+                    'AWS Shield'
+                ],
+                correctOptionIndexes: [0, 1],
+                explanation: 'CloudFront delivers content globally and WAF protects against application-layer attacks.'
+            },
+            {
+                id: 'q4',
+                prompt: 'A serverless API backend requires authorization for mobile users and automatic scaling. Which solution is best?',
+                options: [
+                    'API Gateway + EC2 + IAM',
+                    'API Gateway + Lambda + Cognito',
+                    'Application Load Balancer + Lambda',
+                    'Lambda only with manual keys'
+                ],
+                correctOptionIndex: 1,
+                explanation: 'API Gateway with Lambda and Cognito provides serverless authorization and scaling.'
+            },
+            {
+                id: 'q5',
+                prompt: 'A financial services workload requires encryption at rest, centralized auditing, and secure key management. Which services should be used? (Choose two.)',
+                options: [
+                    'AWS KMS',
+                    'Amazon S3',
+                    'AWS CloudTrail',
+                    'Amazon CloudWatch'
+                ],
+                correctOptionIndexes: [0, 2],
+                explanation: 'KMS provides key management and CloudTrail records audit logs.'
+            },
+            {
+                id: 'q6',
+                prompt: 'A logistics company needs a globally distributed key-value data store with low-latency reads and automatic replication. Which AWS service should be used?',
+                options: [
+                    'Amazon RDS',
+                    'Amazon ElastiCache',
+                    'Amazon DynamoDB Global Tables',
+                    'Amazon S3'
+                ],
+                correctOptionIndex: 2,
+                explanation: 'DynamoDB Global Tables provide low-latency, globally distributed key-value storage.'
             }
         ],
     },
