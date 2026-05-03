@@ -41,6 +41,7 @@ function App() {
   const [timerEnabled, setTimerEnabled] = useState(true);
   const [timeLeft, setTimeLeft] = useState(0);
   const [examTimedOut, setExamTimedOut] = useState(false);
+  const [darkMode, setDarkMode] = useState(false);
 
   const selectedExam = useMemo(
     () => exams.find((exam) => exam.id === selectedExamId) ?? null,
@@ -172,12 +173,24 @@ function App() {
   };
 
   return (
-    <div className="App">
+    <div className={`App ${darkMode ? 'dark' : ''}`}>
       <header className="app-header">
-        <div>
+        <div className="header-center">
           <p className="app-title">AWS SAA-C03 Exam Practice</p>
           <p className="app-subtitle">Choose an exam, answer questions, and review correct answers at the end.</p>
         </div>
+        <input
+          type="checkbox"
+          id="dark-mode-checkbox"
+          className="dark-mode-checkbox"
+          checked={darkMode}
+          onChange={() => setDarkMode(!darkMode)}
+        />
+        <label htmlFor="dark-mode-checkbox" className="dark-mode-label">
+          <span className="moon">🌙</span>
+          <span className="sun">☀️</span>
+          <span className="ball"></span>
+        </label>
       </header>
 
       <main className="page-content">
@@ -206,6 +219,7 @@ function App() {
                 <button className="primary-button" onClick={() => handleStartExam(exam.id)}>
                   Start Exam
                 </button>
+                 
               </article>
             ))}
           </section>
