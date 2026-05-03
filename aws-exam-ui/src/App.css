@@ -754,19 +754,167 @@
   background: #3f1f1f;
 }
 
+.exam-card-buttons {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 16px;
+}
+
+.exam-card-buttons button {
+  flex: 1;
+  min-width: 120px;
+}
+
+.revision-screen {
+  display: grid;
+  gap: 24px;
+}
+
+.revision-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+
+.revision-header h2,
+.revision-header p {
+  margin: 0 0 12px;
+}
+
+.revision-list {
+  display: grid;
+  gap: 18px;
+}
+
+.revision-card {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-left: 4px solid #3b82f6;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06);
+  transition: background 0.2s linear, border-color 0.2s linear;
+}
+
+.revision-header-card {
+  margin-bottom: 12px;
+}
+
+.revision-header-card h3 {
+  margin: 0;
+  color: #1f2937;
+  font-size: 1.1rem;
+}
+
+.revision-prompt {
+  margin: 12px 0;
+  color: #1f2937;
+  font-weight: 500;
+  line-height: 1.6;
+}
+
+.revision-options {
+  display: grid;
+  gap: 10px;
+  margin: 16px 0;
+}
+
+.revision-option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border-radius: 8px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  color: #1f2937;
+}
+
+.revision-option.correct {
+  background: #dcfce7;
+  border-color: #86efac;
+}
+
+.revision-option.incorrect {
+  background: #fef2f2;
+  border-color: #fecaca;
+}
+
+.option-indicator {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #e2e8f0;
+  font-weight: bold;
+  color: #475569;
+  flex-shrink: 0;
+}
+
+.option-indicator.correct {
+  background: #22c55e;
+  color: white;
+}
+
+.revision-explanation {
+  margin-top: 14px;
+  padding: 12px;
+  background: #fffbeb;
+  border-left: 3px solid #f59e0b;
+  color: #92400e;
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+
+/* Dark mode for revision */
+.App.dark .revision-card {
+  background: #3a3f4a;
+  border-color: #4a5568;
+  border-left-color: #60a5fa;
+}
+
+.App.dark .revision-header-card h3,
+.App.dark .revision-prompt {
+  color: #e2e8f0;
+}
+
+.App.dark .revision-option {
+  background: #4a5568;
+  border-color: #475569;
+  color: #e2e8f0;
+}
+
+.App.dark .revision-option.correct {
+  background: #1e3a1f;
+  border-color: #22c55e;
+}
+
+.App.dark .revision-option.incorrect {
+  background: #3f1f1f;
+  border-color: #ef4444;
+}
+
+.App.dark .revision-explanation {
+  background: #3f2f1f;
+  border-left-color: #d97706;
+  color: #fcd34d;
+}
+
 @media (max-width: 720px) {
-  .quiz-header,
-  .results-actions,
-  .exam-meta {
+  .revision-header {
     flex-direction: column;
   }
 
-  .app-header {
+  .exam-card-buttons {
     flex-direction: column;
-    gap: 16px;
   }
 
-  .header-center {
+  .exam-card-buttons button {
     width: 100%;
   }
 }

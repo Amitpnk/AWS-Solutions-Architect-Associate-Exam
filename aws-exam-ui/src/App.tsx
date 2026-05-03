@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import './App.css';
 import { exams, ExamQuestion } from './data/exams';
 
-type ViewState = 'home' | 'quiz' | 'results';
+type ViewState = 'home' | 'quiz' | 'results' | 'revision';
 
 type AnswerMap = Record<string, number | number[]>;
 type SkippedMap = Record<string, boolean>;
@@ -172,6 +172,11 @@ function App() {
     setExamTimedOut(false);
   };
 
+  const handleOpenRevision = (examId: string) => {
+    setSelectedExamId(examId);
+    setView('revision');
+  };
+
   return (
     <div className={`App ${darkMode ? 'dark' : ''}`}>
       <header className="app-header">
@@ -216,10 +221,14 @@ function App() {
                     Use time limit ({formatTime(exam.durationSeconds)})
                   </label>
                 )}
-                <button className="primary-button" onClick={() => handleStartExam(exam.id)}>
-                  Start Exam
-                </button>
-                 
+                <div className="exam-card-buttons">
+                  <button className="primary-button" onClick={() => handleStartExam(exam.id)}>
+                    Start Exam
+                  </button>
+                  <button className="secondary-button" onClick={() => handleOpenRevision(exam.id)}>
+                    Revision
+                  </button>
+                </div>
               </article>
             ))}
           </section>
@@ -311,6 +320,53 @@ function App() {
                   );
                 })}
               </div>
+            </div>
+          </section>
+        )}
+
+        {view === 'revision' && selectedExam && (
+          <section className="revision-screen">
+            <div className="revision-header">
+              <div>
+                <h2>{selectedExam.title}</h2>
+                <p>{selectedExam.description}</p>
+              </div>
+              <button className="mainpage-button" onClick={handleRestart}>
+                Back to Home
+              </button>
+            </div>
+
+            <div className="revision-list">
+              {selectedExam.questions.map((question, index) => {
+                const correctIndexes = getCorrectIndexes(question);
+                return (
+                  <article key={question.id} className="revision-card">
+                    <div className="revision-header-card">
+                      <h3>Question {index + 1}</h3>
+                    </div>
+                    <p className="revision-prompt">{question.prompt}</p>
+                    <div className="revision-options">
+                      {question.options.map((option, optionIndex) => {
+                        const isCorrect = correctIndexes.includes(optionIndex);
+                        return (
+                          <div
+                            key={optionIndex}
+                            className={`revision-option ${isCorrect ? 'correct' : 'incorrect'}`}
+                          >
+                            <span className={`option-indicator ${isCorrect ? 'correct' : ''}`}>
+                              {isCorrect ? '✓' : '○'}
+                            </span>
+                            {option}
+                          </div>
+                        );
+                      })}
+                    </div>
+                    {question.explanation && (
+                      <p className="revision-explanation"><strong>Explanation:</strong> {question.explanation}</p>
+                    )}
+                  </article>
+                );
+              })}
             </div>
           </section>
         )}
