@@ -2675,7 +2675,1065 @@ export const exams: ExamDefinition[] = [
                 "explanation": "Increasing the target metric percentage (e.g., from 70% to 80% CPU) reduces overshooting. Reducing cooldown causes more frequent scaling. Predictive scaling can help but doesn't directly reduce overshoot. Replacement threshold is for health checks, not target tracking."
             }
         ]
+    },
+    {
+        "id": "exam_rds_aurora_elasticache_saa_c03",
+        "title": "SAA-C03 Practice Set on RDS, Aurora, and ElastiCache",
+        "description": "Comprehensive exam questions covering Amazon RDS, Aurora, ElastiCache, read replicas, multi-AZ, backups, security, RDS Proxy, and caching strategies",
+        "durationSeconds": 7800,
+        "questions": [
+            {
+                "id": "q1",
+                "type": "multiple",
+                "prompt": "A company needs a relational database with automatic replication for disaster recovery and high availability. Which RDS configurations should be implemented? (Choose two.)",
+                "options": [
+                    "Multi-AZ deployment for automatic failover with synchronous replication",
+                    "Read Replicas in different AZs for handling read scaling and disaster recovery",
+                    "Single-AZ RDS with manual snapshots for backup",
+                    "RDS Custom for specialized database requirements"
+                ],
+                "correctOptionIndexes": [0, 1],
+                "explanation": "Multi-AZ provides automatic failover with synchronous replication (HA). Read Replicas offer asynchronous replication for read scaling and can serve as DR targets. Single-AZ with manual snapshots lacks HA. RDS Custom is for specialized cases, not standard HA."
+            },
+            {
+                "id": "q2",
+                "type": "single",
+                "prompt": "What is the primary difference between RDS Multi-AZ and RDS Read Replicas?",
+                "options": [
+                    "Multi-AZ is for read scaling while Read Replicas are for high availability",
+                    "Multi-AZ is for high availability with automatic failover; Read Replicas are for read scaling with manual promotion",
+                    "Multi-AZ supports all database engines while Read Replicas only support MySQL",
+                    "Read Replicas require manual setup while Multi-AZ is automatic"
+                ],
+                "correctOptionIndex": 1,
+                "explanation": "Multi-AZ: synchronous replication, automatic failover, single DNS endpoint, no read scaling. Read Replicas: asynchronous replication, no automatic failover, separate endpoints, read scaling possible, can be promoted to standalone."
+            },
+            {
+                "id": "q3",
+                "type": "multiple",
+                "prompt": "A database application experiences sudden read-heavy traffic during certain hours. Which solutions can handle this? (Choose two.)",
+                "options": [
+                    "Create RDS Read Replicas to distribute read traffic",
+                    "Increase instance size for vertical scaling",
+                    "Use Amazon Aurora with auto-scaling read replicas",
+                    "Implement ElastiCache in front of RDS for caching"
+                ],
+                "correctOptionIndexes": [0, 3],
+                "explanation": "Read Replicas and ElastiCache both handle read scaling. Vertical scaling increases capacity but isn't as dynamic. Aurora has auto-scaling but replicas still need to handle connection distribution. ElastiCache provides caching layer for faster reads."
+            },
+            {
+                "id": "q4",
+                "type": "single",
+                "prompt": "You have an RDS MySQL database with 5 read replicas. The primary database is paused for maintenance. What happens to the read replicas?",
+                "options": [
+                    "Read replicas continue operating and serving read traffic independently",
+                    "Read replicas are automatically paused with the primary",
+                    "Read replicas stop replicating but continue serving cached data",
+                    "Read replicas are promoted to primary"
+                ],
+                "correctOptionIndex": 0,
+                "explanation": "Read Replicas are independent copies with separate endpoints. Pausing the primary doesn't affect replica operation. Replicas use asynchronous replication, so they continue serving reads independently."
+            },
+            {
+                "id": "q5",
+                "type": "multiple",
+                "prompt": "A company is designing a disaster recovery solution for its RDS database with RPO of 1 hour and RTO of 15 minutes. Which strategies meet these requirements? (Choose two.)",
+                "options": [
+                    "Multi-AZ RDS deployment for automatic failover within minutes",
+                    "RDS Read Replica in different region for DR with manual promotion",
+                    "Automated daily snapshots for backup",
+                    "RDS Backup window configured with point-in-time recovery"
+                ],
+                "correctOptionIndexes": [0, 1],
+                "explanation": "Multi-AZ achieves RTO of minutes with automatic failover. Cross-region read replica can be promoted for DR. Automated backups support point-in-time recovery (within backup window). Daily snapshots don't meet 1-hour RPO."
+            },
+            {
+                "id": "q6",
+                "type": "single",
+                "prompt": "You need to create an RDS read replica in a different region from the primary database. What is the expected replication lag?",
+                "options": [
+                    "Synchronous (immediate)",
+                    "Typically less than 1 second",
+                    "Typically 1-10 seconds (asynchronous)",
+                    "Could be several minutes depending on network"
+                ],
+                "correctOptionIndex": 2,
+                "explanation": "Cross-region read replicas use asynchronous replication with typical lag of 1-10 seconds. This is acceptable for most read scaling scenarios. Synchronous replication would be Multi-AZ (same region). Network distance affects lag but typically stays under 10 seconds."
+            },
+            {
+                "id": "q7",
+                "type": "multiple",
+                "prompt": "An e-commerce company wants to implement caching for frequently accessed product information. Which caching solutions are suitable? (Choose two.)",
+                "options": [
+                    "Amazon ElastiCache with Redis for session storage and product caching",
+                    "RDS Read Replicas for caching database queries",
+                    "ElastiCache with Memcached for simple key-value caching",
+                    "Amazon DynamoDB for caching transactional data"
+                ],
+                "correctOptionIndexes": [0, 2],
+                "explanation": "ElastiCache (Redis/Memcached) is designed for caching. Redis supports complex data structures and persistence; Memcached is simpler. Read Replicas aren't caching (they're full database copies). DynamoDB is a database, not a cache."
+            },
+            {
+                "id": "q8",
+                "type": "single",
+                "prompt": "You need to cache session data with automatic expiration and support for complex data structures. Which ElastiCache engine is most appropriate?",
+                "options": [
+                    "Memcached for simplicity and speed",
+                    "Redis for data structures and expiration support",
+                    "DynamoDB for session management",
+                    "RDS for persistent session storage"
+                ],
+                "correctOptionIndex": 1,
+                "explanation": "Redis supports complex data structures (lists, sets, hashes), TTL/expiration (automatic key deletion), persistence, and replication. Memcached is simpler (string key-value only). DynamoDB and RDS are databases, not caching engines."
+            },
+            {
+                "id": "q9",
+                "type": "multiple",
+                "prompt": "Amazon Aurora is being considered for a critical application. Which advantages does Aurora provide over standard RDS? (Choose two.)",
+                "options": [
+                    "Better read performance with auto-scaling read replicas (Aurora Replicas)",
+                    "Faster replication with storage-level replication",
+                    "5x better performance than MySQL RDS",
+                    "Automatic backup with point-in-time recovery up to 35 days"
+                ],
+                "correctOptionIndexes": [0, 2],
+                "explanation": "Aurora has auto-scaling read replicas and 5x better MySQL performance. Storage-level replication is a feature but not the main advantage. All RDS versions support point-in-time recovery (not Aurora-specific)."
+            },
+            {
+                "id": "q10",
+                "type": "single",
+                "prompt": "An Aurora database cluster has 1 primary instance and 4 Aurora Replicas. If the primary fails, which replica becomes the new primary?",
+                "options": [
+                    "AWS automatically selects the replica with lowest latency",
+                    "The oldest Aurora Replica is promoted",
+                    "The replica with the lowest replication lag is promoted",
+                    "Manual intervention is required to promote a replica"
+                ],
+                "correctOptionIndex": 2,
+                "explanation": "Aurora automatically promotes the replica with the lowest replication lag to become the primary. This minimizes data loss. AWS handles failover automatically (unlike standard RDS read replicas which need manual promotion)."
+            },
+            {
+                "id": "q11",
+                "type": "multiple",
+                "prompt": "A company needs to migrate from standard RDS MySQL to Aurora MySQL. Which migration considerations are important? (Choose two.)",
+                "options": [
+                    "Aurora is compatible with MySQL protocol but uses different storage architecture",
+                    "Application connection strings require changes to point to Aurora endpoint",
+                    "All data must be manually transferred using AWS DMS",
+                    "Aurora uses the same backup format as RDS, making migration straightforward"
+                ],
+                "correctOptionIndexes": [0, 1],
+                "explanation": "Aurora is MySQL-compatible at protocol level but has different architecture. Connection strings may need updates (cluster endpoint). AWS DMS can help but migration tools exist. Backup formats differ; direct restore isn't possible."
+            },
+            {
+                "id": "q12",
+                "type": "single",
+                "prompt": "You have an RDS database with automated backups enabled with a 7-day retention period. You need to restore a database from 10 days ago. What options are available?",
+                "options": [
+                    "You cannot restore from 10 days ago (outside retention period)",
+                    "Create a manual snapshot and restore from it",
+                    "Use point-in-time recovery within the 7-day window",
+                    "Restore from the automated backup and extend retention"
+                ],
+                "correctOptionIndex": 0,
+                "explanation": "Automated backups are retained for the configured period (7 days). A restore request from 10 days ago is outside this window and cannot be restored. Manual snapshots can be retained longer, but 10-day data is already lost."
+            },
+            {
+                "id": "q13",
+                "type": "multiple",
+                "prompt": "An RDS database needs enhanced security with encryption, access control, and auditing. Which security measures should be implemented? (Choose two.)",
+                "options": [
+                    "Enable encryption at rest using AWS KMS",
+                    "Use RDS security groups to control network access",
+                    "Store database credentials in environment variables",
+                    "Enable encryption in transit using SSL/TLS connections"
+                ],
+                "correctOptionIndexes": [0, 3],
+                "explanation": "Encryption at rest (KMS) and in transit (SSL/TLS) are encryption best practices. Security groups control network access but aren't directly 'RDS security'. Storing credentials in environment variables is a security anti-pattern; use IAM database authentication instead."
+            },
+            {
+                "id": "q14",
+                "type": "single",
+                "prompt": "You need to connect to an RDS database using IAM database authentication instead of storing passwords. Which RDS engine supports this?",
+                "options": [
+                    "Only MySQL",
+                    "Only PostgreSQL",
+                    "MySQL and PostgreSQL",
+                    "All RDS engines"
+                ],
+                "correctOptionIndex": 2,
+                "explanation": "IAM database authentication is supported for MySQL and PostgreSQL. It generates temporary credentials, eliminating password storage. Other engines (Oracle, SQL Server) use traditional authentication methods."
+            },
+            {
+                "id": "q15",
+                "type": "multiple",
+                "prompt": "An application experiences database connection pooling issues with large numbers of concurrent connections. Which solutions can address this? (Choose two.)",
+                "options": [
+                    "Use RDS Proxy to manage connection pooling between application and database",
+                    "Increase the database instance size to handle more connections",
+                    "Implement ElastiCache to reduce database queries and connection load",
+                    "Create multiple read replicas to distribute connection load"
+                ],
+                "correctOptionIndexes": [0, 2],
+                "explanation": "RDS Proxy manages connection pooling efficiently. ElastiCache reduces queries (lower connection needs). Larger instances help but don't solve pooling issues. Read replicas distribute reads but each needs separate connections."
+            },
+            {
+                "id": "q16",
+                "type": "single",
+                "prompt": "RDS Proxy is deployed in front of an RDS database. What is the primary benefit?",
+                "options": [
+                    "Improves database query performance by 5x",
+                    "Manages database connection pooling to improve efficiency",
+                    "Provides automatic backup and recovery",
+                    "Replicates data across regions"
+                ],
+                "correctOptionIndex": 1,
+                "explanation": "RDS Proxy's main benefit is connection pooling—it reduces the number of database connections by reusing them, improving resource efficiency and supporting more concurrent application connections."
+            },
+            {
+                "id": "q17",
+                "type": "multiple",
+                "prompt": "A company is choosing between RDS Custom and standard RDS. When is RDS Custom appropriate? (Choose two.)",
+                "options": [
+                    "When needing Oracle or Microsoft SQL Server with full database control",
+                    "When requiring customization beyond RDS-managed limitations",
+                    "For standard MySQL/PostgreSQL applications",
+                    "When needing to install custom extensions or patches"
+                ],
+                "correctOptionIndexes": [0, 3],
+                "explanation": "RDS Custom is for Oracle/SQL Server with need for OS-level access. Standard RDS works for MySQL/PostgreSQL. Custom is needed for custom extensions and patches. Standard RDS handles most use cases with less operational overhead."
+            },
+            {
+                "id": "q18",
+                "type": "single",
+                "prompt": "An RDS database backup is encrypted with AWS KMS. You want to restore the database to a different AWS account. What is required?",
+                "options": [
+                    "The backup can be restored directly to the other account",
+                    "KMS key policy must allow cross-account access before restoration",
+                    "A new snapshot must be created in the target account",
+                    "The database must be decrypted first, then restored"
+                ],
+                "correctOptionIndex": 1,
+                "explanation": "Cross-account RDS backup restoration with KMS encryption requires the KMS key policy to allow the target account access. The source account must explicitly grant permissions in the key policy."
+            },
+            {
+                "id": "q19",
+                "type": "multiple",
+                "prompt": "An Aurora cluster needs to handle read-heavy workloads across multiple regions. Which configurations are recommended? (Choose two.)",
+                "options": [
+                    "Create Aurora Global Database for read-only replicas in other regions",
+                    "Deploy Aurora multi-region failover with automatic promotion",
+                    "Use Aurora cross-region read replicas that can be promoted",
+                    "Implement ElastiCache in each region for query caching"
+                ],
+                "correctOptionIndexes": [0, 3],
+                "explanation": "Aurora Global Database provides read-only replicas across regions. ElastiCache reduces query load locally. Cross-region failover is automatic for Global Database (not manual promotion). Standard Aurora replicas don't span regions."
+            },
+            {
+                "id": "q20",
+                "type": "single",
+                "prompt": "An Aurora database cluster has been configured with automated backups. What is the maximum point-in-time recovery window?",
+                "options": [
+                    "7 days",
+                    "14 days",
+                    "35 days",
+                    "Indefinite with manual snapshots"
+                ],
+                "correctOptionIndex": 2,
+                "explanation": "Aurora (like RDS) has a default 35-day point-in-time recovery window, longer than standard RDS (default 7 days). This can be increased to 35 days. Manual snapshots are retained indefinitely."
+            },
+            {
+                "id": "q21",
+                "type": "multiple",
+                "prompt": "ElastiCache is being implemented for session storage in a web application. Which considerations are important? (Choose two.)",
+                "options": [
+                    "Sessions stored in ElastiCache should be considered volatile and not mission-critical",
+                    "ElastiCache should never be used for session storage (use database instead)",
+                    "Enable replication and automatic failover for session availability",
+                    "Configure appropriate TTL values for session expiration"
+                ],
+                "correctOptionIndexes": [0, 3],
+                "explanation": "ElastiCache is excellent for sessions but data isn't persistent (unlike databases). TTL is essential for automatic session cleanup. Replication adds HA. ElastiCache is actually ideal for session storage."
+            },
+            {
+                "id": "q22",
+                "type": "single",
+                "prompt": "You need to cache database query results for 5 minutes. The cache must support automatic expiration. Which ElastiCache engine is appropriate?",
+                "options": [
+                    "Memcached (doesn't support expiration)",
+                    "Redis with TTL/expiration support",
+                    "Either Memcached or Redis (both support TTL)",
+                    "DynamoDB with Time-to-Live"
+                ],
+                "correctOptionIndex": 1,
+                "explanation": "Redis supports TTL (Time-to-Live) with automatic key expiration. Memcached doesn't support TTL natively. DynamoDB is a database, not a cache. Redis is the right choice for expiring cache entries."
+            },
+            {
+                "id": "q23",
+                "type": "multiple",
+                "prompt": "A critical application requires database high availability with minimal failover time. Which configurations provide this? (Choose two.)",
+                "options": [
+                    "RDS Multi-AZ for automatic synchronous replication and sub-minute failover",
+                    "Aurora for native high availability with automatic failover",
+                    "RDS Read Replicas across AZs with manual promotion",
+                    "Regular snapshots with automated restoration on failure"
+                ],
+                "correctOptionIndexes": [0, 1],
+                "explanation": "Multi-AZ and Aurora both provide automatic failover (seconds to minutes). Read Replicas require manual promotion (minutes to hours). Snapshots require manual restoration (longer than automatic failover)."
+            },
+            {
+                "id": "q24",
+                "type": "single",
+                "prompt": "An RDS database experiences high CPU utilization from query load. What immediate action can help reduce database load?",
+                "options": [
+                    "Create new RDS instances",
+                    "Implement ElastiCache to cache frequently accessed data",
+                    "Increase backup frequency",
+                    "Enable query logging"
+                ],
+                "correctOptionIndex": 1,
+                "explanation": "ElastiCache reduces database query load by caching results. New instances don't help without load distribution. Backup frequency and logging don't reduce query load."
+            },
+            {
+                "id": "q25",
+                "type": "multiple",
+                "prompt": "An organization is implementing monitoring and alerting for RDS databases. Which metrics should be monitored? (Choose two.)",
+                "options": [
+                    "CPU utilization to detect resource contention",
+                    "Database connections to identify connection pool issues",
+                    "Read Replica lag to ensure replication health",
+                    "S3 bucket size for backup storage"
+                ],
+                "correctOptionIndexes": [0, 1],
+                "explanation": "CPU and connection metrics are critical for performance. Read Replica lag is important. S3 bucket size isn't an RDS metric (backups are managed by RDS)."
+            },
+            {
+                "id": "q26",
+                "type": "single",
+                "prompt": "You create an RDS read replica in a different AWS region. What are the costs associated with this?",
+                "options": [
+                    "No additional costs (replica inherits primary costs)",
+                    "Standard RDS pricing for replica instance + data transfer costs",
+                    "Only data transfer costs (replica instance is free)",
+                    "Shared pricing between primary and replica"
+                ],
+                "correctOptionIndex": 1,
+                "explanation": "Read replicas are charged as separate instances at full RDS pricing. Cross-region data transfer incurs inter-region data transfer charges. This is important for cost planning."
+            },
+            {
+                "id": "q27",
+                "type": "multiple",
+                "prompt": "An Aurora cluster needs to support a mix of OLTP and OLAP workloads. Which solutions are appropriate? (Choose two.)",
+                "options": [
+                    "Use separate Aurora instances (one for OLTP, one for OLAP)",
+                    "Deploy Aurora read replicas with different settings for OLAP queries",
+                    "Use Aurora with read-only replicas to offload analytics queries",
+                    "Implement separate data warehouse (e.g., Redshift) for analytics"
+                ],
+                "correctOptionIndexes": [2, 3],
+                "explanation": "Aurora read replicas can handle OLAP queries separately. Redshift is purpose-built for analytics and best practice for large-scale OLAP. Separate instances aren't necessary (replicas are cheaper). Different instance settings don't affect query type handling."
+            },
+            {
+                "id": "q28",
+                "type": "single",
+                "prompt": "An RDS database has a 1-hour automated backup window and backups are retained for 7 days. When can you restore the database using point-in-time recovery?",
+                "options": [
+                    "Only during the 1-hour backup window",
+                    "Any time within the last 7 days (not just the backup window)",
+                    "Only to the specific times when backups occurred",
+                    "Any time within the last 24 hours only"
+                ],
+                "correctOptionIndex": 1,
+                "explanation": "Point-in-time recovery uses backup logs and transaction logs to restore to any second within the retention period (7 days), not just backup window times. The backup window is just when automated backups are created."
+            },
+            {
+                "id": "q29",
+                "type": "multiple",
+                "prompt": "ElastiCache is being implemented to reduce database load for an e-commerce platform. Which caching strategies are most effective? (Choose two.)",
+                "options": [
+                    "Cache all database queries without exception",
+                    "Cache product catalog and pricing data that changes infrequently",
+                    "Cache user session data with appropriate TTL",
+                    "Cache real-time inventory levels (frequently changing data)"
+                ],
+                "correctOptionIndexes": [1, 2],
+                "explanation": "Cache stable data (product catalog, prices). Session data is ideal for caching with TTL. Don't cache everything (invalidation overhead). Real-time inventory changes too frequently for effective caching."
+            },
+            {
+                "id": "q30",
+                "type": "single",
+                "prompt": "You need to set up an RDS database with encryption at rest. When should the encryption be enabled?",
+                "options": [
+                    "At database creation time",
+                    "After creation by modifying the database",
+                    "Only after taking a backup",
+                    "Encryption is automatic and cannot be disabled"
+                ],
+                "correctOptionIndex": 0,
+                "explanation": "Encryption at rest must be enabled at RDS instance creation time. It cannot be added or modified after creation—a new encrypted instance would need to be created and data migrated."
+            },
+            {
+                "id": "q31",
+                "type": "multiple",
+                "prompt": "A company is migrating from RDS MySQL to Aurora MySQL using AWS DMS (Database Migration Service). Which considerations are important? (Choose two.)",
+                "options": [
+                    "DMS requires downtime for the migration",
+                    "DMS can perform continuous replication until final cutover",
+                    "Aurora is fully backward-compatible with MySQL applications",
+                    "Connection endpoints change, requiring application updates"
+                ],
+                "correctOptionIndexes": [1, 3],
+                "explanation": "DMS supports continuous replication with zero-downtime migration. Aurora is MySQL-compatible at protocol level. Endpoints differ (RDS: instance.xxx.rds.amazonaws.com vs Aurora: cluster.xxx.rds.amazonaws.com), requiring app string updates."
+            },
+            {
+                "id": "q32",
+                "type": "single",
+                "prompt": "An Aurora Global Database is configured with the primary in us-east-1 and read-only secondary in eu-west-1. In which regions can write operations occur?",
+                "options": [
+                    "Both us-east-1 and eu-west-1",
+                    "Only us-east-1 (primary region)",
+                    "Only eu-west-1 (secondary region)",
+                    "Both regions in read-only mode"
+                ],
+                "correctOptionIndex": 1,
+                "explanation": "Aurora Global Database has one primary region (writable) and secondary regions (read-only). All writes must go to the primary. Secondaries can be promoted to primary for DR (but not both simultaneously)."
+            },
+            {
+                "id": "q33",
+                "type": "multiple",
+                "prompt": "RDS Proxy is used to manage connections for a high-traffic application. Which benefits does it provide? (Choose two.)",
+                "options": [
+                    "Reduces idle database connections through connection pooling",
+                    "Improves application query response time by 5x",
+                    "Enables failover to read replicas automatically",
+                    "Supports IAM authentication between application and proxy"
+                ],
+                "correctOptionIndexes": [0, 3],
+                "explanation": "RDS Proxy pools connections and supports IAM authentication. It doesn't improve query response times (database performance unchanged). Automatic failover requires separate RDS Multi-AZ/Aurora HA setup."
+            },
+            {
+                "id": "q34",
+                "type": "single",
+                "prompt": "You have RDS with read replicas in multiple AZs. During the primary failure, your application continues reading from the replicas. What happens after AWS completes the failover?",
+                "options": [
+                    "One read replica is promoted to primary; others remain as replicas",
+                    "All read replicas are promoted to primary",
+                    "The original primary is restored and made primary again",
+                    "Manual intervention is required to designate a new primary"
+                ],
+                "correctOptionIndex": 0,
+                "explanation": "RDS doesn't auto-promote replicas on primary failure (unlike Aurora). You must manually promote one replica. Failover is automatic only in Multi-AZ (which uses standby, not read replicas)."
+            },
+            {
+                "id": "q35",
+                "type": "multiple",
+                "prompt": "An application needs caching for both sessions and application state with different requirements. Which approach is most appropriate? (Choose two.)",
+                "options": [
+                    "Use Redis for both sessions and application state (supports complex structures)",
+                    "Use Memcached for sessions only (faster for simple key-value)",
+                    "Use RDS for application state (persistent)",
+                    "Use separate ElastiCache clusters optimized for each use case"
+                ],
+                "correctOptionIndexes": [0, 3],
+                "explanation": "Redis handles both sessions and complex state well. Separate clusters allow independent scaling and configuration. Memcached is option for sessions but single instance can handle both. RDS is for persistence, not caching."
+            },
+            {
+                "id": "q36",
+                "type": "single",
+                "prompt": "An RDS database backup is 500 GB. You want to restore it to a different region. How is the backup transferred?",
+                "options": [
+                    "You must manually download the backup and upload to the target region",
+                    "AWS automatically transfers the snapshot across regions",
+                    "The backup cannot be transferred (must be recreated in new region)",
+                    "You must use AWS DataSync to transfer the backup"
+                ],
+                "correctOptionIndex": 1,
+                "explanation": "RDS snapshots can be copied across regions automatically through the AWS Console/API. AWS handles the transfer transparently. You don't manually download/upload or need DataSync."
+            },
+            {
+                "id": "q37",
+                "type": "multiple",
+                "prompt": "A financial application requires compliance with PCI-DSS for database security. Which RDS configurations meet this requirement? (Choose two.)",
+                "options": [
+                    "Enable encryption at rest using AWS KMS",
+                    "Enable SSL/TLS encryption in transit for all connections",
+                    "Use RDS in private subnets with no public access",
+                    "Enable all database logging and query monitoring"
+                ],
+                "correctOptionIndexes": [0, 1],
+                "explanation": "Encryption at rest and in transit are PCI-DSS requirements. Private subnet access is security best practice. Logging/monitoring are recommended but specific PCI-DSS requirements vary."
+            },
+            {
+                "id": "q38",
+                "type": "single",
+                "prompt": "You create an Aurora read replica in the same region as the primary. What is the replication method?",
+                "options": [
+                    "Asynchronous replication through transaction logs",
+                    "Synchronous replication (writes wait for replica confirmation)",
+                    "Storage-level replication within the cluster",
+                    "No replication (read replica is a separate database)"
+                ],
+                "correctOptionIndex": 2,
+                "explanation": "Aurora read replicas (called Aurora Replicas) use storage-level replication—all instances in the cluster share the same storage. This provides ultra-fast, near-synchronous replication within the cluster."
+            },
+            {
+                "id": "q39",
+                "type": "multiple",
+                "prompt": "An organization wants to implement disaster recovery for Aurora with minimal data loss. Which strategies are recommended? (Choose two.)",
+                "options": [
+                    "Use Aurora Global Database with cross-region read replicas",
+                    "Create regular automated backups with 35-day retention",
+                    "Deploy Aurora Multi-AZ with automatic failover",
+                    "Manually promote cross-region replicas weekly"
+                ],
+                "correctOptionIndexes": [0, 2],
+                "explanation": "Global Database and Multi-AZ provide automatic failover with minimal data loss. Automated backups enable recovery but require manual promotion. Manual weekly promotion is not modern DR best practice."
+            },
+            {
+                "id": "q40",
+                "type": "single",
+                "prompt": "You need to connect multiple applications to an RDS database with strict connection limits. What is the best solution?",
+                "options": [
+                    "Increase RDS instance size to handle more connections",
+                    "Deploy RDS Proxy to multiplex connections",
+                    "Create separate RDS instances for each application",
+                    "Configure application connection timeouts"
+                ],
+                "correctOptionIndex": 1,
+                "explanation": "RDS Proxy is purpose-built for connection pooling, allowing many application connections to share fewer database connections. Larger instances help but don't solve pooling inefficiency. Separate instances increase costs and complexity."
+            }
+        ]
+    },
+    {
+        "id": "exam_route53_saa_c03",
+        "title": "SAA-C03 Practice Set on Route 53",
+        "description": "Comprehensive exam questions covering DNS basics, Route 53 routing policies (Simple, Weighted, Latency, Failover, Geolocation, Geoproximity, IP-based, Multi Value), health checks, TTL, CNAME vs Alias, domain registration, and hybrid DNS",
+        "durationSeconds": 7800,
+        "questions": [
+            {
+                "id": "q1",
+                "type": "multiple",
+                "prompt": "A company needs to implement a DNS solution that distributes traffic to multiple EC2 instances with health checks for automatic failover. Which Route 53 routing policies would be appropriate? (Choose two.)",
+                "options": [
+                    "Weighted routing to distribute traffic proportionally with health checks",
+                    "Failover routing with primary and secondary resources",
+                    "Simple routing for basic DNS resolution",
+                    "Latency-based routing for lowest latency across regions"
+                ],
+                "correctOptionIndexes": [0, 1],
+                "explanation": "Weighted routing distributes traffic by percentage with health checks. Failover routing automatically switches to secondary on primary failure. Simple routing doesn't support health checks. Latency routing is for multi-region optimization, not primary failover needs."
+            },
+            {
+                "id": "q2",
+                "type": "single",
+                "prompt": "What is the primary difference between CNAME and Alias records in Route 53?",
+                "options": [
+                    "CNAME works for any domain; Alias only works for AWS resources",
+                    "CNAME can be used for root domains; Alias cannot",
+                    "Alias is free; CNAME incurs query charges",
+                    "CNAME points to IP addresses; Alias points to domain names"
+                ],
+                "correctOptionIndex": 0,
+                "explanation": "CNAME records work for any domain but not root domains. Alias records are AWS-specific and work with AWS resources (ALB, CloudFront, S3) including root domains. Alias queries are free; CNAME queries are charged. Alias is generally preferred for AWS."
+            },
+            {
+                "id": "q3",
+                "type": "multiple",
+                "prompt": "A global e-commerce application wants to direct users to the nearest regional server for optimal performance. Which Route 53 routing policies could achieve this? (Choose two.)",
+                "options": [
+                    "Latency-based routing to automatically route to lowest-latency region",
+                    "Geolocation routing to route based on user's geographic location",
+                    "Geoproximity routing to route based on geographic location with bias",
+                    "Weighted routing to manually balance traffic across regions"
+                ],
+                "correctOptionIndexes": [0, 1],
+                "explanation": "Latency-based routes to the region with lowest latency. Geolocation routes based on geographic location. Geoproximity also uses location but adds bias adjustment. Weighted routing requires manual percentage configuration."
+            },
+            {
+                "id": "q4",
+                "type": "single",
+                "prompt": "You create a Route 53 health check that fails. What is the TTL impact on DNS resolution?",
+                "options": [
+                    "The TTL immediately decreases to 1 second",
+                    "DNS clients continue using cached responses until TTL expires",
+                    "The health check failure has no direct impact on TTL",
+                    "The record is immediately removed from DNS"
+                ],
+                "correctOptionIndex": 2,
+                "explanation": "Health check failures don't directly affect TTL. DNS clients use cached responses until TTL expires. Once TTL expires, clients query again and get the health check result. Failover routing can redirect to healthy records based on health checks."
+            },
+            {
+                "id": "q5",
+                "type": "multiple",
+                "prompt": "A company registers a domain with a third-party registrar but wants to use Route 53 for DNS management. Which configurations are needed? (Choose two.)",
+                "options": [
+                    "Create a Route 53 hosted zone for the domain",
+                    "Update nameservers at the third-party registrar to point to Route 53",
+                    "Migrate the domain from the registrar to Route 53",
+                    "Create DNS records in Route 53 hosted zone"
+                ],
+                "correctOptionIndexes": [0, 1],
+                "explanation": "Create Route 53 hosted zone, get its nameservers, then update nameservers at the registrar. You don't need to migrate the domain (it can stay at the registrar). Create records in Route 53 once nameservers are updated."
+            },
+            {
+                "id": "q6",
+                "type": "single",
+                "prompt": "You create an Alias record pointing to an ALB. After the ALB is deleted, what happens to DNS queries to the Alias record?",
+                "options": [
+                    "Route 53 returns the cached Alias record",
+                    "Route 53 detects the missing resource and returns NXDOMAIN",
+                    "The Alias record continues to exist but becomes invalid",
+                    "DNS clients receive a timeout error"
+                ],
+                "correctOptionIndex": 1,
+                "explanation": "Route 53 Alias records are intelligent—they check if the target resource exists. If the ALB is deleted, Route 53 returns NXDOMAIN (Non-Existent Domain) to indicate the record is invalid. This is an advantage of Alias over CNAME."
+            },
+            {
+                "id": "q7",
+                "type": "multiple",
+                "prompt": "A company wants to implement blue-green deployment with DNS-based traffic switching. Which Route 53 configurations support this? (Choose two.)",
+                "options": [
+                    "Weighted routing to shift traffic percentages between blue and green environments",
+                    "Failover routing with blue as primary and green as secondary",
+                    "Simple routing to alternate between blue and green records",
+                    "Alias records pointing to both ALBs with health checks"
+                ],
+                "correctOptionIndexes": [0, 1],
+                "explanation": "Weighted routing gradually shifts traffic (e.g., 100% blue → 50/50 → 100% green). Failover routing can switch instantly (blue primary, green secondary). Simple routing doesn't support health checks. Alias records with health checks enable failover."
+            },
+            {
+                "id": "q8",
+                "type": "single",
+                "prompt": "You set a TTL of 3600 seconds for a Route 53 record. A DNS client caches the response. How long will the client use the cached record?",
+                "options": [
+                    "3600 seconds (1 hour)",
+                    "Until the client restarts",
+                    "Indefinitely",
+                    "30 seconds (Route 53 default)"
+                ],
+                "correctOptionIndex": 0,
+                "explanation": "TTL (Time-to-Live) of 3600 seconds means DNS clients cache the response for 1 hour. After 1 hour, the client must query again. TTL doesn't depend on client restart or have indefinite caching."
+            },
+            {
+                "id": "q9",
+                "type": "multiple",
+                "prompt": "A company needs to serve different content to users based on their geographic location. Which Route 53 routing policies support this? (Choose two.)",
+                "options": [
+                    "Geolocation routing to route based on user country/state/continent",
+                    "Geoproximity routing to route based on geographic coordinates with bias",
+                    "Latency-based routing to route based on closest region",
+                    "IP-based routing to route based on client IP address location"
+                ],
+                "correctOptionIndexes": [0, 1],
+                "explanation": "Geolocation routes by user location (country/state/continent). Geoproximity uses location with bias adjustment for fine-tuning. Latency and IP-based can indirectly achieve location-based routing but aren't the primary intent."
+            },
+            {
+                "id": "q10",
+                "type": "single",
+                "prompt": "You configure Route 53 failover routing with a primary and secondary resource. When will the secondary resource be used?",
+                "options": [
+                    "When the primary resource is unhealthy (health check fails)",
+                    "Randomly, alternating between primary and secondary",
+                    "When primary load exceeds a threshold",
+                    "During scheduled maintenance windows"
+                ],
+                "correctOptionIndex": 0,
+                "explanation": "Failover routing switches to secondary only when primary fails health checks. It's not random or load-based. Failover is automatic based on health check results."
+            },
+            {
+                "id": "q11",
+                "type": "multiple",
+                "prompt": "A Route 53 health check is configured with interval of 30 seconds and failure threshold of 3. How long before a resource is marked unhealthy?",
+                "options": [
+                    "30 seconds (on first failure)",
+                    "At least 90 seconds (3 consecutive failures × 30 seconds)",
+                    "Could be 90-120 seconds depending on timing",
+                    "3 minutes (Route 53 default)"
+                ],
+                "correctOptionIndexes": [1, 2],
+                "explanation": "With interval of 30 seconds and failure threshold of 3, it takes at least 3 × 30 = 90 seconds. Due to check timing, it could take up to 120 seconds. Health checks must fail the specified number of times before marking unhealthy."
+            },
+            {
+                "id": "q12",
+                "type": "single",
+                "prompt": "You need to use a Route 53 Alias record to point to an S3 website endpoint. Which S3 configuration is required?",
+                "options": [
+                    "Enable S3 static website hosting",
+                    "Create a CloudFront distribution first",
+                    "Configure S3 bucket CORS",
+                    "No special configuration is needed"
+                ],
+                "correctOptionIndex": 0,
+                "explanation": "S3 Alias records require S3 static website hosting to be enabled on the bucket. This creates an HTTP endpoint that Route 53 can point to. CloudFront and CORS are optional but not required for Alias records."
+            },
+            {
+                "id": "q13",
+                "type": "multiple",
+                "prompt": "A multi-region application uses Route 53 with latency-based routing. What factors determine which region's resources are used? (Choose two.)",
+                "options": [
+                    "The region with the lowest latency from the DNS client's location",
+                    "Health check status of resources in each region",
+                    "The geographic location of the user",
+                    "The time of day and traffic patterns"
+                ],
+                "correctOptionIndexes": [0, 1],
+                "explanation": "Latency-based routing selects the lowest-latency region. Health checks determine if a region's resources are available. Geographic location is used by geolocation routing, not latency. Time and traffic patterns aren't factors (those are manual with weighted routing)."
+            },
+            {
+                "id": "q14",
+                "type": "single",
+                "prompt": "What is the difference between Route 53 health checks and CloudWatch alarms?",
+                "options": [
+                    "Health checks monitor AWS resources; CloudWatch alarms monitor metrics",
+                    "Route 53 health checks are redundant with CloudWatch alarms",
+                    "Health checks are free; CloudWatch alarms require CloudWatch",
+                    "CloudWatch alarms trigger failover; health checks provide monitoring"
+                ],
+                "correctOptionIndex": 0,
+                "explanation": "Route 53 health checks monitor endpoint health (HTTP, TCP, calculated checks). CloudWatch alarms monitor metrics (CPU, disk, custom metrics). Both serve different purposes and are often used together."
+            },
+            {
+                "id": "q15",
+                "type": "multiple",
+                "prompt": "A company has two data centers and wants traffic distributed proportionally (60% to DC1, 40% to DC2) with automatic failover if one fails. Which routing policies could achieve this? (Choose two.)",
+                "options": [
+                    "Weighted routing with 60/40 weights and health checks",
+                    "Failover routing (primary/secondary)",
+                    "Latency routing to balance based on response time",
+                    "Simple routing with multiple records"
+                ],
+                "correctOptionIndexes": [0, 1],
+                "explanation": "Weighted routing allows exact percentage distribution (60/40) with health checks for failover. Failover routing provides failover but not proportional distribution. Latency routing is automatic but may not achieve exact percentages. Simple routing doesn't support health checks."
+            },
+            {
+                "id": "q16",
+                "type": "single",
+                "prompt": "You create a Route 53 record with TTL of 60 seconds. A client queries the record and caches it. You update the record in Route 53. When will the client see the updated record?",
+                "options": [
+                    "Immediately",
+                    "Within 60 seconds (when TTL expires)",
+                    "After 5 minutes",
+                    "Only after manual cache clearing"
+                ],
+                "correctOptionIndex": 1,
+                "explanation": "Clients cache DNS records for the TTL duration. With 60-second TTL, updates are visible to clients within 60 seconds. Lower TTL allows faster propagation but increases DNS query load. This is why shorter TTL is used before planned changes."
+            },
+            {
+                "id": "q17",
+                "type": "multiple",
+                "prompt": "Route 53 is configured with Geolocation routing. A user's location doesn't match any specific geolocation rule. What routing options are available? (Choose two.)",
+                "options": [
+                    "Route to a default location rule",
+                    "Return NXDOMAIN (no answer)",
+                    "Route based on latency as fallback",
+                    "Require the user to specify location"
+                ],
+                "correctOptionIndexes": [0, 1],
+                "explanation": "Geolocation routing can have a default rule for unmatched locations. Alternatively, no answer (NXDOMAIN) is returned. There's no automatic fallback to latency or user specification required."
+            },
+            {
+                "id": "q18",
+                "type": "single",
+                "prompt": "You need to point example.com (root domain) to an Application Load Balancer. Which Route 53 record type should you use?",
+                "options": [
+                    "CNAME record",
+                    "A record",
+                    "Alias A record pointing to ALB",
+                    "NS record"
+                ],
+                "correctOptionIndex": 2,
+                "explanation": "CNAME records cannot be used for root domains. Standard A records require IP addresses (ALB IPs change). Alias A records are the preferred solution—they point to ALB and are AWS-specific. NS records are for nameserver delegation."
+            },
+            {
+                "id": "q19",
+                "type": "multiple",
+                "prompt": "A company implements IP-based routing in Route 53 to control access based on client IP location. Which scenarios are appropriate? (Choose two.)",
+                "options": [
+                    "Route internal users (specific IP ranges) to different content",
+                    "Route based on geographic location without knowing exact IP ranges",
+                    "Direct employees from specific office networks to different endpoints",
+                    "Prevent access from certain geographic regions"
+                ],
+                "correctOptionIndexes": [0, 2],
+                "explanation": "IP-based routing works when you know specific IP ranges (internal networks, office IPs). It's not suitable for geographic routing without knowing IP ranges. IP-based routing is useful for internal/partner networks. Geolocation routing is better for geographic prevention."
+            },
+            {
+                "id": "q20",
+                "type": "single",
+                "prompt": "Route 53 Geoproximity routing is configured with a bias of +100. What is the effect of this bias?",
+                "options": [
+                    "Increases the geographic distance by 100 kilometers",
+                    "Expands the region of effect by 100% (bias pulls more traffic to this location)",
+                    "Sets a 100-millisecond latency threshold",
+                    "Routes 100% of traffic to this location"
+                ],
+                "correctOptionIndex": 1,
+                "explanation": "Geoproximity bias of +100 expands the geographic radius of the location, pulling more traffic toward it (compared to negative bias which contracts the radius). Bias is a percentage adjustment, not distance or latency."
+            },
+            {
+                "id": "q21",
+                "type": "multiple",
+                "prompt": "A company uses Route 53 with weighted routing for A/B testing. One variant is performing poorly. What actions can improve the situation? (Choose two.)",
+                "options": [
+                    "Reduce the weight percentage for the poor-performing variant",
+                    "Add a health check to detect poor performance and failover",
+                    "Temporarily set the weight to 0% to route no traffic to poor variant",
+                    "Delete the poor variant record entirely"
+                ],
+                "correctOptionIndexes": [0, 2],
+                "explanation": "Reducing weight or setting to 0% immediately reduces traffic to poor variant. Health checks can detect unhealthy variants for automatic failover. Deleting the record ends the test abruptly. Weighted routing allows gradual testing without complete removal."
+            },
+            {
+                "id": "q22",
+                "type": "single",
+                "prompt": "What is Route 53 Alias record's key advantage over CNAME records for AWS resources?",
+                "options": [
+                    "Alias records are faster (lower latency)",
+                    "Alias records work at the root domain level and are free",
+                    "Alias records support all DNS record types",
+                    "Alias records automatically update when target IP changes"
+                ],
+                "correctOptionIndex": 3,
+                "explanation": "Alias records automatically follow the target's IP changes (especially important for ALBs with dynamic IPs). They work at root domains (CNAME limitation) and are free. They're AWS-specific and only work with AWS resources."
+            },
+            {
+                "id": "q23",
+                "type": "multiple",
+                "prompt": "Route 53 hosted zone is created for example.com. Which features become available? (Choose two.)",
+                "options": [
+                    "Ability to create DNS records (A, AAAA, CNAME, Alias, MX, TXT, etc.)",
+                    "Automatic domain registration with Route 53",
+                    "Unique nameservers for the hosted zone provided by AWS",
+                    "Automatic SSL certificate generation for the domain"
+                ],
+                "correctOptionIndexes": [0, 2],
+                "explanation": "Hosted zones allow DNS record creation and provide AWS nameservers. Domain registration is optional (can use any registrar). SSL certificates are separate (ACM or other CAs)."
+            },
+            {
+                "id": "q24",
+                "type": "single",
+                "prompt": "You configure Route 53 failover routing with a primary and secondary. The primary becomes healthy again after being unhealthy. What happens?",
+                "options": [
+                    "Traffic immediately switches back to primary",
+                    "Traffic gradually shifts back to primary",
+                    "Traffic remains on secondary",
+                    "Manual intervention is required to switch back"
+                ],
+                "correctOptionIndex": 0,
+                "explanation": "Failover routing automatically switches traffic back to primary when it becomes healthy (health check passes). There's no gradual shift—it's automatic and immediate."
+            },
+            {
+                "id": "q25",
+                "type": "multiple",
+                "prompt": "A global company needs to implement DNS failover with health checks. Which health check configurations should be considered? (Choose two.)",
+                "options": [
+                    "HTTP/HTTPS health checks on application endpoints",
+                    "TCP health checks for non-HTTP services",
+                    "CloudWatch Alarm-based health checks for metric monitoring",
+                    "Simple DNS resolution checks without endpoint verification"
+                ],
+                "correctOptionIndexes": [0, 1],
+                "explanation": "HTTP/HTTPS checks verify application health. TCP checks work for non-HTTP services. CloudWatch Alarm checks monitor metrics. Simple DNS resolution isn't a health check type—it doesn't verify endpoint health."
+            },
+            {
+                "id": "q26",
+                "type": "single",
+                "prompt": "Route 53 Multi Value routing is used with 3 records, each with health checks enabled. At least one record is unhealthy. What happens?",
+                "options": [
+                    "All 3 records are returned regardless of health",
+                    "Only healthy records are returned; unhealthy records are excluded",
+                    "One random record is returned",
+                    "All records are marked as unhealthy"
+                ],
+                "correctOptionIndex": 1,
+                "explanation": "Multi Value routing returns multiple healthy records (up to 8). Unhealthy records are automatically excluded from responses. This differs from simple routing which returns all records regardless of health."
+            },
+            {
+                "id": "q27",
+                "type": "multiple",
+                "prompt": "A company uses Route 53 with DNS firewall to control DNS queries. Which use cases are appropriate? (Choose two.)",
+                "options": [
+                    "Block access to domains known to contain malware",
+                    "Block DNS queries to specific internal domain suffixes",
+                    "Filter DNS queries based on query source IP",
+                    "Prevent DNS data exfiltration to external DNS servers"
+                ],
+                "correctOptionIndexes": [0, 2],
+                "explanation": "Route 53 Resolver DNS Firewall can block malicious domains and filter by source IP. It's designed for security filtering. Internal domain access control and data exfiltration prevention have other solutions."
+            },
+            {
+                "id": "q28",
+                "type": "single",
+                "prompt": "You have Route 53 Resolver configured for hybrid DNS resolution between on-premises and AWS. Which component enables this?",
+                "options": [
+                    "Route 53 Alias records",
+                    "Route 53 Resolver Endpoints (inbound and outbound)",
+                    "CloudWatch monitoring",
+                    "VPC endpoints"
+                ],
+                "correctOptionIndex": 1,
+                "explanation": "Route 53 Resolver Endpoints enable hybrid DNS: inbound endpoints accept queries from on-premises, outbound endpoints forward queries to on-premises DNS. This enables bidirectional DNS resolution between environments."
+            },
+            {
+                "id": "q29",
+                "type": "multiple",
+                "prompt": "Route 53 is being used for a mission-critical application requiring high availability. Which redundancy measures should be implemented? (Choose two.)",
+                "options": [
+                    "Use multiple Route 53 hosted zones (not possible - single hosted zone per domain)",
+                    "Combine Alias records with health checks for automatic failover",
+                    "Use failover or weighted routing policies with multi-region resources",
+                    "Rely on Route 53 as sole DNS (Route 53 is highly available by default)"
+                ],
+                "correctOptionIndexes": [1, 2],
+                "explanation": "One hosted zone per domain (no multiple zones). Alias + health checks enable failover. Failover/weighted policies support multi-region HA. Route 53 itself is highly available (replicated globally)."
+            },
+            {
+                "id": "q30",
+                "type": "single",
+                "prompt": "You transfer a domain from another registrar to Route 53. During the transfer, will the domain stop resolving?",
+                "options": [
+                    "Yes, for 24-48 hours during transfer",
+                    "No, if nameservers are updated before transfer completes",
+                    "Only if you don't update nameservers at the old registrar",
+                    "Depends on TTL settings"
+                ],
+                "correctOptionIndex": 1,
+                "explanation": "If you update nameservers to Route 53's nameservers before completing the transfer, the domain continues resolving (no downtime). Once nameservers point to Route 53, it handles DNS regardless of transfer status."
+            },
+            {
+                "id": "q31",
+                "type": "multiple",
+                "prompt": "A company implements Route 53 Simple routing for a load-balanced application. What are the limitations? (Choose two.)",
+                "options": [
+                    "Cannot use health checks (all records returned)",
+                    "Cannot use Alias records",
+                    "Cannot distribute traffic proportionally",
+                    "Cannot set TTL values"
+                ],
+                "correctOptionIndexes": [0, 2],
+                "explanation": "Simple routing doesn't support health checks—all records are always returned. It doesn't support weighted distribution. Alias records and TTL values work fine with simple routing."
+            },
+            {
+                "id": "q32",
+                "type": "single",
+                "prompt": "Route 53 Weighted routing has two records: Weight 100 and Weight 0. How is traffic distributed?",
+                "options": [
+                    "100% to the Weight 100 record",
+                    "50% each (weights are relative)",
+                    "0% to Weight 100, 100% to Weight 0",
+                    "Alternating between the two"
+                ],
+                "correctOptionIndex": 0,
+                "explanation": "Weights determine proportional distribution. Weight 100 vs Weight 0 = 100% to the non-zero weight. Total weight is 100, so 100/(100+0) = 100%. Setting weight to 0 effectively disables a record."
+            },
+            {
+                "id": "q33",
+                "type": "multiple",
+                "prompt": "Route 53 is configured with Latency-based routing across 3 regions. A region experiences network issues increasing latency. What happens? (Choose two.)",
+                "options": [
+                    "Route 53 automatically detects increased latency and shifts traffic to lower-latency regions",
+                    "Users in affected region experience degraded performance until latency improves",
+                    "Health check failures in the affected region trigger failover",
+                    "Traffic is equally distributed across regions regardless of latency changes"
+                ],
+                "correctOptionIndexes": [0, 2],
+                "explanation": "Latency routing automatically shifts based on latency changes (detected by Route 53 measurements). Health check failures can trigger failover. Latency routing is dynamic and adapts to network conditions."
+            },
+            {
+                "id": "q34",
+                "type": "single",
+                "prompt": "You need to implement blue-green deployment with DNS-based switching. The production (green) endpoint is the current endpoint, and blue is the new version. Which approach is recommended?",
+                "options": [
+                    "Use Simple routing to alternate records",
+                    "Use Weighted routing with 100% weight on green, then gradually shift to blue",
+                    "Use Failover routing with green as primary and blue as secondary",
+                    "Use Latency routing for automatic switching"
+                ],
+                "correctOptionIndex": 1,
+                "explanation": "Weighted routing allows controlled gradual traffic shift (100% green → 90/10 green/blue → 50/50 → 0/100 blue). This is the blue-green pattern. Failover is for HA, not gradual deployment. Simple doesn't support weights."
+            },
+            {
+                "id": "q35",
+                "type": "multiple",
+                "prompt": "Route 53 DNS query logging is enabled. Which information is captured in the logs? (Choose two.)",
+                "options": [
+                    "Query timestamp, domain name, and query type (A, AAAA, CNAME, etc.)",
+                    "DNS response code (NOERROR, NXDOMAIN, SERVFAIL, etc.)",
+                    "Query response time and latency",
+                    "Client IP address and user identity"
+                ],
+                "correctOptionIndexes": [0, 1],
+                "explanation": "Route 53 query logs capture timestamp, domain, query type, response code. They don't include response time metrics or detailed user information. Logs are stored in CloudWatch Logs."
+            },
+            {
+                "id": "q36",
+                "type": "single",
+                "prompt": "A Route 53 health check is configured with an HTTP health check on port 80. The endpoint is behind an Application Load Balancer. What should the health check monitor?",
+                "options": [
+                    "The ALB endpoint directly",
+                    "A specific backend EC2 instance",
+                    "The ALB health check endpoint",
+                    "A CloudWatch alarm"
+                ],
+                "correctOptionIndex": 0,
+                "explanation": "The health check should monitor the ALB (which represents the application as a whole). Monitoring individual instances is redundant (ALB has its own health checks). CloudWatch alarm-based checks are separate."
+            },
+            {
+                "id": "q37",
+                "type": "multiple",
+                "prompt": "A company uses Route 53 MX records to configure email service. Which additional records are typically needed? (Choose two.)",
+                "options": [
+                    "SPF (TXT record) for sender authentication",
+                    "DKIM (TXT record) for email signing",
+                    "A records for mail server IP resolution",
+                    "CNAME records for mail forwarding"
+                ],
+                "correctOptionIndexes": [0, 1],
+                "explanation": "MX records specify mail servers. SPF (TXT) and DKIM (TXT) records enhance email security. A records resolve mail server names. CNAME records aren't typically used for email."
+            },
+            {
+                "id": "q38",
+                "type": "single",
+                "prompt": "You register a domain with Route 53. How long does it take for the domain to be active and resolving?",
+                "options": [
+                    "Immediately (seconds)",
+                    "Within 1-2 hours",
+                    "Within 24-48 hours",
+                    "Within 5 business days"
+                ],
+                "correctOptionIndex": 0,
+                "explanation": "Route 53 domain registration is processed quickly. The domain becomes active within seconds to minutes (not hours or days like traditional registrars). DNS resolution is immediate once records are created."
+            },
+            {
+                "id": "q39",
+                "type": "multiple",
+                "prompt": "Route 53 is integrated with CloudFront for a global web application. Which configurations are common? (Choose two.)",
+                "options": [
+                    "Alias record pointing Route 53 domain to CloudFront distribution",
+                    "CloudFront distribution as the target for weighted routing",
+                    "CNAME record pointing to CloudFront domain name",
+                    "Geolocation routing to select different CloudFront distributions by region"
+                ],
+                "correctOptionIndexes": [0, 3],
+                "explanation": "Alias records point domains to CloudFront distributions (preferred method). Geolocation routing can direct users to different CDN edge locations. CNAME also works but Alias is preferred. CloudFront itself isn't a weighted routing target."
+            },
+            {
+                "id": "q40",
+                "type": "single",
+                "prompt": "A Route 53 health check fails for a primary resource. The failover record is promoted. What is the expected time before traffic switches?",
+                "options": [
+                    "Immediately (within seconds)",
+                    "Based on health check interval (typically 30-60 seconds minimum)",
+                    "Within 1-2 minutes",
+                    "Depends on TTL of the record (up to TTL duration)"
+                ],
+                "correctOptionIndex": 1,
+                "explanation": "Failover routing switches based on health check failures. Time depends on health check interval (3 failures × 30 seconds = 90 seconds minimum). TTL doesn't affect failover time—that's for cached responses. Actual failover is fast once health check detects failure."
+            }
+        ]
     }
+
+
 
 
 ];
