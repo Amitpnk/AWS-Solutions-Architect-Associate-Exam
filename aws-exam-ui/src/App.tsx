@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import './App.css';
 import { exams, ExamQuestion } from './data/exams';
+import { resourceCategories } from './data/resources';
 
 type ViewState = 'home' | 'quiz' | 'results' | 'revision';
 
@@ -46,6 +47,7 @@ function App() {
   const [examTimedOut, setExamTimedOut] = useState(false);
   const [darkMode, setDarkMode] = useState(false);
   const [showSponsor, setShowSponsor] = useState(false);
+  const [homeTab, setHomeTab] = useState<'exams' | 'study'>('exams');
 
   const selectedExam = useMemo(
     () => exams.find((exam) => exam.id === selectedExamId) ?? null,
@@ -185,8 +187,8 @@ function App() {
     <div className={`App ${darkMode ? 'dark' : ''}`}>
       <header className="app-header">
         <div className="header-center">
-          <p className="app-title">AWS SAA-C03 Exam Practice</p>
-          <p className="app-subtitle">Choose an exam, answer questions, and review correct answers at the end.</p>
+          <p className="app-title">AWS Solutions Architect Associate</p>
+          <p className="app-subtitle">Sharpen your AWS skills with timed practice exams, instant feedback, and curated study material.</p>
         </div>
         <input
           type="checkbox"
@@ -204,38 +206,78 @@ function App() {
 
       <main className="page-content">
         {view === 'home' && (
-          <section className="exam-list">
-            {exams.map((exam) => (
-              <article key={exam.id} className="exam-card">
-                <div>
-                  <h2>{exam.title}</h2>
-                  <p>{exam.description}</p>
-                  <div className="exam-meta">
-                    <span>{exam.questions.length} questions</span>
-                    <span>{exam.durationSeconds ? `Up to ${formatTime(exam.durationSeconds)} if timed` : 'No time limit'}</span>
-                  </div>
+          <>
+            <div className="home-tabs">
+              <button
+                className={`home-tab ${homeTab === 'exams' ? 'active' : ''}`}
+                onClick={() => setHomeTab('exams')}
+              >
+                Practice Exams
+              </button>
+              <button
+                className={`home-tab ${homeTab === 'study' ? 'active' : ''}`}
+                onClick={() => setHomeTab('study')}
+              >
+                Study Material
+              </button>
+            </div>
+
+            {homeTab === 'exams' && (
+              <section className="exam-list">
+                {exams.map((exam) => (
+                  <article key={exam.id} className="exam-card">
+                    <div>
+                      <h2>{exam.title}</h2>
+                      <p>{exam.description}</p>
+                      <div className="exam-meta">
+                        <span>{exam.questions.length} questions</span>
+                        <span>{exam.durationSeconds ? `Up to ${formatTime(exam.durationSeconds)} if timed` : 'No time limit'}</span>
+                      </div>
+                    </div>
+                    {exam.durationSeconds && (
+                      <label className="timer-option">
+                        <input
+                          type="checkbox"
+                          checked={timerEnabled}
+                          onChange={() => setTimerEnabled((prev) => !prev)}
+                        />
+                        Use time limit ({formatTime(exam.durationSeconds)})
+                      </label>
+                    )}
+                    <div className="exam-card-buttons">
+                      <button className="primary-button" onClick={() => handleStartExam(exam.id)}>
+                        Start Exam
+                      </button>
+                      <button className="secondary-button" onClick={() => handleOpenRevision(exam.id)}>
+                        Revision
+                      </button>
+                    </div>
+                  </article>
+                ))}
+              </section>
+            )}
+
+            {homeTab === 'study' && (
+              <section className="resources-section">
+                <div className="resources-grid">
+                  {resourceCategories.map((cat) => (
+                    <div key={cat.category} className="resource-card">
+                      <h3 className="resource-category">{cat.icon} {cat.category}</h3>
+                      <ul className="resource-list">
+                        {cat.resources.map((r) => (
+                          <li key={r.service}>
+                            <a href={r.url} target="_blank" rel="noreferrer" className="resource-link">
+                              {r.service}
+                            </a>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  ))}
                 </div>
-                {exam.durationSeconds && (
-                  <label className="timer-option">
-                    <input
-                      type="checkbox"
-                      checked={timerEnabled}
-                      onChange={() => setTimerEnabled((prev) => !prev)}
-                    />
-                    Use time limit ({formatTime(exam.durationSeconds)})
-                  </label>
-                )}
-                <div className="exam-card-buttons">
-                  <button className="primary-button" onClick={() => handleStartExam(exam.id)}>
-                    Start Exam
-                  </button>
-                  <button className="secondary-button" onClick={() => handleOpenRevision(exam.id)}>
-                    Revision
-                  </button>
-                </div>
-              </article>
-            ))}
-          </section>
+              </section>
+            )}
+          </>
         )}
 
         {view === 'quiz' && selectedExam && currentQuestion && (

@@ -933,6 +933,132 @@
   color: #fde68a;
 }
 
+/* Home Tabs */
+.home-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 24px;
+  border-bottom: 2px solid #e2e8f0;
+  padding-bottom: 0;
+}
+
+.home-tab {
+  background: none;
+  border: none;
+  border-bottom: 3px solid transparent;
+  margin-bottom: -2px;
+  padding: 10px 20px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #64748b;
+  cursor: pointer;
+  transition: color 0.15s ease, border-color 0.15s ease;
+  border-radius: 0;
+}
+
+.home-tab:hover {
+  color: #1d4ed8;
+}
+
+.home-tab.active {
+  color: #1d4ed8;
+  border-bottom-color: #1d4ed8;
+}
+
+.App.dark .home-tabs {
+  border-bottom-color: #1e3562;
+}
+
+.App.dark .home-tab {
+  color: #64748b;
+}
+
+.App.dark .home-tab:hover {
+  color: #93c5fd;
+}
+
+.App.dark .home-tab.active {
+  color: #60a5fa;
+  border-bottom-color: #60a5fa;
+}
+
+/* Study Resources */
+.resources-section {
+  margin-top: 0;
+}
+
+.resources-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 18px;
+}
+
+.resource-card {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 18px 20px;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.05);
+  transition: background 0.2s linear, border-color 0.2s linear;
+}
+
+.resource-category {
+  margin: 0 0 12px;
+  font-size: 0.95rem;
+  color: #0f172a;
+}
+
+.resource-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+
+.resource-link {
+  color: #1d4ed8;
+  text-decoration: none;
+  font-size: 0.88rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.resource-link::before {
+  content: '→';
+  font-size: 0.8rem;
+  opacity: 0.6;
+}
+
+.resource-link:hover {
+  color: #1e40af;
+  text-decoration: underline;
+}
+
+/* Dark mode for resources */
+.App.dark .resources-heading {
+  color: #f1f5f9;
+}
+
+.App.dark .resource-card {
+  background: #0f2040;
+  border-color: #1e3562;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.App.dark .resource-category {
+  color: #bfdbfe;
+}
+
+.App.dark .resource-link {
+  color: #60a5fa;
+}
+
+.App.dark .resource-link:hover {
+  color: #93c5fd;
+}
+
 /* Sponsor FAB */
 .sponsor-fab {
   position: fixed;
