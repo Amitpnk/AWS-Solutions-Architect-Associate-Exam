@@ -905,6 +905,163 @@
   color: #fcd34d;
 }
 
+/* Sponsor FAB */
+.sponsor-fab {
+  position: fixed;
+  bottom: 28px;
+  right: 28px;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: #f59e0b;
+  color: white;
+  font-size: 1.5rem;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(245, 158, 11, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  z-index: 900;
+}
+
+.sponsor-fab:hover {
+  transform: scale(1.1);
+  box-shadow: 0 6px 20px rgba(245, 158, 11, 0.55);
+}
+
+.sponsor-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+  padding: 90px 28px 28px;
+  z-index: 1000;
+}
+
+.sponsor-modal {
+  background: white;
+  border-radius: 18px;
+  padding: 24px;
+  width: 320px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
+  position: relative;
+  display: grid;
+  gap: 16px;
+}
+
+.sponsor-close {
+  position: absolute;
+  top: 12px;
+  right: 14px;
+  background: none;
+  border: none;
+  font-size: 1rem;
+  cursor: pointer;
+  color: #94a3b8;
+  line-height: 1;
+}
+
+.sponsor-close:hover {
+  color: #475569;
+}
+
+.sponsor-modal h3 {
+  margin: 0;
+  font-size: 1.1rem;
+  color: #0f172a;
+}
+
+.sponsor-tagline {
+  margin: 0;
+  font-size: 0.88rem;
+  color: #64748b;
+}
+
+.sponsor-option {
+  display: grid;
+  gap: 8px;
+}
+
+.sponsor-option-label {
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: #334155;
+}
+
+.sponsor-upi-qr {
+  width: 100%;
+  max-width: 180px;
+  border-radius: 10px;
+  display: block;
+  margin: 0 auto;
+}
+
+.sponsor-upi-text {
+  margin: 4px 0 0;
+  text-align: center;
+  font-size: 0.85rem;
+  color: #475569;
+  font-family: monospace;
+}
+
+.App.dark .sponsor-upi-text {
+  color: #94a3b8;
+}
+
+.sponsor-bmc-btn {
+  display: inline-block;
+  background: #f59e0b;
+  color: white;
+  text-decoration: none;
+  border-radius: 10px;
+  padding: 10px 16px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-align: center;
+  transition: background 0.15s ease;
+}
+
+.sponsor-bmc-btn:hover {
+  background: #d97706;
+}
+
+/* Dark mode for sponsor modal */
+.App.dark .sponsor-modal {
+  background: #2d3748;
+}
+
+.App.dark .sponsor-modal h3 {
+  color: #e2e8f0;
+}
+
+.App.dark .sponsor-tagline {
+  color: #94a3b8;
+}
+
+.App.dark .sponsor-option-label {
+  color: #cbd5e1;
+}
+
+.App.dark .sponsor-upi-row {
+  background: #3a3f4a;
+}
+
+.App.dark .sponsor-upi-id {
+  color: #e2e8f0;
+}
+
+.App.dark .sponsor-close {
+  color: #64748b;
+}
+
+.App.dark .sponsor-close:hover {
+  color: #94a3b8;
+}
+
 @media (max-width: 720px) {
   .revision-header {
     flex-direction: column;
