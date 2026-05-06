@@ -266,9 +266,13 @@ function App() {
                       <ul className="resource-list">
                         {cat.resources.map((r) => (
                           <li key={r.service}>
-                            <a href={r.url} target="_blank" rel="noreferrer" className="resource-link">
-                              {r.service}
-                            </a>
+                            {r.url.includes('https') ? (
+                              <a href={r.url} target="_blank" rel="noreferrer" className="resource-link">
+                                {r.service}
+                              </a>
+                            ) : (
+                              <span className="resource-link--no-url">{r.service}</span>
+                            )}
                           </li>
                         ))}
                       </ul>
@@ -480,7 +484,7 @@ function App() {
 
             <div className="sponsor-option">
               <span className="sponsor-option-label">🇮🇳 UPI (INR)</span>
-              <img src="/upi-qr.png" alt="UPI QR Code" className="sponsor-upi-qr" />
+              <img src={`${process.env.PUBLIC_URL}/upi-qr.png`} alt="UPI QR Code" className="sponsor-upi-qr" />
               <p className="sponsor-upi-text">{SPONSOR_UPI_ID}</p>
             </div>
 
