@@ -392,9 +392,14 @@ function App() {
                 <h2>{selectedExam.title}</h2>
                 <p>{selectedExam.description}</p>
               </div>
-              <button className="mainpage-button" onClick={handleRestart}>
-                Back to Home
-              </button>
+              <div className="revision-header-actions">
+                <button className="pdf-export-btn" onClick={() => window.print()}>
+                  Export PDF
+                </button>
+                <button className="mainpage-button" onClick={handleRestart}>
+                  Back to Home
+                </button>
+              </div>
             </div>
 
             <div className="revision-list">
@@ -444,6 +449,9 @@ function App() {
                 <button className="primary-button" onClick={handleRestart}>Back to Home</button>
                 <button className="secondary-button" onClick={() => handleStartExam(selectedExam.id)}>
                   Retake Exam
+                </button>
+                <button className="pdf-export-btn" onClick={() => window.print()}>
+                  Export PDF
                 </button>
               </div>
             </div>
