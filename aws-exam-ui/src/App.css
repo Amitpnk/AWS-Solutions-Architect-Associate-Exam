@@ -372,6 +372,19 @@
   transform: translateX(24px);
 }
 
+.github-link {
+  color: white;
+  display: flex;
+  align-items: center;
+  opacity: 0.8;
+  transition: opacity 0.2s;
+  margin-left: 12px;
+}
+
+.github-link:hover {
+  opacity: 1;
+}
+
 .page-content {
   padding: 24px;
   max-width: 1120px;
