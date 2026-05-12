@@ -60,10 +60,10 @@ export const resourceCategories: ResourceCategory[] = [
       { service: 'Amazon EC2', url: `https://medium.com/expertminds/building-highly-available-and-scalable-applications-with-amazon-ec2-auto-scaling-205ea9630879` },
       { service: 'Amazon EC2 Auto Scaling', url: `https://medium.com/expertminds/building-highly-available-and-scalable-applications-with-amazon-ec2-auto-scaling-205ea9630879` },
       { service: 'AWS Elastic Beanstalk', url: `https://medium.com/expertminds/exploring-aws-elastic-beanstalk-aws-batch-and-serverless-application-repository-f6e4e3cd1c28` },
-      { service: 'AWS Outposts', url: `${BLOG_BASE}/aws-outposts` },
+      { service: 'AWS Outposts', url: `https://medium.com/expertminds/aws-hybrid-edge-compute-services-outposts-vmware-cloud-and-wavelength-81b54a268220` },
       { service: 'AWS Serverless Application Repository', url: `https://medium.com/expertminds/exploring-aws-elastic-beanstalk-aws-batch-and-serverless-application-repository-f6e4e3cd1c28` },
-      { service: 'VMware Cloud on AWS', url: `${BLOG_BASE}/vmware-cloud-aws` },
-      { service: 'AWS Wavelength', url: `${BLOG_BASE}/aws-wavelength` },
+      { service: 'VMware Cloud on AWS', url: `https://medium.com/expertminds/aws-hybrid-edge-compute-services-outposts-vmware-cloud-and-wavelength-81b54a268220` },
+      { service: 'AWS Wavelength', url: `https://medium.com/expertminds/aws-hybrid-edge-compute-services-outposts-vmware-cloud-and-wavelength-81b54a268220` },
     ],
   },
   {

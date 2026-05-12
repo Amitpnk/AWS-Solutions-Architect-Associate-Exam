@@ -1554,3 +1554,155 @@
     print-color-adjust: exact;
   }
 }
+
+/* ── About Section ── */
+.about-section {
+  display: grid;
+  gap: 32px;
+}
+
+.about-hero {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 18px;
+  padding: 40px 24px;
+  text-align: center;
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.06);
+}
+
+.about-avatar {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #0f172a 0%, #1d4ed8 100%);
+  color: white;
+  font-size: 1.6rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 16px;
+}
+
+.about-name {
+  margin: 0 0 6px;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.about-tagline {
+  margin: 0 0 24px;
+  color: #64748b;
+  font-size: 1rem;
+}
+
+.about-links {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.about-link-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  text-decoration: none;
+  background: #0f172a;
+  color: white;
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+
+.about-link-btn--coffee {
+  background: #f59e0b;
+  color: white;
+}
+
+.about-link-btn:hover {
+  opacity: 0.85;
+  transform: translateY(-1px);
+}
+
+.about-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 20px;
+}
+
+.about-card {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 18px;
+  padding: 24px;
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.06);
+}
+
+.about-card h3 {
+  margin: 0 0 12px;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.about-card p {
+  margin: 0;
+  color: #475569;
+  line-height: 1.7;
+  font-size: 0.95rem;
+}
+
+.about-feature-list {
+  margin: 0;
+  padding-left: 20px;
+  color: #475569;
+  line-height: 2;
+  font-size: 0.95rem;
+}
+
+.about-contribute-btn {
+  display: inline-block;
+  margin-top: 16px;
+  padding: 10px 18px;
+  background: #1d4ed8;
+  color: white;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  text-decoration: none;
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+
+.about-contribute-btn:hover {
+  opacity: 0.85;
+  transform: translateY(-1px);
+}
+
+/* Dark mode — about */
+.dark .about-hero,
+.dark .about-card {
+  background: #1e293b;
+  border-color: #334155;
+}
+
+.dark .about-name {
+  color: #f1f5f9;
+}
+
+.dark .about-tagline,
+.dark .about-card p,
+.dark .about-feature-list {
+  color: #94a3b8;
+}
+
+.dark .about-card h3 {
+  color: #e2e8f0;
+}
+
+.dark .about-link-btn {
+  background: #334155;
+}
