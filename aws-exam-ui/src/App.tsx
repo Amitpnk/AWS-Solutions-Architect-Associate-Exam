@@ -3,6 +3,7 @@ import './App.css';
 import { exams, ExamQuestion } from './data/exams';
 import { resourceCategories } from './data/resources';
 import { awsServiceCategories } from './data/awsServices';
+import { scenarioCategories, comparisons, keyFacts } from './data/cheatSheet';
 
 type ViewState = 'home' | 'quiz' | 'results' | 'revision';
 
@@ -48,14 +49,51 @@ function App() {
   const [examTimedOut, setExamTimedOut] = useState(false);
   const [darkMode, setDarkMode] = useState(false);
   const [showSponsor, setShowSponsor] = useState(false);
-  const [homeTab, setHomeTab] = useState<'exams' | 'study' | 'services' | 'about'>('exams');
+  const [homeTab, setHomeTab] = useState<'exams' | 'study' | 'services' | 'cheatsheet' | 'about'>('exams');
   const [resourceSearch, setResourceSearch] = useState('');
   const [serviceSearch, setServiceSearch] = useState('');
+  const [cheatSearch, setCheatSearch] = useState('');
+  const [cheatSection, setCheatSection] = useState<'scenarios' | 'comparisons' | 'keyfacts'>('scenarios');
 
   const selectedExam = useMemo(
     () => exams.find((exam) => exam.id === selectedExamId) ?? null,
     [selectedExamId]
   );
+
+  const filteredScenarios = useMemo(() => {
+    const term = cheatSearch.trim().toLowerCase();
+    if (!term || cheatSection !== 'scenarios') return scenarioCategories;
+    return scenarioCategories
+      .map((cat) => ({
+        ...cat,
+        tips: cat.tips.filter(
+          (t) =>
+            t.scenario.toLowerCase().includes(term) ||
+            t.service.toLowerCase().includes(term) ||
+            t.note.toLowerCase().includes(term) ||
+            t.keywords.some((k) => k.toLowerCase().includes(term))
+        ),
+      }))
+      .filter((cat) => cat.category.toLowerCase().includes(term) || cat.tips.length > 0);
+  }, [cheatSearch, cheatSection]);
+
+  const filteredComparisons = useMemo(() => {
+    const term = cheatSearch.trim().toLowerCase();
+    if (!term || cheatSection !== 'comparisons') return comparisons;
+    return comparisons.filter(
+      (c) =>
+        c.title.toLowerCase().includes(term) ||
+        c.options.some((o) => o.name.toLowerCase().includes(term) || o.useWhen.toLowerCase().includes(term))
+    );
+  }, [cheatSearch, cheatSection]);
+
+  const filteredKeyFacts = useMemo(() => {
+    const term = cheatSearch.trim().toLowerCase();
+    if (!term || cheatSection !== 'keyfacts') return keyFacts;
+    return keyFacts.filter(
+      (f) => f.service.toLowerCase().includes(term) || f.fact.toLowerCase().includes(term)
+    );
+  }, [cheatSearch, cheatSection]);
 
   const filteredServiceCategories = useMemo(() => {
     const term = serviceSearch.trim().toLowerCase();
@@ -265,6 +303,12 @@ function App() {
                 AWS Services
               </button>
               <button
+                className={`home-tab ${homeTab === 'cheatsheet' ? 'active' : ''}`}
+                onClick={() => setHomeTab('cheatsheet')}
+              >
+                Cheat Sheet
+              </button>
+              <button
                 className={`home-tab ${homeTab === 'about' ? 'active' : ''}`}
                 onClick={() => setHomeTab('about')}
               >
@@ -362,16 +406,123 @@ function App() {
                   filteredServiceCategories.map((cat) => (
                     <div key={cat.category} className="services-glossary-group">
                       <h3 className="services-glossary-heading">{cat.icon} {cat.category}</h3>
-                      <div className="services-glossary-grid">
+                      <ul className="services-glossary-list">
                         {cat.services.map((svc) => (
-                          <div key={svc.name} className="services-glossary-card">
+                          <li key={svc.name} className="services-glossary-item">
                             <span className="services-glossary-name">{svc.name}</span>
+                            <span className="services-glossary-sep">—</span>
                             <span className="services-glossary-def">{svc.definition}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  ))
+                )}
+              </section>
+            )}
+
+            {homeTab === 'cheatsheet' && (
+              <section className="cheatsheet-section">
+                <div className="cheatsheet-toolbar">
+                  <div className="cheatsheet-sub-tabs">
+                    <button
+                      className={`cheatsheet-sub-tab ${cheatSection === 'scenarios' ? 'active' : ''}`}
+                      onClick={() => { setCheatSection('scenarios'); setCheatSearch(''); }}
+                    >
+                      Scenario Guide
+                    </button>
+                    <button
+                      className={`cheatsheet-sub-tab ${cheatSection === 'comparisons' ? 'active' : ''}`}
+                      onClick={() => { setCheatSection('comparisons'); setCheatSearch(''); }}
+                    >
+                      Service Comparisons
+                    </button>
+                    <button
+                      className={`cheatsheet-sub-tab ${cheatSection === 'keyfacts' ? 'active' : ''}`}
+                      onClick={() => { setCheatSection('keyfacts'); setCheatSearch(''); }}
+                    >
+                      Key Numbers
+                    </button>
+                  </div>
+                  <input
+                    type="search"
+                    placeholder="Search..."
+                    value={cheatSearch}
+                    onChange={(e) => setCheatSearch(e.target.value)}
+                    className="resource-search-input cheatsheet-search"
+                  />
+                </div>
+
+                {cheatSection === 'scenarios' && (
+                  <>
+                    {filteredScenarios.length === 0 ? (
+                      <p className="resource-no-results">No scenarios match "{cheatSearch}".</p>
+                    ) : (
+                      filteredScenarios.map((cat) => (
+                        <div key={cat.category} className="cheatsheet-group">
+                          <h3 className="cheatsheet-group-heading">{cat.icon} {cat.category}</h3>
+                          <div className="cheatsheet-scenario-list">
+                            {cat.tips.map((tip, i) => (
+                              <div key={i} className="cheatsheet-scenario-card">
+                                <div className="cheatsheet-scenario-top">
+                                  <span className="cheatsheet-scenario-text">{tip.scenario}</span>
+                                  <span className="cheatsheet-service-badge">{tip.service}</span>
+                                </div>
+                                <p className="cheatsheet-note">{tip.note}</p>
+                                <div className="cheatsheet-keywords">
+                                  {tip.keywords.map((kw) => (
+                                    <span key={kw} className="cheatsheet-keyword">{kw}</span>
+                                  ))}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </>
+                )}
+
+                {cheatSection === 'comparisons' && (
+                  <>
+                    {filteredComparisons.length === 0 ? (
+                      <p className="resource-no-results">No comparisons match "{cheatSearch}".</p>
+                    ) : (
+                      <div className="cheatsheet-comparisons-grid">
+                        {filteredComparisons.map((cmp) => (
+                          <div key={cmp.title} className="cheatsheet-comparison-card">
+                            <h3 className="cheatsheet-comparison-title">{cmp.title}</h3>
+                            <div className="cheatsheet-comparison-options">
+                              {cmp.options.map((opt) => (
+                                <div key={opt.name} className="cheatsheet-comparison-option">
+                                  <span className="cheatsheet-service-badge">{opt.name}</span>
+                                  <p className="cheatsheet-comparison-use">{opt.useWhen}</p>
+                                </div>
+                              ))}
+                            </div>
                           </div>
                         ))}
                       </div>
-                    </div>
-                  ))
+                    )}
+                  </>
+                )}
+
+                {cheatSection === 'keyfacts' && (
+                  <>
+                    {filteredKeyFacts.length === 0 ? (
+                      <p className="resource-no-results">No facts match "{cheatSearch}".</p>
+                    ) : (
+                      <ul className="cheatsheet-facts-list">
+                        {filteredKeyFacts.map((fact, i) => (
+                          <li key={i} className="cheatsheet-fact-item">
+                            <span className="cheatsheet-service-badge">{fact.service}</span>
+                            <span className={`cheatsheet-fact-tag cheatsheet-fact-tag--${fact.tag}`}>{fact.tag}</span>
+                            <span className="cheatsheet-fact-text">{fact.fact}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </>
                 )}
               </section>
             )}
@@ -409,31 +560,45 @@ function App() {
                   <div className="about-card">
                     <h3>About This Project</h3>
                     <p>
-                      This free, open-source practice platform was built to help candidates prepare for the
-                      <strong> AWS Solutions Architect – Associate (SAA-C03)</strong> certification. It offers
-                      timed practice exams, instant feedback with explanations, revision mode, and curated study
-                      resources — all in one place.
+                      A free, open-source all-in-one prep platform for the
+                      <strong> AWS Solutions Architect – Associate (SAA-C03)</strong> certification.
+                      From timed mock exams to a service glossary and exam cheat sheet — everything you need to pass, in one place.
                     </p>
                   </div>
 
-                  <div className="about-card">
-                    <h3>Features</h3>
+                  <div className="about-card about-card--highlight" >
+                    <h3>What's Inside</h3>
                     <ul className="about-feature-list">
-                      <li>Timed &amp; untimed practice exams</li>
-                      <li>Single and multiple-choice questions</li>
-                      <li>Detailed answer explanations</li>
-                      <li>Revision mode with correct answers highlighted</li>
-                      <li>PDF export for offline study</li>
-                      <li>Curated AWS documentation &amp; resource links</li>
-                      <li>Dark mode support</li>
+                      <li><strong>Practice Exams</strong> — timed &amp; untimed with instant scoring</li>
+                      <li><strong>Single &amp; multi-select</strong> question types</li>
+                      <li><strong>Detailed explanations</strong> for every answer</li>
+                      <li><strong>Revision mode</strong> — all correct answers at a glance</li>
+                      <li><strong>AWS Services</strong> — one-liner definitions for 130+ services by category</li>
+                      <li><strong>Cheat Sheet</strong> — scenario → service guide, comparisons &amp; key numbers</li>
+                      <li><strong>Study Material</strong> — curated AWS docs &amp; resource links</li>
+                      <li><strong>PDF export</strong> for offline study</li>
+                      <li><strong>Dark mode</strong> support</li>
+                    </ul>
+                  </div>
+
+                  <div className="about-card">
+                    <h3>Cheat Sheet</h3>
+                    <p>
+                      The <strong>Cheat Sheet</strong> tab is designed purely for exam day recall.
+                      It covers 3 areas:
+                    </p>
+                    <ul className="about-feature-list">
+                      <li><strong>Scenario Guide</strong> — read the scenario, pick the right service</li>
+                      <li><strong>Service Comparisons</strong> — SQS vs SNS, ALB vs NLB, and 8 more</li>
+                      <li><strong>Key Numbers</strong> — limits, defaults, gotchas &amp; tips</li>
                     </ul>
                   </div>
 
                   <div className="about-card">
                     <h3>Contribute</h3>
                     <p>
-                      Found a bug or want to add more questions? Contributions are welcome on GitHub.
-                      Open an issue or submit a pull request — every improvement helps the community.
+                      Found a bug, missing a question, or want to improve the cheat sheet?
+                      Contributions are welcome — open an issue or submit a pull request on GitHub.
                     </p>
                     <a
                       href="https://github.com/Amitpnk/AWS-Solutions-Architect-Associate-Exam/issues"
@@ -449,8 +614,8 @@ function App() {
                     <h3>Disclaimer</h3>
                     <p>
                       This project is not affiliated with, endorsed by, or sponsored by Amazon Web Services.
-                      All AWS trademarks and service names are the property of Amazon.com, Inc. Questions are
-                      created for educational purposes only.
+                      All AWS trademarks and service names are the property of Amazon.com, Inc.
+                      Questions and content are created for educational purposes only.
                     </p>
                   </div>
                 </div>
