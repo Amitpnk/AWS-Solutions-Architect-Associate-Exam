@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import './App.css';
 import { exams, ExamQuestion } from './data/exams';
 import { resourceCategories } from './data/resources';
+import { awsServiceCategories } from './data/awsServices';
 
 type ViewState = 'home' | 'quiz' | 'results' | 'revision';
 
@@ -47,12 +48,38 @@ function App() {
   const [examTimedOut, setExamTimedOut] = useState(false);
   const [darkMode, setDarkMode] = useState(false);
   const [showSponsor, setShowSponsor] = useState(false);
-  const [homeTab, setHomeTab] = useState<'exams' | 'study' | 'about'>('exams');
+  const [homeTab, setHomeTab] = useState<'exams' | 'study' | 'services' | 'about'>('exams');
+  const [resourceSearch, setResourceSearch] = useState('');
+  const [serviceSearch, setServiceSearch] = useState('');
 
   const selectedExam = useMemo(
     () => exams.find((exam) => exam.id === selectedExamId) ?? null,
     [selectedExamId]
   );
+
+  const filteredServiceCategories = useMemo(() => {
+    const term = serviceSearch.trim().toLowerCase();
+    if (!term) return awsServiceCategories;
+    return awsServiceCategories
+      .map((cat) => ({
+        ...cat,
+        services: cat.services.filter(
+          (s) => s.name.toLowerCase().includes(term) || s.definition.toLowerCase().includes(term)
+        ),
+      }))
+      .filter((cat) => cat.category.toLowerCase().includes(term) || cat.services.length > 0);
+  }, [serviceSearch]);
+
+  const filteredResourceCategories = useMemo(() => {
+    const term = resourceSearch.trim().toLowerCase();
+    if (!term) return resourceCategories;
+    return resourceCategories
+      .map((cat) => ({
+        ...cat,
+        resources: cat.resources.filter((r) => r.service.toLowerCase().includes(term)),
+      }))
+      .filter((cat) => cat.category.toLowerCase().includes(term) || cat.resources.length > 0);
+  }, [resourceSearch]);
 
   const currentQuestion = selectedExam?.questions[currentQuestionIndex] ?? null;
 
@@ -232,6 +259,12 @@ function App() {
                 Study Material
               </button>
               <button
+                className={`home-tab ${homeTab === 'services' ? 'active' : ''}`}
+                onClick={() => setHomeTab('services')}
+              >
+                AWS Services
+              </button>
+              <button
                 className={`home-tab ${homeTab === 'about' ? 'active' : ''}`}
                 onClick={() => setHomeTab('about')}
               >
@@ -276,26 +309,70 @@ function App() {
 
             {homeTab === 'study' && (
               <section className="resources-section">
-                <div className="resources-grid">
-                  {resourceCategories.map((cat) => (
-                    <div key={cat.category} className="resource-card">
-                      <h3 className="resource-category">{cat.icon} {cat.category}</h3>
-                      <ul className="resource-list">
-                        {cat.resources.map((r) => (
-                          <li key={r.service}>
-                            {r.url.includes('https') ? (
-                              <a href={r.url} target="_blank" rel="noreferrer" className="resource-link">
-                                {r.service}
-                              </a>
-                            ) : (
-                              <span className="resource-link--no-url">{r.service}</span>
-                            )}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  ))}
+                <div className="resource-search-bar">
+                  <input
+                    type="search"
+                    placeholder="Search services or categories..."
+                    value={resourceSearch}
+                    onChange={(e) => setResourceSearch(e.target.value)}
+                    className="resource-search-input"
+                  />
                 </div>
+                {filteredResourceCategories.length === 0 ? (
+                  <p className="resource-no-results">No services match "{resourceSearch}".</p>
+                ) : (
+                  <div className="resources-grid">
+                    {filteredResourceCategories.map((cat) => (
+                      <div key={cat.category} className="resource-card">
+                        <h3 className="resource-category">{cat.icon} {cat.category}</h3>
+                        <ul className="resource-list">
+                          {cat.resources.map((r) => (
+                            <li key={r.service}>
+                              {r.url.includes('https') ? (
+                                <a href={r.url} target="_blank" rel="noreferrer" className="resource-link">
+                                  {r.service}
+                                </a>
+                              ) : (
+                                <span className="resource-link--no-url">{r.service}</span>
+                              )}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </section>
+            )}
+
+            {homeTab === 'services' && (
+              <section className="services-glossary-section">
+                <div className="resource-search-bar">
+                  <input
+                    type="search"
+                    placeholder="Search services or categories..."
+                    value={serviceSearch}
+                    onChange={(e) => setServiceSearch(e.target.value)}
+                    className="resource-search-input"
+                  />
+                </div>
+                {filteredServiceCategories.length === 0 ? (
+                  <p className="resource-no-results">No services match "{serviceSearch}".</p>
+                ) : (
+                  filteredServiceCategories.map((cat) => (
+                    <div key={cat.category} className="services-glossary-group">
+                      <h3 className="services-glossary-heading">{cat.icon} {cat.category}</h3>
+                      <div className="services-glossary-grid">
+                        {cat.services.map((svc) => (
+                          <div key={svc.name} className="services-glossary-card">
+                            <span className="services-glossary-name">{svc.name}</span>
+                            <span className="services-glossary-def">{svc.definition}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))
+                )}
               </section>
             )}
 

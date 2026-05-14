@@ -1706,3 +1706,114 @@
 .dark .about-link-btn {
   background: #334155;
 }
+
+/* ── Resource search ── */
+.resource-search-bar {
+  margin-bottom: 20px;
+}
+
+.resource-search-input {
+  width: 100%;
+  max-width: 480px;
+  padding: 10px 16px;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  font-size: 0.95rem;
+  background: white;
+  color: #0f172a;
+  outline: none;
+  box-sizing: border-box;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.resource-search-input:focus {
+  border-color: #1d4ed8;
+  box-shadow: 0 0 0 3px rgba(29, 78, 216, 0.12);
+}
+
+.resource-no-results {
+  color: #64748b;
+  font-size: 0.95rem;
+  padding: 24px 0;
+}
+
+/* AWS Services Glossary */
+.services-glossary-section {
+  margin-top: 0;
+}
+
+.services-glossary-group {
+  margin-bottom: 32px;
+}
+
+.services-glossary-heading {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0 0 14px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid #e2e8f0;
+}
+
+.services-glossary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 12px;
+}
+
+.services-glossary-card {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-left: 4px solid #1d4ed8;
+  border-radius: 10px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.05);
+  transition: background 0.2s linear, border-color 0.2s linear;
+}
+
+.services-glossary-name {
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: #1d4ed8;
+}
+
+.services-glossary-def {
+  font-size: 0.85rem;
+  color: #475569;
+  line-height: 1.55;
+}
+
+/* Dark mode for services glossary */
+.App.dark .services-glossary-heading {
+  color: #bfdbfe;
+  border-bottom-color: #1e3562;
+}
+
+.App.dark .services-glossary-card {
+  background: #0f2040;
+  border-color: #1e3562;
+  border-left-color: #3b82f6;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.App.dark .services-glossary-name {
+  color: #60a5fa;
+}
+
+.App.dark .services-glossary-def {
+  color: #94a3b8;
+}
+
+.dark .resource-search-input {
+  background: #1e293b;
+  border-color: #334155;
+  color: #f1f5f9;
+}
+
+.dark .resource-search-input:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+}
