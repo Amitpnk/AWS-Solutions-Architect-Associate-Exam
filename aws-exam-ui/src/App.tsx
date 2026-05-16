@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import './App.css';
-import { exams, ExamQuestion } from './data/exams';
+import { exams, ExamQuestion } from './data/exams/index';
 import { resourceCategories } from './data/resources';
 import { awsServiceCategories } from './data/awsServices';
 import { scenarioCategories, comparisons, keyFacts } from './data/cheatSheet';
