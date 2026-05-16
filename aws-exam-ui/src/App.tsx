@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import './App.css';
 import { exams, ExamQuestion } from './data/exams/index';
 import { resourceCategories } from './data/resources';
@@ -50,6 +50,27 @@ function App() {
   const [examTimedOut, setExamTimedOut] = useState(false);
   const [darkMode, setDarkMode] = useState(false);
   const [showSponsor, setShowSponsor] = useState(false);
+  const [isSpeaking, setIsSpeaking] = useState(false);
+
+  const stopSpeaking = useCallback(() => {
+    window.speechSynthesis.cancel();
+    setIsSpeaking(false);
+  }, []);
+
+  const speakQuestion = useCallback((question: ExamQuestion, questionNumber: number) => {
+    stopSpeaking();
+    const letters = ['A', 'B', 'C', 'D', 'E'];
+    const text = [
+      `Question ${questionNumber}. ${question.prompt}`,
+      ...question.options.map((opt, i) => `Option ${letters[i]}: ${opt}`),
+    ].join('. ');
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.rate = 0.9;
+    utterance.onend = () => setIsSpeaking(false);
+    utterance.onerror = () => setIsSpeaking(false);
+    setIsSpeaking(true);
+    window.speechSynthesis.speak(utterance);
+  }, [stopSpeaking]);
   const [homeTab, setHomeTab] = useState<'exams' | 'study' | 'services' | 'cheatsheet' | 'compare' | 'about'>('exams');
   const [resourceSearch, setResourceSearch] = useState('');
   const [serviceSearch, setServiceSearch] = useState('');
@@ -140,6 +161,14 @@ function App() {
   }, [resourceSearch]);
 
   const currentQuestion = selectedExam?.questions[currentQuestionIndex] ?? null;
+
+  useEffect(() => {
+    stopSpeaking();
+  }, [currentQuestionIndex, stopSpeaking]);
+
+  useEffect(() => {
+    if (view !== 'quiz') stopSpeaking();
+  }, [view, stopSpeaking]);
 
   useEffect(() => {
     if (view !== 'quiz' || !selectedExam || !timerEnabled || !selectedExam.durationSeconds) {
@@ -718,7 +747,27 @@ function App() {
            
 
             <div className="question-card">
-              <h3>{currentQuestion.prompt}</h3>
+              <div className="question-prompt-row">
+                <h3>{currentQuestion.prompt}</h3>
+                <button
+                  type="button"
+                  className={`speak-btn${isSpeaking ? ' speaking' : ''}`}
+                  onClick={() => isSpeaking ? stopSpeaking() : speakQuestion(currentQuestion, currentQuestionIndex + 1)}
+                  title={isSpeaking ? 'Stop reading' : 'Read question aloud'}
+                >
+                  {isSpeaking ? (
+                    <>
+                      <svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><rect x="2" y="2" width="12" height="12" rx="2"/></svg>
+                      Stop
+                    </>
+                  ) : (
+                    <>
+                      <svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M3 2l10 6-10 6V2z"/></svg>
+                      Read
+                    </>
+                  )}
+                </button>
+              </div>
               {currentQuestion.correctOptionIndexes && <p className="multi-select-note">Select all that apply.</p>}
               <div className="options-grid">
                 {currentQuestion.options.map((option, optionIndex) => {
