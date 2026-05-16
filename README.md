@@ -11,6 +11,8 @@ It includes key AWS services, architecture patterns, security concepts, and best
 
 ## Live Demo
 
+https://amitpnk.github.io/AWS-Solutions-Architect-Associate-Exam/
+
 ![alt text](image.png)
 
 ## Exam Overview
