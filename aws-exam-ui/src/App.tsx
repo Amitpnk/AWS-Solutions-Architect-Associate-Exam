@@ -4,6 +4,7 @@ import { exams, ExamQuestion } from './data/exams';
 import { resourceCategories } from './data/resources';
 import { awsServiceCategories } from './data/awsServices';
 import { scenarioCategories, comparisons, keyFacts } from './data/cheatSheet';
+import { cloudComparisonCategories } from './data/cloudComparison';
 
 type ViewState = 'home' | 'quiz' | 'results' | 'revision';
 
@@ -49,7 +50,7 @@ function App() {
   const [examTimedOut, setExamTimedOut] = useState(false);
   const [darkMode, setDarkMode] = useState(false);
   const [showSponsor, setShowSponsor] = useState(false);
-  const [homeTab, setHomeTab] = useState<'exams' | 'study' | 'services' | 'cheatsheet' | 'about'>('exams');
+  const [homeTab, setHomeTab] = useState<'exams' | 'study' | 'services' | 'cheatsheet' | 'compare' | 'about'>('exams');
   const [resourceSearch, setResourceSearch] = useState('');
   const [serviceSearch, setServiceSearch] = useState('');
   const [cheatSearch, setCheatSearch] = useState('');
@@ -94,6 +95,25 @@ function App() {
       (f) => f.service.toLowerCase().includes(term) || f.fact.toLowerCase().includes(term)
     );
   }, [cheatSearch, cheatSection]);
+
+  const [compareSearch, setCompareSearch] = useState('');
+
+  const filteredCompareCategories = useMemo(() => {
+    const term = compareSearch.trim().toLowerCase();
+    if (!term) return cloudComparisonCategories;
+    return cloudComparisonCategories
+      .map((cat) => ({
+        ...cat,
+        services: cat.services.filter(
+          (s) =>
+            s.aws.toLowerCase().includes(term) ||
+            s.azure.toLowerCase().includes(term) ||
+            s.gcp.toLowerCase().includes(term) ||
+            s.description.toLowerCase().includes(term)
+        ),
+      }))
+      .filter((cat) => cat.category.toLowerCase().includes(term) || cat.services.length > 0);
+  }, [compareSearch]);
 
   const filteredServiceCategories = useMemo(() => {
     const term = serviceSearch.trim().toLowerCase();
@@ -307,6 +327,12 @@ function App() {
                 onClick={() => setHomeTab('cheatsheet')}
               >
                 Cheat Sheet
+              </button>
+              <button
+                className={`home-tab ${homeTab === 'compare' ? 'active' : ''}`}
+                onClick={() => setHomeTab('compare')}
+              >
+                AWS vs Azure vs GCP
               </button>
               <button
                 className={`home-tab ${homeTab === 'about' ? 'active' : ''}`}
@@ -523,6 +549,54 @@ function App() {
                       </ul>
                     )}
                   </>
+                )}
+              </section>
+            )}
+
+            {homeTab === 'compare' && (
+              <section className="compare-section">
+                <div className="compare-intro">
+                  <p>Side-by-side mapping of AWS services to their Azure and GCP equivalents. Use the search to filter by any service name or description.</p>
+                </div>
+                <div className="resource-search-bar">
+                  <input
+                    type="search"
+                    placeholder="Search AWS, Azure, or GCP service..."
+                    value={compareSearch}
+                    onChange={(e) => setCompareSearch(e.target.value)}
+                    className="resource-search-input"
+                  />
+                </div>
+                {filteredCompareCategories.length === 0 ? (
+                  <p className="resource-no-results">No services match "{compareSearch}".</p>
+                ) : (
+                  filteredCompareCategories.map((cat) => (
+                    <div key={cat.category} className="compare-group">
+                      <h3 className="compare-group-heading">{cat.icon} {cat.category}</h3>
+                      <div className="compare-table-wrapper">
+                        <table className="compare-table">
+                          <thead>
+                            <tr>
+                              <th className="compare-th compare-th--aws">AWS</th>
+                              <th className="compare-th compare-th--azure">Azure</th>
+                              <th className="compare-th compare-th--gcp">GCP</th>
+                              <th className="compare-th compare-th--desc">What it does</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {cat.services.map((row, i) => (
+                              <tr key={i} className="compare-row">
+                                <td className="compare-td compare-cell--aws">{row.aws}</td>
+                                <td className="compare-td compare-cell--azure">{row.azure}</td>
+                                <td className="compare-td compare-cell--gcp">{row.gcp}</td>
+                                <td className="compare-td compare-cell--desc">{row.description}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  ))
                 )}
               </section>
             )}

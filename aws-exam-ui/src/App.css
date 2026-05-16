@@ -2167,3 +2167,121 @@
 .App.dark .cheatsheet-fact-tag--tip     { background: #052e16; color: #86efac; }
 .App.dark .cheatsheet-fact-tag--gotcha  { background: #2d1c00; color: #fde68a; }
 .App.dark .cheatsheet-fact-tag--default { background: #0c2a3f; color: #7dd3fc; }
+
+/* ── Cloud Comparison (AWS vs Azure vs GCP) ──────────────────────────────── */
+.compare-section {
+  display: grid;
+  gap: 28px;
+}
+
+.compare-intro {
+  color: #64748b;
+  font-size: 0.9rem;
+}
+
+.compare-intro p {
+  margin: 0;
+}
+
+.compare-group {
+  display: grid;
+  gap: 10px;
+}
+
+.compare-group-heading {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0;
+  padding-bottom: 8px;
+  border-bottom: 2px solid #e2e8f0;
+}
+
+.compare-table-wrapper {
+  overflow-x: auto;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.05);
+}
+
+.compare-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.84rem;
+  background: white;
+}
+
+.compare-th {
+  padding: 10px 14px;
+  text-align: left;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.compare-th--aws   { background: #fff7ed; color: #c2410c; border-bottom: 2px solid #fed7aa; }
+.compare-th--azure { background: #eff6ff; color: #1d4ed8; border-bottom: 2px solid #bfdbfe; }
+.compare-th--gcp   { background: #f0fdf4; color: #15803d; border-bottom: 2px solid #bbf7d0; }
+.compare-th--desc  { background: #f8fafc; color: #475569; border-bottom: 2px solid #e2e8f0; }
+
+.compare-row {
+  transition: background 0.1s ease;
+}
+
+.compare-row:hover td {
+  background: #f8fafc;
+}
+
+.compare-row:not(:last-child) td {
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.compare-td {
+  padding: 10px 14px;
+  vertical-align: top;
+  line-height: 1.5;
+}
+
+.compare-cell--aws   { font-weight: 700; color: #c2410c; white-space: nowrap; }
+.compare-cell--azure { font-weight: 600; color: #1d4ed8; }
+.compare-cell--gcp   { font-weight: 600; color: #15803d; }
+.compare-cell--desc  { color: #475569; }
+
+/* Dark mode — compare */
+.App.dark .compare-intro {
+  color: #64748b;
+}
+
+.App.dark .compare-group-heading {
+  color: #bfdbfe;
+  border-bottom-color: #1e3562;
+}
+
+.App.dark .compare-table-wrapper {
+  border-color: #1e3562;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.App.dark .compare-table {
+  background: #0f2040;
+}
+
+.App.dark .compare-th--aws   { background: #2a1200; color: #fb923c; border-bottom-color: #7c2d12; }
+.App.dark .compare-th--azure { background: #0a1e40; color: #60a5fa; border-bottom-color: #1e3a8a; }
+.App.dark .compare-th--gcp   { background: #052e16; color: #4ade80; border-bottom-color: #166534; }
+.App.dark .compare-th--desc  { background: #0d1e3a; color: #94a3b8; border-bottom-color: #1e3562; }
+
+.App.dark .compare-row:hover td {
+  background: #122447;
+}
+
+.App.dark .compare-row:not(:last-child) td {
+  border-bottom-color: #1a2e4a;
+}
+
+.App.dark .compare-cell--aws   { color: #fb923c; }
+.App.dark .compare-cell--azure { color: #60a5fa; }
+.App.dark .compare-cell--gcp   { color: #4ade80; }
+.App.dark .compare-cell--desc  { color: #94a3b8; }
