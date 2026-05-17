@@ -118,6 +118,15 @@ function App() {
   }, [cheatSearch, cheatSection]);
 
   const [compareSearch, setCompareSearch] = useState('');
+  const [revealedAnswers, setRevealedAnswers] = useState<Set<string>>(new Set());
+
+  const toggleRevealAnswer = (id: string) => {
+    setRevealedAnswers(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  };
 
   const filteredCompareCategories = useMemo(() => {
     const term = compareSearch.trim().toLowerCase();
@@ -860,28 +869,50 @@ function App() {
                 return (
                   <article key={question.id} className="revision-card">
                     <div className="revision-header-card">
-                      <h3>Question {index + 1}</h3>
+                      <h3>
+                        Question {index + 1}
+                        <span className="revision-q-count"> of {selectedExam.questions.length}</span>
+                      </h3>
                     </div>
                     <p className="revision-prompt">{question.prompt}</p>
                     <div className="revision-options">
                       {question.options.map((option, optionIndex) => {
-                        const isCorrect = correctIndexes.includes(optionIndex);
+                        const letter = String.fromCharCode(65 + optionIndex);
                         return (
-                          <div
-                            key={optionIndex}
-                            className={`revision-option ${isCorrect ? 'correct' : 'incorrect'}`}
-                          >
-                            <span className={`option-indicator ${isCorrect ? 'correct' : ''}`}>
-                              {isCorrect ? '✓' : '○'}
-                            </span>
-                            {option}
+                          <div key={optionIndex} className="revision-option">
+                            <span className="option-letter">{letter}</span>
+                            <span>{option}</span>
                           </div>
                         );
                       })}
                     </div>
-                    {question.explanation && (
-                      <p className="revision-explanation"><strong>Explanation:</strong> {question.explanation}</p>
-                    )}
+                    <div className="revision-answer-section">
+                      <button
+                        className={`check-answer-btn ${revealedAnswers.has(question.id) ? 'revealed' : ''}`}
+                        onClick={() => toggleRevealAnswer(question.id)}
+                        type="button"
+                      >
+                        {revealedAnswers.has(question.id) ? 'Hide Answer' : 'Check Answer'}
+                      </button>
+                      {revealedAnswers.has(question.id) && (
+                        <div className="revision-answer-body">
+                          <div className="revision-answer-header">Correct Answer</div>
+                          <div className="revision-correct-list">
+                            {correctIndexes.map(i => (
+                              <div key={i} className="revision-correct-item">
+                                <span className="revision-correct-letter">{String.fromCharCode(65 + i)}</span>
+                                <span>{question.options[i]}</span>
+                              </div>
+                            ))}
+                          </div>
+                          {question.explanation && (
+                            <div className="revision-explanation">
+                              <strong>Explanation:</strong> {question.explanation}
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
                   </article>
                 );
               })}
