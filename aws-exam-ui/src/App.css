@@ -1380,6 +1380,34 @@
   flex-shrink: 0;
 }
 
+.toggle-all-answers-btn {
+  padding: 10px 20px;
+  background: transparent;
+  color: #3b82f6;
+  border: 1.5px solid #3b82f6;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+  white-space: nowrap;
+}
+
+.toggle-all-answers-btn:hover {
+  background: #3b82f6;
+  color: white;
+}
+
+.App.dark .toggle-all-answers-btn {
+  color: #60a5fa;
+  border-color: #3b82f6;
+}
+
+.App.dark .toggle-all-answers-btn:hover {
+  background: #3b82f6;
+  color: white;
+}
+
 .pdf-export-btn {
   padding: 10px 20px;
   background: #3b82f6;

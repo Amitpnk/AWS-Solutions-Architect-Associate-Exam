@@ -854,6 +854,16 @@ function App() {
                 <p>{selectedExam.description}</p>
               </div>
               <div className="revision-header-actions">
+                <button
+                  className="toggle-all-answers-btn"
+                  onClick={() => {
+                    const allIds = selectedExam.questions.map(q => q.id);
+                    const allRevealed = allIds.every(id => revealedAnswers.has(id));
+                    setRevealedAnswers(allRevealed ? new Set() : new Set(allIds));
+                  }}
+                >
+                  {selectedExam.questions.every(q => revealedAnswers.has(q.id)) ? 'Hide All Answers' : 'Reveal All Answers'}
+                </button>
                 <button className="pdf-export-btn" onClick={() => window.print()}>
                   Export PDF
                 </button>
