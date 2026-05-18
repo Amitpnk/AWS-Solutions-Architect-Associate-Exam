@@ -119,6 +119,7 @@ function App() {
 
   const [compareSearch, setCompareSearch] = useState('');
   const [revealedAnswers, setRevealedAnswers] = useState<Set<string>>(new Set());
+  const [revisionShuffleKey, setRevisionShuffleKey] = useState(0);
 
   const toggleRevealAnswer = (id: string) => {
     setRevealedAnswers(prev => {
@@ -168,6 +169,23 @@ function App() {
       }))
       .filter((cat) => cat.category.toLowerCase().includes(term) || cat.resources.length > 0);
   }, [resourceSearch]);
+
+  const revisionShuffledOptions = useMemo(() => {
+    if (!selectedExam) return {} as Record<string, { shuffled: string[]; oldToNew: number[] }>;
+    const result: Record<string, { shuffled: string[]; oldToNew: number[] }> = {};
+    for (const q of selectedExam.questions) {
+      const indexes = q.options.map((_, i) => i);
+      for (let i = indexes.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [indexes[i], indexes[j]] = [indexes[j], indexes[i]];
+      }
+      const shuffled = indexes.map(i => q.options[i]);
+      const oldToNew: number[] = new Array(q.options.length);
+      indexes.forEach((oldPos, newPos) => { oldToNew[oldPos] = newPos; });
+      result[q.id] = { shuffled, oldToNew };
+    }
+    return result;
+  }, [selectedExamId, revisionShuffleKey]);
 
   const currentQuestion = selectedExam?.questions[currentQuestionIndex] ?? null;
 
@@ -281,7 +299,10 @@ function App() {
   };
 
   const handleFinish = () => {
-    setView('results');
+    const shouldLeave = window.confirm('Are you sure you want to leave the exam and return to the results page?');
+    if (shouldLeave) {
+      setView('results');
+    }
   };
 
   const handleMainPageClick = () => {
@@ -855,6 +876,12 @@ function App() {
               </div>
               <div className="revision-header-actions">
                 <button
+                  className="shuffle-options-btn"
+                  onClick={() => setRevisionShuffleKey(k => k + 1)}
+                >
+                  Shuffle Options
+                </button>
+                <button
                   className="toggle-all-answers-btn"
                   onClick={() => {
                     const allIds = selectedExam.questions.map(q => q.id);
@@ -876,6 +903,11 @@ function App() {
             <div className="revision-list">
               {selectedExam.questions.map((question, index) => {
                 const correctIndexes = getCorrectIndexes(question);
+                const shuffle = revisionShuffledOptions[question.id];
+                const displayOptions = shuffle ? shuffle.shuffled : question.options;
+                const displayCorrectIndexes = shuffle
+                  ? correctIndexes.map(i => shuffle.oldToNew[i])
+                  : correctIndexes;
                 return (
                   <article key={question.id} className="revision-card">
                     <div className="revision-header-card">
@@ -886,7 +918,7 @@ function App() {
                     </div>
                     <p className="revision-prompt">{question.prompt}</p>
                     <div className="revision-options">
-                      {question.options.map((option, optionIndex) => {
+                      {displayOptions.map((option, optionIndex) => {
                         const letter = String.fromCharCode(65 + optionIndex);
                         return (
                           <div key={optionIndex} className="revision-option">
@@ -908,10 +940,10 @@ function App() {
                         <div className="revision-answer-body">
                           <div className="revision-answer-header">Correct Answer</div>
                           <div className="revision-correct-list">
-                            {correctIndexes.map(i => (
+                            {displayCorrectIndexes.map(i => (
                               <div key={i} className="revision-correct-item">
                                 <span className="revision-correct-letter">{String.fromCharCode(65 + i)}</span>
-                                <span>{question.options[i]}</span>
+                                <span>{displayOptions[i]}</span>
                               </div>
                             ))}
                           </div>

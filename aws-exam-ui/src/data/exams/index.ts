@@ -9,6 +9,9 @@ import { examCloudFront } from './examCloudFront';
 import { examAppIntegration } from './examAppIntegration';
 import { examDatabase } from './examDatabase';
 import { examStorage } from './examStorage';
+import { examCostManagement } from './examCostManagement';
+import { examSecurity } from './examSecurity';
+import { examML } from './examML';
 export type { ExamQuestion, ExamDefinition } from './types';
 
-export const exams = [exam1, exam3, examEC2, examHA, examRDS, examRoute53, examCloudFront, examAppIntegration, examDatabase, examStorage];
+export const exams = [exam1, exam3, examEC2, examHA, examRDS, examRoute53, examCloudFront, examAppIntegration, examDatabase, examStorage, examCostManagement, examSecurity, examML];

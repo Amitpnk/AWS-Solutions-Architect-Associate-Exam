@@ -1380,6 +1380,33 @@
   flex-shrink: 0;
 }
 
+.shuffle-options-btn {
+  padding: 10px 20px;
+  background: transparent;
+  color: #8b5cf6;
+  border: 1.5px solid #8b5cf6;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+  white-space: nowrap;
+}
+
+.shuffle-options-btn:hover {
+  background: #8b5cf6;
+  color: white;
+}
+
+.App.dark .shuffle-options-btn {
+  color: #a78bfa;
+  border-color: #8b5cf6;
+}
+
+.App.dark .shuffle-options-btn:hover {
+  background: #8b5cf6;
+  color: white;
+}
+
 .toggle-all-answers-btn {
   padding: 10px 20px;
   background: transparent;
