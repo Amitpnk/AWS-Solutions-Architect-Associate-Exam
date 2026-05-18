@@ -46,10 +46,10 @@ export const resourceCategories: ResourceCategory[] = [
     category: 'AWS Cost Management',
     icon: '💰',
     resources: [
-      { service: 'AWS Budgets', url: `${BLOG_BASE}/aws-budgets` },
-      { service: 'AWS Cost and Usage Report', url: `${BLOG_BASE}/aws-cost-usage-report` },
-      { service: 'AWS Cost Explorer', url: `${BLOG_BASE}/aws-cost-explorer` },
-      { service: 'Savings Plans', url: `${BLOG_BASE}/aws-savings-plans` },
+      { service: 'AWS Budgets', url: `https://medium.com/expertminds/aws-cost-management-f34f2f17f5ee` },
+      { service: 'AWS Cost and Usage Report', url: `https://medium.com/expertminds/aws-cost-management-f34f2f17f5ee` },
+      { service: 'AWS Cost Explorer', url: `https://medium.com/expertminds/aws-cost-management-f34f2f17f5ee` },
+      { service: 'Savings Plans', url: `https://medium.com/expertminds/aws-cost-management-f34f2f17f5ee` },
     ],
   },
   {
@@ -213,9 +213,9 @@ export const resourceCategories: ResourceCategory[] = [
     category: 'Serverless',
     icon: '⚡',
     resources: [
-      { service: 'AWS AppSync', url: `${BLOG_BASE}/aws-appsync` },
-      { service: 'AWS Fargate', url: `${BLOG_BASE}/aws-fargate` },
-      { service: 'AWS Lambda', url: `${BLOG_BASE}/aws-lambda` },
+      { service: 'AWS AppSync', url: `https://medium.com/expertminds/serverless-on-aws-a1c9a190df70` },
+      { service: 'AWS Fargate', url: `https://medium.com/expertminds/serverless-on-aws-a1c9a190df70` },
+      { service: 'AWS Lambda', url: `https://medium.com/expertminds/serverless-on-aws-a1c9a190df70` },
     ],
   },
   {
