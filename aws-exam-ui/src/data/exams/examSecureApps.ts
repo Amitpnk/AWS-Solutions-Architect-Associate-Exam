@@ -781,6 +781,402 @@ export const examSecureApps: ExamDefinition = {
             ],
             correctOptionIndex: 3,
             explanation: 'IAM Access Analyzer unused access findings (introduced in 2023) analyze IAM roles, users, and policies to identify unused permissions, unused access keys, and unused passwords. An analyzer configured for unused access finds roles with permissions that have not been exercised in the analysis window (configurable, default 90 days). This surfaces over-provisioned roles so they can be right-sized to least privilege. Access Analyzer policy validation checks new policies against static best-practice rules but does not look at historical usage. Trusted Advisor\'s IAM checks are high-level (e.g., root MFA enabled) and do not analyze per-permission usage. IAM Last Accessed data is available manually per role but is not automatically analyzed by Config rules in a built-in way.'
+        },
+
+        // ═══════════════════════════════════════════════════════════════════════
+        // SCENARIO — Full Auth Flow: Cognito + API Gateway + Lambda
+        // ═══════════════════════════════════════════════════════════════════════
+        {
+            id: 'sapp_q53',
+            type: 'single',
+            prompt: 'A company builds a mobile app where users sign in with their corporate Microsoft Azure AD credentials. After sign-in, users call a private REST API (API Gateway) that invokes Lambda. The company does NOT want to migrate identities to AWS. Which architecture handles authentication end-to-end with the LEAST custom code?',
+            options: [
+                'Create IAM users mirroring all Azure AD users; mobile app authenticates with long-term IAM access keys',
+                'Configure a Cognito User Pool with Azure AD as a SAML 2.0 external Identity Provider; use the Cognito User Pool Authorizer on API Gateway; Lambda receives the user\'s claims in the request context',
+                'Build a custom token validation Lambda authorizer that calls the Azure AD /userinfo endpoint on every API request',
+                'Use AWS Directory Service AD Connector to sync Azure AD users, then use IAM Identity Center for API Gateway authorization'
+            ],
+            correctOptionIndex: 1,
+            explanation: 'Cognito User Pools natively support federated identity providers via SAML 2.0 and OIDC — Azure AD is a common SAML IdP. Users authenticate against Azure AD through Cognito (which acts as a SAML SP), receive Cognito JWT tokens, and use those tokens to call API Gateway. API Gateway\'s native Cognito Authorizer validates the JWT without custom code. Lambda receives verified user claims (email, groups, custom attributes) in the authorizer context. IAM users for every Azure AD user is operationally unmanageable. A custom Lambda authorizer that calls Azure AD on every request adds latency and external dependency. AD Connector is for on-premises AD, not Azure AD, and IAM Identity Center is for workforce AWS console access, not API authorization.'
+        },
+        {
+            id: 'sapp_q54',
+            type: 'single',
+            prompt: 'An API Gateway REST API uses a Lambda authorizer (REQUEST type). The authorizer validates a JWT and returns an IAM policy. Developers notice that the authorizer Lambda is invoked on every single API request, adding 200ms latency. The JWT tokens are valid for 1 hour. What is the SIMPLEST fix to eliminate the repeated Lambda invocations for the same token?',
+            options: [
+                'Switch from a Lambda authorizer to a Cognito User Pool Authorizer — Cognito authorizers have built-in caching',
+                'Enable the authorizer cache in API Gateway: set a TTL (e.g., 3600 seconds) and configure the cache key to be the Authorization header token — API Gateway caches the IAM policy response for that token for the TTL duration',
+                'Move the JWT validation logic into each Lambda function behind the API so the authorizer is not needed',
+                'Enable API Gateway caching on the stage and set the TTL to match the token validity period'
+            ],
+            correctOptionIndex: 1,
+            explanation: 'Lambda authorizers in API Gateway support result caching with a configurable TTL (0–3600 seconds). When caching is enabled with the Authorization header as the cache key, API Gateway caches the IAM policy returned by the authorizer for the specified TTL. Subsequent requests with the same token bypass the Lambda invocation entirely — zero additional latency after the first call within the TTL window. This matches the JWT validity period (1 hour = 3600s TTL). Stage-level API Gateway response caching caches the backend response, not the authorization decision. Switching to Cognito authorizers is a larger refactor. Moving JWT validation into every Lambda function violates separation of concerns and duplicates code.'
+        },
+
+        // ═══════════════════════════════════════════════════════════════════════
+        // SCENARIO — S3 Cross-Region Replication + Encryption
+        // ═══════════════════════════════════════════════════════════════════════
+        {
+            id: 'sapp_q55',
+            type: 'single',
+            prompt: 'A company replicates objects from an S3 source bucket (us-east-1) encrypted with KMS CMK-A to a destination bucket (eu-west-1). Replication fails for encrypted objects with an access denied error. The S3 replication IAM role has s3:GetObject and s3:ReplicateObject. What additional permissions are REQUIRED?',
+            options: [
+                'The replication role needs s3:PutObject on the destination bucket only',
+                'The replication role needs kms:Decrypt on the source CMK-A (to read the encrypted object) AND kms:GenerateDataKey on the destination CMK (to re-encrypt for the destination). Both KMS key policies must also grant these permissions to the replication role',
+                'Enable S3 Transfer Acceleration on both buckets to allow cross-region KMS decryption',
+                'The destination bucket must use SSE-S3 (not KMS) because cross-region replication cannot re-encrypt with a different CMK'
+            ],
+            correctOptionIndex: 1,
+            explanation: 'S3 cross-region replication with KMS encryption is a two-step KMS process: (1) Decrypt: the replication role must call kms:Decrypt on the SOURCE CMK (CMK-A) to read the encrypted source object — the source KMS key policy must grant this to the role; (2) Re-encrypt: the replication role must call kms:GenerateDataKey on the DESTINATION CMK to encrypt the replicated object for the destination bucket — the destination KMS key policy must grant this to the role. Without both permissions, replication fails with AccessDenied. Cross-region replication fully supports re-encrypting with a different destination CMK (including multi-region CMKs). Transfer Acceleration affects speed, not encryption permissions.'
+        },
+
+        // ═══════════════════════════════════════════════════════════════════════
+        // SCENARIO — STS Role Chaining Session Duration
+        // ═══════════════════════════════════════════════════════════════════════
+        {
+            id: 'sapp_q56',
+            type: 'single',
+            prompt: 'A CI/CD pipeline running in Account A assumes Role-B in Account B (session duration: 8 hours). Within that session, Role-B then assumes Role-C in Account C, requesting a 4-hour session. The pipeline then uses Role-C credentials. A developer notices Role-C credentials expire in 1 hour, not 4 hours. Why?',
+            options: [
+                'Cross-account role chaining is limited to 1-hour sessions regardless of the requested duration',
+                'Role-C\'s maximum session duration is configured to 1 hour in its IAM settings',
+                'When role chaining (assuming a role from within a role session), the resulting session duration cannot exceed the remaining lifetime of the source session. The Role-B session had 1 hour remaining at the time Role-C was assumed, capping Role-C at 1 hour',
+                'Account C has an SCP limiting all role session durations to 1 hour'
+            ],
+            correctOptionIndex: 2,
+            explanation: 'This is the role chaining session duration cap rule. When you assume a role from within an existing role session (role chaining), the resulting session duration is capped at the LESSER of: (a) the requested duration, (b) the role\'s configured maximum session duration, or (c) the remaining lifetime of the SOURCE role\'s session. In this scenario, Role-B was assumed 7 hours ago with an 8-hour session — only 1 hour remains. Even though Role-C was requested with a 4-hour session, the STS service caps it at 1 hour (the Role-B session\'s remaining time). This is a deliberate security control to prevent credential chains that outlive their source session. Human users who assume roles from the console or CLI (not from within another role session) are not subject to this chain cap.'
+        },
+
+        // ═══════════════════════════════════════════════════════════════════════
+        // SCENARIO — WAF + Shield + CloudFront: Which Service for What
+        // ═══════════════════════════════════════════════════════════════════════
+        {
+            id: 'sapp_q57',
+            type: 'single',
+            prompt: 'A global e-commerce site uses CloudFront in front of an ALB. The security team needs: (1) protection against volumetric L3/L4 DDoS with AWS DRT access, (2) block SQL injection in HTTP request bodies, (3) block requests from specific countries, (4) rate-limit any IP making >500 requests/5min. Which combination is correct?',
+            options: [
+                'Shield Standard for (1); WAF Managed Rules for (2); WAF Geo Match for (3); WAF Rate-Based Rule for (4)',
+                'Shield Advanced for (1); WAF Core Rule Set managed rule group for (2); WAF Geographic match rule for (3); WAF rate-based rule for (4) — all applied to CloudFront',
+                'Shield Advanced for (1); Network Firewall for (2) and (3); CloudFront for (4) with origin request limits',
+                'Shield Advanced for (1)-(4) because it includes WAF and rate limiting as part of the subscription'
+            ],
+            correctOptionIndex: 1,
+            explanation: 'Each requirement maps to a specific feature: (1) Shield Advanced on CloudFront provides enhanced L3/L4/L7 DDoS protection, cost protection, and 24/7 DRT access. Shield Standard is automatic/free but has no DRT access or cost protection. (2) WAF Core Rule Set (CRS) managed rule group includes OWASP rules that detect SQL injection in query strings, headers, and body. (3) WAF Geographic match rule conditions block by country code with a single rule. (4) WAF rate-based rules track per-IP request rates over a 5-minute window and auto-block IPs exceeding the threshold. All four WAF features are attached to the CloudFront distribution. Shield Advanced does NOT include WAF or rate limiting — they are separate services. Network Firewall operates at VPC level, not in front of CloudFront.'
+        },
+        {
+            id: 'sapp_q58',
+            type: 'single',
+            prompt: 'A company uses AWS WAF on an ALB. A penetration tester uses HTTP request smuggling to bypass WAF inspection and reach the backend. The WAF is processing requests but the smuggled requests appear as a continuation of a previous request body. What WAF feature, when enabled, mitigates this?',
+            options: [
+                'Enable AWS WAF Bot Control to detect automated smuggling tools',
+                'Enable WAF body inspection with a larger size limit (up to 64 KB)',
+                'Enable WAF request body inspection for ALB specifically AND configure the ALB to reject ambiguous requests; use the WAF managed rule group for HTTP protocol compliance violations',
+                'Add a WAF IP rate-based rule to block IPs sending more than 10 requests per second'
+            ],
+            correctOptionIndex: 2,
+            explanation: 'HTTP request smuggling exploits discrepancies in how the front-end (WAF/proxy) and back-end (server) parse HTTP request boundaries — typically using conflicting Content-Length and Transfer-Encoding headers. The mitigation has two parts: (1) Enable WAF body inspection and the HTTP Flood managed rule group which includes rules detecting malformed Content-Length/Transfer-Encoding headers (protocol compliance violations); (2) Configure the ALB to reject requests with ambiguous length headers. AWS WAF also has the "Block requests that include more than 8 KB" setting and body inspection rules that can detect anomalous header combinations. Bot Control identifies automated bots but not protocol-level smuggling. Larger body size limits do not help with header-level smuggling. Rate limiting affects volume, not the smuggling technique.'
+        },
+
+        // ═══════════════════════════════════════════════════════════════════════
+        // SCENARIO — S3 Glacier Vault Lock vs Object Lock
+        // ═══════════════════════════════════════════════════════════════════════
+        {
+            id: 'sapp_q59',
+            type: 'single',
+            prompt: 'A legal team requires that archived case files in Amazon S3 Glacier be immutable for exactly 7 years, that the retention policy itself cannot be changed or deleted by anyone (including root), and that the policy is formally "locked" and auditable for regulatory purposes. Which feature meets ALL these requirements?',
+            options: [
+                'S3 Object Lock in Compliance mode on the Glacier storage class objects',
+                'S3 Glacier Vault Lock — a separately locked vault-level policy attached to a Glacier vault that, once locked, cannot be changed or deleted for its lifetime',
+                'S3 Lifecycle policy that transitions objects to Glacier with an expiry after 7 years',
+                'Enable S3 MFA Delete and S3 Versioning on the Glacier storage class bucket'
+            ],
+            correctOptionIndex: 1,
+            explanation: 'S3 Glacier Vault Lock is purpose-built for regulatory compliance WORM (Write Once Read Many) requirements. A Vault Lock policy is created, tested in a 24-hour "in-progress" state, then explicitly LOCKED. Once locked: the policy cannot be modified or deleted by anyone — not the account root, not AWS. The locked policy enforces retention controls (e.g., deny delete until 7 years). This provides an immutable, auditable retention policy for regulatory auditors. S3 Object Lock in Compliance mode also provides strong WORM guarantees for S3 objects, but it is per-object and applies to S3 buckets, not S3 Glacier vaults. Glacier Vault Lock is the specifically designed mechanism for Amazon S3 Glacier (not S3 with Glacier storage class). Lifecycle policies define transitions but do not prevent deletion. MFA Delete prevents accidental deletion but can be disabled by the root account.'
+        },
+
+        // ═══════════════════════════════════════════════════════════════════════
+        // SCENARIO — CloudTrail Data Events vs Management Events
+        // ═══════════════════════════════════════════════════════════════════════
+        {
+            id: 'sapp_q60',
+            type: 'single',
+            prompt: 'A forensics team investigates a breach. The attacker exfiltrated data by calling s3:GetObject on thousands of objects over 2 hours. The team checks CloudTrail but finds NO record of the s3:GetObject calls. CloudTrail is enabled and logging management events. Why are the GetObject calls missing?',
+            options: [
+                'S3 GetObject calls are not supported by CloudTrail — only IAM and EC2 events are recorded',
+                'S3 data events (object-level operations: GetObject, PutObject, DeleteObject) are NOT logged by default in CloudTrail. They must be explicitly enabled as a separate "data events" trail configuration for the specific S3 bucket or all buckets',
+                'The attacker deleted the CloudTrail logs before the forensics team investigated',
+                'CloudTrail only records failed API calls; successful GetObject calls are not logged'
+            ],
+            correctOptionIndex: 1,
+            explanation: 'CloudTrail distinguishes between two event types: (1) Management events — control-plane operations like CreateBucket, CreateUser, RunInstances — logged by default in all trails at no extra cost; (2) Data events — data-plane operations on specific resources like s3:GetObject, s3:PutObject, Lambda:InvokeFunction, DynamoDB:GetItem — NOT logged by default due to the extremely high volume they generate. Data events must be explicitly enabled per resource type or per resource ARN in the trail configuration and incur additional charges. This is a critical forensics gap — organizations that do not enable S3 data events cannot reconstruct object-level access history. The fix is to enable S3 data event logging in CloudTrail, or use S3 server access logging as an alternative.'
+        },
+
+        // ═══════════════════════════════════════════════════════════════════════
+        // SCENARIO — Dedicated Instances vs Dedicated Hosts (Compliance)
+        // ═══════════════════════════════════════════════════════════════════════
+        {
+            id: 'sapp_q61',
+            type: 'single',
+            prompt: 'A pharmaceutical company must prove to regulators that their EC2 instances run on hardware that is not shared with any other AWS customer. Additionally, their software licensing is per-socket and per-core, requiring visibility into the specific physical host\'s socket and core count. Which EC2 tenancy option satisfies BOTH requirements?',
+            options: [
+                'Dedicated Instances — instances run on hardware dedicated to a single customer; socket/core visibility is provided',
+                'Dedicated Hosts — physically dedicated server with full visibility into socket count, cores per socket, and the ability to control instance placement; also satisfies single-tenant hardware requirement',
+                'Reserved Instances with a 3-year term — Reserved Instances guarantee dedicated physical hardware',
+                'Placement Groups (Cluster) — group instances on the same physical rack for isolation'
+            ],
+            correctOptionIndex: 1,
+            explanation: 'Dedicated Hosts are the correct choice when BOTH physical isolation AND hardware visibility/control are needed. A Dedicated Host is an entire physical server allocated exclusively to you: you see the socket count, cores per socket, and total vCPUs — enabling per-socket/per-core license management (e.g., Windows Server, SQL Server, Oracle). You can also control which instances are placed on which host. Dedicated Instances provide physical isolation (no other customer shares your hardware) but offer NO visibility into the underlying host\'s physical topology and no instance-to-host placement control — they are insufficient for per-socket/per-core licensing. Reserved Instances are a billing commitment, not a tenancy type. Placement Groups optimize network performance or availability — not physical isolation from other customers.'
+        },
+
+        // ═══════════════════════════════════════════════════════════════════════
+        // SCENARIO — Direct Connect Security
+        // ═══════════════════════════════════════════════════════════════════════
+        {
+            id: 'sapp_q62',
+            type: 'single',
+            prompt: 'A financial institution requires that all data transmitted over their AWS Direct Connect connection to VPCs is encrypted in transit at the network layer (Layer 2), not just at the application layer. The connection already has a Private VIF. Which feature provides this?',
+            options: [
+                'Enable HTTPS on all applications — TLS provides Layer 2 encryption over Direct Connect',
+                'Use a Site-to-Site VPN over the Direct Connect connection — IPsec encrypts the traffic at Layer 3',
+                'Enable MACsec (IEEE 802.1AE) on the Direct Connect connection — it provides hop-by-hop Layer 2 encryption between the customer router and the AWS Direct Connect device',
+                'Enable AWS Transit Gateway with encryption — it encrypts all traffic flowing through it including Direct Connect traffic'
+            ],
+            correctOptionIndex: 2,
+            explanation: 'MACsec (Media Access Control Security, IEEE 802.1AE) is the only option that encrypts traffic at Layer 2 (the data link layer) on Direct Connect. It encrypts every frame between the customer premises equipment (CPE) and the AWS Direct Connect device — before the traffic enters the AWS network. This satisfies requirements for network-layer encryption that TLS alone cannot provide (TLS is application-layer). MACsec is available on Dedicated Direct Connect connections at 10 Gbps and higher speeds. Running IPsec VPN over Direct Connect (option B) encrypts at Layer 3 and is a valid alternative for L3 encryption, but it is NOT Layer 2. TLS is application-layer (Layer 7). Transit Gateway encryption applies to VPN attachments, not Direct Connect Private VIF traffic.'
+        },
+
+        // ═══════════════════════════════════════════════════════════════════════
+        // SCENARIO — Confused Deputy with S3 + EventBridge
+        // ═══════════════════════════════════════════════════════════════════════
+        {
+            id: 'sapp_q63',
+            type: 'single',
+            prompt: 'A Lambda function in Account A is triggered by an EventBridge rule and writes results to an S3 bucket in Account B. The S3 bucket policy allows the Lambda execution role from Account A. A security engineer warns that the S3 bucket policy as written is vulnerable to the confused deputy problem. Which condition should be added to the bucket policy to mitigate this?',
+            options: [
+                'Add a condition requiring aws:SecureTransport: true to enforce HTTPS',
+                'Add conditions for aws:SourceAccount (Account A\'s ID) and aws:SourceArn (the specific Lambda function ARN or EventBridge rule ARN) to ensure S3 only accepts writes when the specific trusted source initiates them',
+                'Add a condition requiring aws:MultiFactorAuthPresent: true for all PutObject calls',
+                'Replace the bucket policy with an IAM role in Account B that Account A\'s Lambda assumes before writing — this eliminates the need for a bucket policy'
+            ],
+            correctOptionIndex: 1,
+            explanation: 'The confused deputy problem for service-to-service flows: if the S3 bucket policy simply allows "any Lambda from Account A," a malicious actor who has Account A\'s Lambda execution role could write to buckets in Account B from ANY Lambda function. The aws:SourceArn condition restricts writes to calls originating from the SPECIFIC Lambda function (or EventBridge rule) ARN, and aws:SourceAccount verifies it is from Account A. Together, these conditions ensure Account B\'s S3 bucket only accepts writes when the SPECIFIC trusted function from Account A initiates the call — not any other Lambda sharing that role. This is the AWS-recommended pattern for service-to-resource cross-account trust. MFA conditions don\'t apply to service invocations. Cross-account role assumption is an alternative but adds latency and complexity.'
+        },
+
+        // ═══════════════════════════════════════════════════════════════════════
+        // SCENARIO — EKS Security: IRSA vs Node Role
+        // ═══════════════════════════════════════════════════════════════════════
+        {
+            id: 'sapp_q64',
+            type: 'single',
+            prompt: 'An EKS cluster has worker nodes with an EC2 instance role that has broad S3 access. Individual pods need different, narrower S3 permissions. Developers realize all pods inherit the node\'s broad S3 permissions via the instance metadata service. What is the AWS-recommended solution to give each pod only the permissions it needs?',
+            options: [
+                'Deploy a separate EKS node group for each pod\'s permission level — each node group has a different IAM instance role',
+                'Use IAM Roles for Service Accounts (IRSA) — annotate each Kubernetes ServiceAccount with a specific IAM role ARN; the EKS OIDC provider allows the pod to exchange a Kubernetes service account token for AWS temporary credentials scoped to that role',
+                'Store per-pod AWS credentials in Kubernetes Secrets and inject them as environment variables into each pod',
+                'Remove the IAM role from the node group — pods then use static IAM access keys stored in a Secrets Manager secret shared across the cluster'
+            ],
+            correctOptionIndex: 1,
+            explanation: 'IAM Roles for Service Accounts (IRSA) is the AWS-standard solution for pod-level IAM permissions in EKS. Each Kubernetes ServiceAccount is annotated with an IAM role ARN. When a pod uses that ServiceAccount, the EKS pod identity webhook mounts a projected Kubernetes service account token. The AWS SDK in the pod exchanges this token via the OIDC identity provider for short-lived AWS STS credentials scoped to the annotated IAM role. Each pod gets only its specific permissions — not the broad node role. Separate node groups per permission level is operationally expensive and wasteful. Kubernetes Secrets are base64-encoded (not encrypted) by default and sharing credentials across pods violates least privilege. Static access keys in any form are a security antipattern.'
+        },
+
+        // ═══════════════════════════════════════════════════════════════════════
+        // SCENARIO — Multi-Account Security Architecture
+        // ═══════════════════════════════════════════════════════════════════════
+        {
+            id: 'sapp_q65',
+            type: 'single',
+            prompt: 'A company with 50 AWS accounts in an Organization wants a centralized security architecture. They need: CloudTrail logs from ALL accounts in one S3 bucket, GuardDuty findings from ALL accounts in one place, and Security Hub findings aggregated centrally. Which architecture minimizes custom code and operational overhead?',
+            options: [
+                'Create Lambda functions in each member account that forward CloudTrail, GuardDuty, and Security Hub events to the central account via SNS',
+                'Create a dedicated Security account: enable an Organization CloudTrail Trail from the management account delivering to an S3 bucket in the Security account; delegate GuardDuty to the Security account with auto-enable for members; delegate Security Hub to the Security account with cross-account aggregation enabled',
+                'Enable AWS Config Aggregator in the Security account — it pulls CloudTrail, GuardDuty, and Security Hub data from all member accounts automatically',
+                'Use Amazon EventBridge Event Bus sharing from all member accounts to the central Security account, then write custom Lambda functions to store CloudTrail logs and parse GuardDuty and Security Hub findings'
+            ],
+            correctOptionIndex: 1,
+            explanation: 'AWS provides native Organization-level delegation for all three services: (1) CloudTrail Organization Trail — created once from the management account, applies to all current and future member accounts, delivers logs to a central S3 bucket (typically in a dedicated Security/Log Archive account). (2) GuardDuty delegated administrator — the Security account manages GuardDuty for all members with auto-enable for new accounts; findings from all accounts appear in the Security account. (3) Security Hub delegated administrator with aggregation — all findings flow to the Security account. No custom Lambda functions or cross-account EventBridge piping needed. Config Aggregator aggregates configuration compliance data but does NOT include CloudTrail logs or GuardDuty findings.'
+        },
+        {
+            id: 'sapp_q66',
+            type: 'multiple',
+            prompt: 'A company uses a Security account as the centralized security hub. The CloudTrail Organization Trail delivers logs to an S3 bucket in the Security account. Which TWO controls should be applied to the CloudTrail S3 bucket to maximize log integrity and prevent tampering? (Choose 2)',
+            options: [
+                'Enable CloudTrail log file validation — creates signed digest files allowing cryptographic verification of log integrity',
+                'Enable S3 Object Lock in Compliance mode with a retention period — prevents ANY principal, including root, from deleting or altering logs before expiry',
+                'Enable S3 Transfer Acceleration — speeds up log delivery and prevents interception',
+                'Set the S3 bucket to Requester Pays — prevents unauthorized access to the log bucket by charging requesters'
+            ],
+            correctOptionIndexes: [0, 1],
+            explanation: 'Two complementary controls protect CloudTrail log integrity: (1) CloudTrail log file validation generates SHA-256 signed digest files every hour. Running aws cloudtrail validate-logs proves whether log files were modified, deleted, or forged after delivery — this is cryptographic proof of content integrity. (2) S3 Object Lock in Compliance mode with a retention period prevents any principal — including the AWS root account — from deleting or overwriting log files before the retention period expires. This is physical deletion prevention. Together they provide both content integrity (was the log changed?) and deletion prevention (was the log removed?). Transfer Acceleration is a performance feature unrelated to security. Requester Pays makes requesters pay data transfer costs — it does not provide meaningful access control and sophisticated attackers are not deterred by costs.'
+        },
+
+        // ═══════════════════════════════════════════════════════════════════════
+        // SCENARIO — KMS Grant vs Key Policy
+        // ═══════════════════════════════════════════════════════════════════════
+        {
+            id: 'sapp_q67',
+            type: 'single',
+            prompt: 'An AWS service (e.g., AWS Secrets Manager) needs temporary delegated permission to use a customer\'s KMS CMK for a specific operation (e.g., GenerateDataKey) on behalf of a user. The permission should be revocable without modifying the key policy. Which KMS mechanism is designed for this pattern?',
+            options: [
+                'Add an inline permission boundary to the KMS key that grants the service temporary access',
+                'Create a KMS Grant — a delegated authorization that allows a grantee principal to use the key for specific operations, which can be retired or revoked independently of the key policy',
+                'Update the KMS key policy to add the service principal and set a time-based condition (aws:CurrentTime) to auto-expire the permission',
+                'Use a KMS alias to create a time-limited alternate key reference for the service'
+            ],
+            correctOptionIndex: 1,
+            explanation: 'KMS Grants are designed precisely for this pattern — temporary, delegated, programmatically managed permissions to use a KMS key. When you grant Secrets Manager permission to use your CMK, AWS creates a Grant on the key. The grant specifies: the grantee (Secrets Manager), the allowed operations (GenerateDataKey, Decrypt), and optional constraints (e.g., EncryptionContext). Grants can be listed, retired (by the grantee), or revoked (by the key administrator) independently without modifying the key policy. This is how most AWS services (S3, RDS, EBS, Secrets Manager) use customer-managed KMS keys — they create temporary grants rather than requiring key policy changes. Key policies require manual editing. Time-based key policy conditions are static and not easily revocable. KMS aliases are for naming, not authorization.'
+        },
+
+        // ═══════════════════════════════════════════════════════════════════════
+        // SCENARIO — Macie + Step Functions Remediation
+        // ═══════════════════════════════════════════════════════════════════════
+        {
+            id: 'sapp_q68',
+            type: 'single',
+            prompt: 'Amazon Macie finds an S3 bucket containing PII (customer credit card numbers) that was accidentally made public. The company wants an automated workflow that: (1) blocks public access immediately, (2) moves the objects to a quarantine bucket, (3) notifies the security team, (4) creates a ticket in Jira. Which architecture implements this multi-step remediation reliably?',
+            options: [
+                'A single Lambda function triggered by EventBridge that performs all four steps sequentially',
+                'Macie → EventBridge → AWS Step Functions state machine: Step 1 Lambda blocks public access, Step 2 Lambda moves objects, Step 3 SNS notifies security team, Step 4 Lambda calls Jira API — with error handling and retry logic at each state',
+                'CloudWatch alarm on Macie findings metric → SNS → Lambda for all four steps',
+                'Macie → Security Hub → AWS Config automatic remediation runbook that calls all four actions'
+            ],
+            correctOptionIndex: 1,
+            explanation: 'Multi-step automated remediation with error handling, retries, and orchestration is exactly the use case for AWS Step Functions. Each step becomes a separate state with independent error handling: if the "move objects" step fails (e.g., large object count), it can retry without re-blocking public access again. Step Functions provides execution history, visual workflow, and guarantees on state transitions. A single Lambda for all four steps is fragile — a failure partway through leaves the workflow in an unknown state with no visibility. CloudWatch alarms are for metric-based alerts, not Macie finding-triggered remediation (EventBridge is correct). Security Hub + Config remediation works for Config rule violations, not Macie PII finding workflows.'
+        },
+
+        // ═══════════════════════════════════════════════════════════════════════
+        // SCENARIO — VPC Flow Logs Interpretation
+        // ═══════════════════════════════════════════════════════════════════════
+        {
+            id: 'sapp_q69',
+            type: 'single',
+            prompt: 'A VPC Flow Log entry shows: srcaddr=10.0.1.50 dstaddr=10.0.2.100 dstport=3306 protocol=6 action=REJECT. The EC2 instance at 10.0.1.50 cannot connect to the RDS instance at 10.0.2.100 on port 3306. The Security Group on the RDS instance allows TCP 3306 from the EC2 instance\'s SG. What is the MOST likely cause?',
+            options: [
+                'The EC2 instance\'s Security Group does not allow outbound traffic on port 3306',
+                'The Network ACL on the RDS subnet is blocking inbound TCP traffic on port 3306 from the EC2 subnet, or the Network ACL on the EC2 subnet is blocking outbound TCP on port 3306',
+                'The RDS instance\'s Security Group is blocking the traffic despite showing inbound rules',
+                'VPC Flow Logs show REJECT for all encrypted database traffic — this is expected behavior for RDS MySQL'
+            ],
+            correctOptionIndex: 1,
+            explanation: 'The Security Group on the RDS instance correctly allows port 3306 from the EC2 SG — Security Groups are stateful so the REJECT is not from the SG. The REJECT in VPC Flow Logs indicates the traffic was blocked by a STATELESS control — which means a Network ACL (NACL). NACLs are stateless and evaluated in rule number order. Two possible NACL issues: (1) The RDS subnet NACL has no inbound ALLOW rule for TCP 3306 from the EC2 subnet CIDR; (2) The EC2 subnet NACL has no outbound ALLOW rule for TCP 3306 (or no return traffic rule for ephemeral ports 1024-65535). Security Groups are stateful and would show ACCEPT, not REJECT, if the rule matches. VPC Flow Logs always log traffic metadata regardless of whether it is encrypted.'
+        },
+
+        // ═══════════════════════════════════════════════════════════════════════
+        // SCENARIO — Encryption Context in KMS
+        // ═══════════════════════════════════════════════════════════════════════
+        {
+            id: 'sapp_q70',
+            type: 'single',
+            prompt: 'An application uses KMS to encrypt user data. During encryption, the application passes an EncryptionContext of {"userId": "usr-123", "environment": "prod"}. Later, when decrypting, the application accidentally omits the EncryptionContext. What happens?',
+            options: [
+                'The decryption succeeds — EncryptionContext is metadata-only and is not required for decryption',
+                'The decryption fails with an InvalidCiphertextException — the EncryptionContext used during encryption must be provided EXACTLY during decryption; KMS validates it as part of the authenticated encryption (AEAD)',
+                'The decryption succeeds but KMS logs a warning in CloudTrail about the missing context',
+                'KMS automatically retrieves the original EncryptionContext from its internal store and uses it for decryption'
+            ],
+            correctOptionIndex: 1,
+            explanation: 'KMS EncryptionContext is NOT just metadata — it is a critical component of authenticated encryption (AES-256-GCM). The EncryptionContext key-value pairs are cryptographically bound to the ciphertext using AEAD (Authenticated Encryption with Associated Data). During decryption, KMS verifies that the provided EncryptionContext exactly matches what was used during encryption (same keys, same values, case-sensitive). If the EncryptionContext is missing or different, KMS returns InvalidCiphertextException — it will NOT decrypt the ciphertext. This prevents a stolen ciphertext from being decrypted in a different context (e.g., a prod ciphertext cannot be decrypted with a dev context). EncryptionContext values also appear in CloudTrail logs, providing additional audit context for who decrypted what, for which resource.'
+        },
+
+        // ═══════════════════════════════════════════════════════════════════════
+        // SCENARIO — Cognito User Pool: Custom Auth Challenge
+        // ═══════════════════════════════════════════════════════════════════════
+        {
+            id: 'sapp_q71',
+            type: 'single',
+            prompt: 'A company wants to implement passwordless authentication in their Cognito User Pool — users receive a one-time code via SMS and enter it instead of a password. Standard Cognito MFA does not fit because users should never set a password at all. Which Cognito feature enables fully custom authentication flows?',
+            options: [
+                'Enable Cognito hosted UI with SMS MFA mandatory — users can skip password entry',
+                'Configure the USER_PASSWORD_AUTH flow with SMS as the only factor',
+                'Use the Custom Authentication flow with three Lambda triggers: Define Auth Challenge, Create Auth Challenge, and Verify Auth Response — these together implement any custom step-up or passwordless flow',
+                'Use Cognito Identity Pools with SMS verification as the primary authentication mechanism'
+            ],
+            correctOptionIndex: 2,
+            explanation: 'Cognito\'s Custom Authentication Challenge flow uses three coordinated Lambda triggers: (1) Define Auth Challenge — receives the session state and decides what challenge to present next (e.g., "send SMS OTP"); (2) Create Auth Challenge — generates the actual challenge (calls SNS to send an SMS with the OTP, returns the challenge parameters); (3) Verify Auth Response — receives the user\'s response and validates it against the generated OTP. This allows fully custom authentication flows including passwordless SMS OTP, magic links, TOTP, CAPTCHA, or any combination. The built-in USER_PASSWORD_AUTH requires a password. Standard MFA is a second factor AFTER password authentication — not a replacement. Cognito Identity Pools handle AWS credential vending after authentication, not the authentication itself.'
+        },
+
+        // ═══════════════════════════════════════════════════════════════════════
+        // SCENARIO — Resource-Based Policy: Who Can Access Without an Identity Policy
+        // ═══════════════════════════════════════════════════════════════════════
+        {
+            id: 'sapp_q72',
+            type: 'single',
+            prompt: 'An S3 bucket in Account A has a resource-based policy that explicitly Allows s3:GetObject for "Principal": {"AWS": "arn:aws:iam::ACCOUNT-B:root"}. An IAM user in Account B (with no S3 permissions in their identity policy) tries to access the bucket. What happens?',
+            options: [
+                'Access is granted because the S3 bucket policy explicitly grants access to Account B, and that covers all Account B principals including the IAM user',
+                'Access is denied because the IAM user in Account B has no identity policy granting S3 access — both the S3 bucket policy AND the IAM user\'s identity policy must allow the action for cross-account access',
+                'Access is granted if the IAM user has an S3 bucket policy attached at the account level',
+                'Access is granted because "root" grants override individual IAM user policies in Account B'
+            ],
+            correctOptionIndex: 1,
+            explanation: 'Cross-account S3 access requires authorization on BOTH sides: (1) The resource-based policy (S3 bucket policy) in Account A must allow the cross-account principal — specifying Account B root delegates to Account B IAM. (2) The IAM identity policy on the specific user/role in Account B must also grant the S3 action on the Account A bucket ARN. Both are required. The Account B root principal in the bucket policy means "Account B\'s IAM system can grant access" — it does NOT mean all Account B users automatically have access. Each Account B IAM principal still needs an explicit IAM policy grant. This is the fundamental cross-account access rule: both the resource policy AND the identity policy must allow the action. Within the same account, a resource policy granting a principal is sufficient even without an identity policy (because the resource policy alone constitutes an Allow).'
+        },
+
+        // ═══════════════════════════════════════════════════════════════════════
+        // SCENARIO — WAF Logging + Kinesis
+        // ═══════════════════════════════════════════════════════════════════════
+        {
+            id: 'sapp_q73',
+            type: 'single',
+            prompt: 'A company\'s security team wants real-time visibility into all WAF BLOCK decisions — specifically to detect attack patterns and feed them into a SIEM. They need sub-minute latency from block event to SIEM ingestion, with the raw WAF log fields (IP, URI, rule matched). Which architecture achieves this?',
+            options: [
+                'Enable WAF logging to S3 and configure S3 Event Notifications to trigger a Lambda that forwards logs to the SIEM',
+                'Configure WAF logging to Amazon Kinesis Data Firehose; Firehose can deliver to S3, Elasticsearch/OpenSearch, or call a Lambda for transformation before forwarding to the SIEM via HTTP endpoint',
+                'Enable AWS CloudTrail data events for WAF, then stream CloudTrail to CloudWatch Logs and subscribe the SIEM to the log group',
+                'Configure Amazon EventBridge with a WAF block event rule that sends each blocked request to the SIEM via EventBridge API destination'
+            ],
+            correctOptionIndex: 1,
+            explanation: 'AWS WAF natively supports logging to Amazon Kinesis Data Firehose as the delivery stream. Firehose provides: near-real-time delivery (sub-60-second latency, configurable buffer), direct integration with destinations like Amazon OpenSearch, S3, HTTP endpoints (your SIEM), and Splunk. The WAF log record includes IP address, URI, headers sampled, matching rule group and rule name, and the action taken (ALLOW/BLOCK/COUNT). Firehose also supports Lambda transformation for log enrichment or format conversion. S3 + Event Notifications + Lambda introduces more latency (S3 batches before triggering). CloudTrail WAF events capture API calls to the WAF service (creating rules etc.), not individual request decisions. EventBridge does not carry individual WAF request block events — WAF sends request logs to Kinesis/S3, not EventBridge.'
+        },
+
+        // ═══════════════════════════════════════════════════════════════════════
+        // SCENARIO — ACM Private CA Chain
+        // ═══════════════════════════════════════════════════════════════════════
+        {
+            id: 'sapp_q74',
+            type: 'single',
+            prompt: 'A company uses ACM Private CA to issue TLS certificates for internal microservices. The PKI hierarchy has a Root CA and a Subordinate CA. The Root CA\'s private key must be stored with the highest possible security — offline, air-gapped, and never accessible to software. How should the Root CA be managed?',
+            options: [
+                'Create both Root CA and Subordinate CA in ACM PCA — ACM PCA manages all key material within AWS KMS',
+                'Create the Root CA offline using OpenSSL on an air-gapped HSM; use it to sign a Subordinate CA certificate; create the Subordinate CA in ACM PCA and import the Root CA certificate as the trust anchor. Day-to-day certificate issuance uses only the Subordinate CA in ACM PCA',
+                'Create the Root CA in ACM PCA with CloudHSM as the key store — CloudHSM provides physical isolation equivalent to an air-gapped system',
+                'Store the Root CA private key in AWS Secrets Manager with KMS encryption — this is equivalent to air-gapped storage'
+        ],
+            correctOptionIndex: 1,
+            explanation: 'Best-practice PKI design keeps the Root CA offline and air-gapped — it is only brought online to sign Subordinate CA certificates (an infrequent operation). ACM Private CA supports this hybrid model: the Root CA is operated offline (on a dedicated HSM or air-gapped computer), and its certificate is imported into ACM PCA as the trust chain. The Subordinate CA is created in ACM PCA — AWS manages the Subordinate CA private key in FIPS-140-2 HSMs within ACM PCA. All day-to-day certificate issuance goes through the Subordinate CA. If the Subordinate CA is ever compromised, the offline Root CA is used to revoke and reissue a new Subordinate CA. CloudHSM is network-connected (not air-gapped). Secrets Manager with KMS is a key vault, not an air-gapped HSM. Creating both CAs in ACM PCA means the Root CA private key is software-accessible — not air-gapped.'
+        },
+
+        // ═══════════════════════════════════════════════════════════════════════
+        // SCENARIO — SCPs with Tag Conditions
+        // ═══════════════════════════════════════════════════════════════════════
+        {
+            id: 'sapp_q75',
+            type: 'single',
+            prompt: 'A company wants to enforce that EC2 instances in all member accounts can only be launched if they are tagged with a "CostCenter" and "Environment" tag at launch time. Untagged instances must be blocked. Which SCP condition implements this?',
+            options: [
+                'An SCP that Allows ec2:RunInstances only when aws:RequestTag/CostCenter exists and aws:RequestTag/Environment exists',
+                'An SCP that Denies ec2:RunInstances when the condition StringNotLike aws:RequestTag/CostCenter is "*" OR StringNotLike aws:RequestTag/Environment is "*" — blocking launches missing either required tag',
+                'An SCP that Denies ec2:RunInstances with a condition aws:TagKeys ForAllValues:StringEquals [CostCenter, Environment] — this ensures both tag keys must be present',
+                'An AWS Config rule that detects untagged EC2 instances and terminates them via automatic remediation'
+            ],
+            correctOptionIndex: 1,
+            explanation: 'To block EC2 launches missing required tags: use an SCP with Effect:Deny, Action:ec2:RunInstances, and a condition that checks if the required tag keys are absent. The correct pattern uses StringNotLike or Null conditions: "Condition": {"Null": {"aws:RequestTag/CostCenter": "true"}} — this denies RunInstances when the CostCenter tag is NOT provided (null = missing). Similarly for Environment. Combining two such Deny conditions (one per tag) with "OR" logic (each in a separate condition key block — AWS evaluates multiple conditions with AND, so each missing tag independently triggers the Deny). Option A is an Allow SCP which requires a different SCP architecture. ForAllValues checks if the provided tags are a subset of the allowed set — not that required tags ARE present. Config auto-remediation is reactive (instance already launched) not preventive.'
+        },
+
+        // ═══════════════════════════════════════════════════════════════════════
+        // SCENARIO — Incident Response: Root Account Credential Compromise
+        // ═══════════════════════════════════════════════════════════════════════
+        {
+            id: 'sapp_q76',
+            type: 'single',
+            prompt: 'A company suspects their AWS root account credentials (email + password) have been compromised. GuardDuty shows a finding: RootCredentialUsage — root account API calls from an unusual IP. The company has MFA enabled on root. What are the FIRST TWO immediate response actions? (Select the answer listing both correctly)',
+            options: [
+                'Delete the AWS account immediately and recreate it',
+                'Change the root account password AND the MFA device immediately (invalidating any existing root sessions); then review CloudTrail for all API calls made by root in the past 90 days to assess what actions were taken',
+                'Disable all IAM users in the account to prevent lateral movement, then investigate',
+                'Contact AWS Support to freeze the account while the investigation proceeds'
+            ],
+            correctOptionIndex: 1,
+            explanation: 'For root credential compromise: (1) Immediately change the root account password — this invalidates any active root console sessions; (2) If MFA is suspected to be compromised (or as a precaution), change or re-register the MFA device to revoke any active MFA-authenticated sessions. Root account sessions are not invalidatable via IAM (no root API credentials to revoke), so changing the password and MFA device is the equivalent of revoking root access. Then: (3) Review CloudTrail for root API activity (root calls appear with userIdentity.type = "Root") to determine what was accessed or modified; (4) Check for new IAM users, roles, or access keys created by root; (5) Review for changes to SCPs, billing settings, or account settings. Deleting the account destroys all resources. Disabling IAM users is premature before scoping the compromise. AWS Support can help but cannot change your root credentials for you.'
         }
     ]
 };
