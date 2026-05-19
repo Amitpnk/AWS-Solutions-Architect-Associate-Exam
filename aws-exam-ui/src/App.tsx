@@ -120,9 +120,18 @@ function App() {
   const [compareSearch, setCompareSearch] = useState('');
   const [revealedAnswers, setRevealedAnswers] = useState<Set<string>>(new Set());
   const [revisionShuffleKey, setRevisionShuffleKey] = useState(0);
+  const [checkedAnswers, setCheckedAnswers] = useState<Set<string>>(new Set());
 
   const toggleRevealAnswer = (id: string) => {
     setRevealedAnswers(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  };
+
+  const toggleCheckedAnswer = (id: string) => {
+    setCheckedAnswers(prev => {
       const next = new Set(prev);
       if (next.has(id)) next.delete(id); else next.add(id);
       return next;
@@ -239,6 +248,7 @@ function App() {
     setCurrentQuestionIndex(0);
     setAnswers({});
     setSkippedQuestions({});
+    setCheckedAnswers(new Set());
     setExamTimedOut(false);
     setView('quiz');
     setTimeLeft(timerEnabled && exam.durationSeconds ? exam.durationSeconds : 0);
@@ -354,7 +364,7 @@ function App() {
           title="View on GitHub"
         >
           <svg height="24" width="24" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
-            <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8z"/>
+            <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8z" />
           </svg>
         </a>
       </header>
@@ -674,7 +684,7 @@ function App() {
                       className="about-link-btn"
                     >
                       <svg height="18" width="18" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
-                        <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8z"/>
+                        <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8z" />
                       </svg>
                       GitHub
                     </a>
@@ -774,7 +784,7 @@ function App() {
               </div>
             </div>
 
-           
+
 
             <div className="question-card">
               <div className="question-prompt-row">
@@ -787,12 +797,12 @@ function App() {
                 >
                   {isSpeaking ? (
                     <>
-                      <svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><rect x="2" y="2" width="12" height="12" rx="2"/></svg>
+                      <svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><rect x="2" y="2" width="12" height="12" rx="2" /></svg>
                       Stop
                     </>
                   ) : (
                     <>
-                      <svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M3 2l10 6-10 6V2z"/></svg>
+                      <svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M3 2l10 6-10 6V2z" /></svg>
                       Read
                     </>
                   )}
@@ -827,6 +837,25 @@ function App() {
               </div>
             </div>
 
+            {checkedAnswers.has(currentQuestion.id) && (
+              <div className="revision-answer-body" style={{ margin: '0 0 12px 0' }}>
+                <div className="revision-answer-header">Correct Answer</div>
+                <div className="revision-correct-list">
+                  {getCorrectIndexes(currentQuestion).map(i => (
+                    <div key={i} className="revision-correct-item">
+                      <span className="revision-correct-letter">{String.fromCharCode(65 + i)}</span>
+                      <span>{currentQuestion.options[i]}</span>
+                    </div>
+                  ))}
+                </div>
+                {currentQuestion.explanation && (
+                  <div className="revision-explanation">
+                    <strong>Explanation:</strong> {currentQuestion.explanation}
+                  </div>
+                )}
+              </div>
+            )}
+
             <div className="quiz-controls">
               <button className="mainpage-button" onClick={handleMainPageClick}>
                 Main Page
@@ -837,15 +866,23 @@ function App() {
               <button className="secondary-button" onClick={handleSkipQuestion}>
                 Skip & Return Later
               </button>
+
               <button className="secondary-button" onClick={handleNext}>
                 {currentQuestionIndex + 1 < selectedExam.questions.length ? 'Next' : 'Finish'}
               </button>
               <button className="danger-button" onClick={handleFinish}>
                 End Exam
               </button>
+              <button
+                className={`check-answer-btn ${checkedAnswers.has(currentQuestion.id) ? 'revealed' : ''}`}
+                onClick={() => toggleCheckedAnswer(currentQuestion.id)}
+                type="button"
+              >
+                {checkedAnswers.has(currentQuestion.id) ? 'Hide Answer' : 'Check Answer'}
+              </button>
             </div>
 
-             <div className="question-nav">
+            <div className="question-nav">
               <span>Jump to question:</span>
               <div className="question-nav-grid">
                 {selectedExam.questions.map((question, index) => {
@@ -968,7 +1005,7 @@ function App() {
               <h2>Exam Completed</h2>
               {examTimedOut && <p className="alert-text">Time expired and the exam ended automatically.</p>}
               <p>
-                Score: <strong>{score}</strong> / <strong>{selectedExam.questions.length}</strong> {`(${((score / selectedExam.questions.length) * 100).toFixed(2)}%)`  }
+                Score: <strong>{score}</strong> / <strong>{selectedExam.questions.length}</strong> {`(${((score / selectedExam.questions.length) * 100).toFixed(2)}%)`}
               </p>
               <div className="results-actions">
                 <button className="primary-button" onClick={handleRestart}>Back to Home</button>

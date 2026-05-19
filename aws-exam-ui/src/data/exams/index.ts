@@ -12,6 +12,9 @@ import { examStorage } from './examStorage';
 import { examCostManagement } from './examCostManagement';
 import { examSecurity } from './examSecurity';
 import { examML } from './examML';
+import { examSecureApps } from './examSecureApps';
 export type { ExamQuestion, ExamDefinition } from './types';
 
-export const exams = [exam1, exam3, examEC2, examHA, examRDS, examRoute53, examCloudFront, examAppIntegration, examDatabase, examStorage, examCostManagement, examSecurity, examML];
+export const exams = [ examSecureApps, examEC2, examHA, examRDS, examRoute53,
+    examCloudFront, examAppIntegration, examDatabase, examStorage,
+     examCostManagement, examSecurity, examML, exam1, exam3];
