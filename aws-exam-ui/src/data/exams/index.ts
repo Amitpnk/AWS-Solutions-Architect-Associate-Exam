@@ -1,6 +1,7 @@
 import { exam1 } from './exam1';
 import { examDump1 } from './examDump1';
 import { examDumpSecurity66To130 } from './examDump2';
+import { examDumpSecurity131To195 } from './examDump3';
 import { examEC2 } from './examEC2';
 import { examHA } from './examHA';
 import { examRDS } from './examRDS';
@@ -15,6 +16,6 @@ import { examML } from './examML';
 
 export type { ExamQuestion, ExamDefinition } from './types';
 
-export const exams = [ examDump1, examDumpSecurity66To130, examEC2, examHA, examRDS, examRoute53,
+export const exams = [ examDump1, examDumpSecurity66To130, examDumpSecurity131To195, examEC2, examHA, examRDS, examRoute53,
     examCloudFront, examAppIntegration, examDatabase, examStorage,
     examCostManagement, examSecurity, examML, exam1];

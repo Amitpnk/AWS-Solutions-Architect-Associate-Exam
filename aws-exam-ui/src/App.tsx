@@ -1050,9 +1050,49 @@ function App() {
             <div className="results-summary">
               <h2>Exam Completed</h2>
               {examTimedOut && <p className="alert-text">Time expired and the exam ended automatically.</p>}
-              <p>
-                Score: <strong>{score}</strong> / <strong>{selectedExam.questions.length}</strong> {`(${((score / selectedExam.questions.length) * 100).toFixed(2)}%)`}
-              </p>
+              {(() => {
+                const total = selectedExam.questions.length;
+                const wrong = total - score;
+                const pct = score / total;
+                const circ = 2 * Math.PI * 45;
+                const passed = pct >= 0.72;
+                return (
+                  <div className="score-chart-wrap">
+                    <svg className="score-donut" viewBox="0 0 120 120">
+                      {/* track */}
+                      <circle cx="60" cy="60" r="45" fill="none" stroke="#e2e8f0" strokeWidth="16" />
+                      {/* incorrect arc (red, full circle behind) */}
+                      <circle cx="60" cy="60" r="45" fill="none" stroke="#fca5a5"
+                        strokeWidth="16"
+                        strokeDasharray={`${(wrong / total) * circ} ${circ}`}
+                        transform="rotate(-90 60 60)"
+                        style={{ strokeDashoffset: -(pct * circ) }}
+                      />
+                      {/* correct arc (green) */}
+                      <circle cx="60" cy="60" r="45" fill="none"
+                        stroke={passed ? '#22c55e' : '#f97316'}
+                        strokeWidth="16"
+                        strokeDasharray={`${pct * circ} ${circ}`}
+                        strokeLinecap="round"
+                        transform="rotate(-90 60 60)"
+                      />
+                      <text x="60" y="52" textAnchor="middle" fontSize="22" fontWeight="700" fill="currentColor" className="donut-main-text">
+                        {(pct * 100).toFixed(1)}%
+                      </text>
+                      <text x="60" y="70" textAnchor="middle" fontSize="11" fill="#64748b">
+                        {score} / {total}
+                      </text>
+                    </svg>
+                    <span className={`pass-fail-badge ${passed ? 'pass' : 'fail'}`}>
+                      {passed ? '✓ PASS' : '✗ FAIL'}
+                    </span>
+                    <div className="score-legend">
+                      <span><span className="legend-dot dot-correct" /> Correct: <strong>{score}</strong></span>
+                      <span><span className="legend-dot dot-incorrect" /> Incorrect: <strong>{wrong}</strong></span>
+                    </div>
+                  </div>
+                );
+              })()}
               <div className="results-actions">
                 <button className="primary-button" onClick={handleRestart}>Back to Home</button>
                 <button className="secondary-button" onClick={() => handleStartExam(selectedExam.id)}>

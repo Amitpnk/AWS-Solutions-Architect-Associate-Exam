@@ -1,4 +1,4 @@
-.App {
+﻿.App {
   min-height: 100vh;
   background: #f4f7fb;
   color: #1f2937;
@@ -251,6 +251,65 @@
   flex-wrap: wrap;
 }
 
+/* ── Score donut chart ── */
+.score-chart-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.score-donut {
+  width: 160px;
+  height: 160px;
+}
+
+.donut-main-text {
+  fill: #1e293b;
+}
+
+.pass-fail-badge {
+  font-size: 0.95rem;
+  font-weight: 700;
+  padding: 4px 18px;
+  border-radius: 20px;
+  letter-spacing: 0.05em;
+}
+
+.pass-fail-badge.pass {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.pass-fail-badge.fail {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.score-legend {
+  display: flex;
+  gap: 20px;
+  font-size: 0.9rem;
+  color: #475569;
+}
+
+.legend-dot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  margin-right: 5px;
+  vertical-align: middle;
+}
+
+.dot-correct {
+  background: #22c55e;
+}
+
+.dot-incorrect {
+  background: #fca5a5;
+}
+
 .review-list {
   display: grid;
   gap: 18px;
@@ -356,7 +415,7 @@
   transition: background-color 0.2s linear;
 }
 
-.dark-mode-checkbox:checked + .dark-mode-label {
+.dark-mode-checkbox:checked+.dark-mode-label {
   background-color: #1e3a8a;
 }
 
@@ -381,7 +440,7 @@
   transition: transform 0.2s linear;
 }
 
-.dark-mode-checkbox:checked + .dark-mode-label .ball {
+.dark-mode-checkbox:checked+.dark-mode-label .ball {
   transform: translateX(24px);
 }
 
@@ -839,6 +898,24 @@
 
 .App.dark .alert-text {
   color: #fca5a5;
+}
+
+.App.dark .donut-main-text {
+  fill: #f1f5f9;
+}
+
+.App.dark .pass-fail-badge.pass {
+  background: #052e16;
+  color: #4ade80;
+}
+
+.App.dark .pass-fail-badge.fail {
+  background: #2d0a0a;
+  color: #fca5a5;
+}
+
+.App.dark .score-legend {
+  color: #94a3b8;
 }
 
 .App.dark .explanation {
@@ -1628,6 +1705,7 @@
 }
 
 @media print {
+
   /* ── Hide all chrome ── */
   .App-header,
   .sponsor-fab,
@@ -1886,6 +1964,16 @@
     color: #1e3a6e;
   }
 
+  .score-chart-wrap {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .pass-fail-badge {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
   .alert-text {
     color: #991b1b !important;
     -webkit-print-color-adjust: exact;
@@ -1945,7 +2033,7 @@
     color: #dc2626;
   }
 
-  .review-card > p {
+  .review-card>p {
     font-size: 0.95rem;
     font-weight: 600;
     color: #0f172a;
@@ -2500,10 +2588,25 @@
   flex-shrink: 0;
 }
 
-.cheatsheet-fact-tag--limit   { background: #fee2e2; color: #991b1b; }
-.cheatsheet-fact-tag--tip     { background: #dcfce7; color: #166534; }
-.cheatsheet-fact-tag--gotcha  { background: #fef9c3; color: #854d0e; }
-.cheatsheet-fact-tag--default { background: #e0f2fe; color: #075985; }
+.cheatsheet-fact-tag--limit {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.cheatsheet-fact-tag--tip {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.cheatsheet-fact-tag--gotcha {
+  background: #fef9c3;
+  color: #854d0e;
+}
+
+.cheatsheet-fact-tag--default {
+  background: #e0f2fe;
+  color: #075985;
+}
 
 .cheatsheet-fact-text {
   font-size: 0.85rem;
@@ -2588,10 +2691,25 @@
   color: #cbd5e1;
 }
 
-.App.dark .cheatsheet-fact-tag--limit   { background: #3b0a0a; color: #fca5a5; }
-.App.dark .cheatsheet-fact-tag--tip     { background: #052e16; color: #86efac; }
-.App.dark .cheatsheet-fact-tag--gotcha  { background: #2d1c00; color: #fde68a; }
-.App.dark .cheatsheet-fact-tag--default { background: #0c2a3f; color: #7dd3fc; }
+.App.dark .cheatsheet-fact-tag--limit {
+  background: #3b0a0a;
+  color: #fca5a5;
+}
+
+.App.dark .cheatsheet-fact-tag--tip {
+  background: #052e16;
+  color: #86efac;
+}
+
+.App.dark .cheatsheet-fact-tag--gotcha {
+  background: #2d1c00;
+  color: #fde68a;
+}
+
+.App.dark .cheatsheet-fact-tag--default {
+  background: #0c2a3f;
+  color: #7dd3fc;
+}
 
 /* ── Cloud Comparison (AWS vs Azure vs GCP) ──────────────────────────────── */
 .compare-section {
@@ -2646,10 +2764,29 @@
   white-space: nowrap;
 }
 
-.compare-th--aws   { background: #fff7ed; color: #c2410c; border-bottom: 2px solid #fed7aa; }
-.compare-th--azure { background: #eff6ff; color: #1d4ed8; border-bottom: 2px solid #bfdbfe; }
-.compare-th--gcp   { background: #f0fdf4; color: #15803d; border-bottom: 2px solid #bbf7d0; }
-.compare-th--desc  { background: #f8fafc; color: #475569; border-bottom: 2px solid #e2e8f0; }
+.compare-th--aws {
+  background: #fff7ed;
+  color: #c2410c;
+  border-bottom: 2px solid #fed7aa;
+}
+
+.compare-th--azure {
+  background: #eff6ff;
+  color: #1d4ed8;
+  border-bottom: 2px solid #bfdbfe;
+}
+
+.compare-th--gcp {
+  background: #f0fdf4;
+  color: #15803d;
+  border-bottom: 2px solid #bbf7d0;
+}
+
+.compare-th--desc {
+  background: #f8fafc;
+  color: #475569;
+  border-bottom: 2px solid #e2e8f0;
+}
 
 .compare-row {
   transition: background 0.1s ease;
@@ -2669,10 +2806,25 @@
   line-height: 1.5;
 }
 
-.compare-cell--aws   { font-weight: 700; color: #c2410c; white-space: nowrap; }
-.compare-cell--azure { font-weight: 600; color: #1d4ed8; }
-.compare-cell--gcp   { font-weight: 600; color: #15803d; }
-.compare-cell--desc  { color: #475569; }
+.compare-cell--aws {
+  font-weight: 700;
+  color: #c2410c;
+  white-space: nowrap;
+}
+
+.compare-cell--azure {
+  font-weight: 600;
+  color: #1d4ed8;
+}
+
+.compare-cell--gcp {
+  font-weight: 600;
+  color: #15803d;
+}
+
+.compare-cell--desc {
+  color: #475569;
+}
 
 /* Dark mode — compare */
 .App.dark .compare-intro {
@@ -2693,10 +2845,29 @@
   background: #0f2040;
 }
 
-.App.dark .compare-th--aws   { background: #2a1200; color: #fb923c; border-bottom-color: #7c2d12; }
-.App.dark .compare-th--azure { background: #0a1e40; color: #60a5fa; border-bottom-color: #1e3a8a; }
-.App.dark .compare-th--gcp   { background: #052e16; color: #4ade80; border-bottom-color: #166534; }
-.App.dark .compare-th--desc  { background: #0d1e3a; color: #94a3b8; border-bottom-color: #1e3562; }
+.App.dark .compare-th--aws {
+  background: #2a1200;
+  color: #fb923c;
+  border-bottom-color: #7c2d12;
+}
+
+.App.dark .compare-th--azure {
+  background: #0a1e40;
+  color: #60a5fa;
+  border-bottom-color: #1e3a8a;
+}
+
+.App.dark .compare-th--gcp {
+  background: #052e16;
+  color: #4ade80;
+  border-bottom-color: #166534;
+}
+
+.App.dark .compare-th--desc {
+  background: #0d1e3a;
+  color: #94a3b8;
+  border-bottom-color: #1e3562;
+}
 
 .App.dark .compare-row:hover td {
   background: #122447;
@@ -2706,9 +2877,17 @@
   border-bottom-color: #1a2e4a;
 }
 
-.App.dark .compare-cell--aws   { color: #fb923c; }
-.App.dark .compare-cell--azure { color: #60a5fa; }
-.App.dark .compare-cell--gcp   { color: #4ade80; }
+.App.dark .compare-cell--aws {
+  color: #fb923c;
+}
+
+.App.dark .compare-cell--azure {
+  color: #60a5fa;
+}
+
+.App.dark .compare-cell--gcp {
+  color: #4ade80;
+}
 
 .App.dark .speak-btn {
   border-color: #60a5fa;
@@ -2725,4 +2904,7 @@
   border-color: #ef4444;
   color: white;
 }
-.App.dark .compare-cell--desc  { color: #94a3b8; }
+
+.App.dark .compare-cell--desc {
+  color: #94a3b8;
+}
