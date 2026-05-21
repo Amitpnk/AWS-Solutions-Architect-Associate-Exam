@@ -818,10 +818,12 @@ function App() {
                   const inputType = isMultiSelect ? 'checkbox' : 'radio';
                   const inputName = isMultiSelect ? undefined : currentQuestion.id;
 
+                  const isLocked = checkedAnswers.has(currentQuestion.id);
+
                   return (
                     <label
                       key={option}
-                      className={`option-button ${isSelected ? 'selected' : ''}`}
+                      className={`option-button ${isSelected ? 'selected' : ''} ${isLocked ? 'option-locked' : ''}`}
                     >
                       <input
                         type={inputType}
@@ -829,12 +831,41 @@ function App() {
                         value={optionIndex}
                         checked={isSelected}
                         onChange={() => handleAnswer(optionIndex)}
+                        disabled={isLocked}
                       />
                       {option}
                     </label>
                   );
                 })}
               </div>
+            </div>
+
+            <div className="quiz-controls">
+              <button className="mainpage-button" onClick={handleMainPageClick}>
+                Main Page
+              </button>
+              <button className="secondary-button" onClick={handlePrev} disabled={currentQuestionIndex === 0}>
+                Previous
+              </button>
+              <button className="secondary-button" onClick={handleSkipQuestion}>
+                Skip & Return Later
+              </button>
+
+              <button className="secondary-button" onClick={handleNext}>
+                {currentQuestionIndex + 1 < selectedExam.questions.length ? 'Next' : 'Finish'}
+              </button>
+              <button className="danger-button" onClick={handleFinish}>
+                End Exam
+              </button>
+              <button
+                className={`check-answer-btn ${checkedAnswers.has(currentQuestion.id) ? 'revealed' : ''}`}
+                onClick={() => toggleCheckedAnswer(currentQuestion.id)}
+                type="button"
+                disabled={answers[currentQuestion.id] === undefined}
+                title={answers[currentQuestion.id] === undefined ? 'Select an option first' : undefined}
+              >
+                {checkedAnswers.has(currentQuestion.id) ? 'Hide Answer' : 'Check Answer'}
+              </button>
             </div>
 
             {checkedAnswers.has(currentQuestion.id) && (() => {
@@ -878,33 +909,7 @@ function App() {
               );
             })()}
 
-            <div className="quiz-controls">
-              <button className="mainpage-button" onClick={handleMainPageClick}>
-                Main Page
-              </button>
-              <button className="secondary-button" onClick={handlePrev} disabled={currentQuestionIndex === 0}>
-                Previous
-              </button>
-              <button className="secondary-button" onClick={handleSkipQuestion}>
-                Skip & Return Later
-              </button>
 
-              <button className="secondary-button" onClick={handleNext}>
-                {currentQuestionIndex + 1 < selectedExam.questions.length ? 'Next' : 'Finish'}
-              </button>
-              <button className="danger-button" onClick={handleFinish}>
-                End Exam
-              </button>
-              <button
-                className={`check-answer-btn ${checkedAnswers.has(currentQuestion.id) ? 'revealed' : ''}`}
-                onClick={() => toggleCheckedAnswer(currentQuestion.id)}
-                type="button"
-                disabled={answers[currentQuestion.id] === undefined}
-                title={answers[currentQuestion.id] === undefined ? 'Select an option first' : undefined}
-              >
-                {checkedAnswers.has(currentQuestion.id) ? 'Hide Answer' : 'Check Answer'}
-              </button>
-            </div>
 
             <div className="question-nav">
               <span>Jump to question:</span>

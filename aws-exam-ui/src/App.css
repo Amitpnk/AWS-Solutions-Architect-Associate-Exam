@@ -140,6 +140,12 @@
   box-shadow: 0 0 0 1px #4338ca;
 }
 
+.option-button.option-locked {
+  cursor: not-allowed;
+  opacity: 0.75;
+  pointer-events: none;
+}
+
 .options-grid {
   display: grid;
   gap: 14px;
@@ -502,6 +508,12 @@
   box-shadow: 0 0 0 1px #4338ca;
 }
 
+.option-button.option-locked {
+  cursor: not-allowed;
+  opacity: 0.75;
+  pointer-events: none;
+}
+
 .options-grid {
   display: grid;
   gap: 14px;
@@ -738,6 +750,10 @@
 .App.dark .option-button.selected {
   background: #1e3a8a;
   box-shadow: 0 0 0 2px #3b82f6;
+}
+
+.App.dark .option-button.option-locked {
+  opacity: 0.6;
 }
 
 .App.dark .secondary-button {
