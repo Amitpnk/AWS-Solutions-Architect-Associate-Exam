@@ -2,7 +2,7 @@ import type { ExamDefinition } from './types';
 
 export const examDump1: ExamDefinition = {
   id: 'examDump1',
-  title: 'SAA-C03 Exam Dump 1 — Mixed Scenarios',
+  title: 'SAA-C03 Exam Dump 1 — Mixed Scenarios 1-65',
   description:
     'Mixed AWS Solutions Architect Associate exam-dump questions covering networking, databases, security, identity, encryption, and compliance topics — with detailed incorrect-option explanations and AWS documentation references.',
   durationSeconds: 7800,
