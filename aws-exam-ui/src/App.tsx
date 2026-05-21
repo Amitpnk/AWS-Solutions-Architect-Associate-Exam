@@ -1090,6 +1090,22 @@ function App() {
                       </div>
                     )}
                     {question.explanation && <p className="explanation">{question.explanation}</p>}
+                    {question.incorrectOptionExplanations &&
+                      Object.keys(question.incorrectOptionExplanations).length > 0 && (
+                        <div className="revision-incorrect-explanations">
+                          <div className="revision-incorrect-explanations-header">Why other options are wrong</div>
+                          {Object.entries(question.incorrectOptionExplanations).map(([origIdx, reason]) => {
+                            const orig = parseInt(origIdx, 10);
+                            const letter = String.fromCharCode(65 + orig);
+                            return (
+                              <div key={origIdx} className="revision-incorrect-item">
+                                <span className="revision-incorrect-letter">{letter}</span>
+                                <span>{reason}</span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
                   </article>
                 );
               })}
