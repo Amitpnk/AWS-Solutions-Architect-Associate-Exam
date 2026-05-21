@@ -837,40 +837,46 @@ function App() {
               </div>
             </div>
 
-            {checkedAnswers.has(currentQuestion.id) && (
-              <div className="revision-answer-body" style={{ margin: '0 0 12px 0' }}>
-                <div className="revision-answer-header">Correct Answer</div>
-                <div className="revision-correct-list">
-                  {getCorrectIndexes(currentQuestion).map(i => (
-                    <div key={i} className="revision-correct-item">
-                      <span className="revision-correct-letter">{String.fromCharCode(65 + i)}</span>
-                      <span>{currentQuestion.options[i]}</span>
+            {checkedAnswers.has(currentQuestion.id) && (() => {
+              const selected = normalizeAnswer(answers[currentQuestion.id]);
+              const correct = isAnswerCorrect(currentQuestion, selected);
+              return (
+                <div className="revision-answer-body" style={{ margin: '0 0 12px 0' }}>
+                  <div className={`quiz-verdict ${correct ? 'quiz-verdict--correct' : 'quiz-verdict--wrong'}`}>
+                    {correct ? '✓ Correct!' : '✗ Incorrect'}
+                  </div>
+                  <div className="revision-answer-header">Correct Answer</div>
+                  <div className="revision-correct-list">
+                    {getCorrectIndexes(currentQuestion).map(i => (
+                      <div key={i} className="revision-correct-item">
+                        <span className="revision-correct-letter">{String.fromCharCode(65 + i)}</span>
+                        <span>{currentQuestion.options[i]}</span>
+                      </div>
+                    ))}
+                  </div>
+                  {currentQuestion.explanation && (
+                    <div className="revision-explanation">
+                      <strong>Explanation:</strong> {currentQuestion.explanation}
                     </div>
-                  ))}
+                  )}
+                  {currentQuestion.incorrectOptionExplanations && (
+                    <div className="revision-incorrect-explanations">
+                      <div className="revision-incorrect-explanations-header">Why other options are wrong</div>
+                      {Object.entries(currentQuestion.incorrectOptionExplanations).map(([origIdx, reason]) => {
+                        const orig = parseInt(origIdx, 10);
+                        const letter = String.fromCharCode(65 + orig);
+                        return (
+                          <div key={origIdx} className="revision-incorrect-item">
+                            <span className="revision-incorrect-letter">{letter}</span>
+                            <span>{reason}</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
-                {currentQuestion.explanation && (
-                  <div className="revision-explanation">
-                    <strong>Explanation:</strong> {currentQuestion.explanation}
-                  </div>
-                )}
-                {currentQuestion.incorrectOptionExplanations && (
-                  <div className="revision-incorrect-explanations">
-                    <div className="revision-incorrect-explanations-header">Why other options are wrong</div>
-                    {Object.entries(currentQuestion.incorrectOptionExplanations).map(([origIdx, reason]) => {
-                      const orig = parseInt(origIdx, 10);
-                      const displayIdx = orig;
-                      const letter = String.fromCharCode(65 + displayIdx);
-                      return (
-                        <div key={origIdx} className="revision-incorrect-item">
-                          <span className="revision-incorrect-letter">{letter}</span>
-                          <span>{reason}</span>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-            )}
+              );
+            })()}
 
             <div className="quiz-controls">
               <button className="mainpage-button" onClick={handleMainPageClick}>
@@ -893,6 +899,8 @@ function App() {
                 className={`check-answer-btn ${checkedAnswers.has(currentQuestion.id) ? 'revealed' : ''}`}
                 onClick={() => toggleCheckedAnswer(currentQuestion.id)}
                 type="button"
+                disabled={answers[currentQuestion.id] === undefined}
+                title={answers[currentQuestion.id] === undefined ? 'Select an option first' : undefined}
               >
                 {checkedAnswers.has(currentQuestion.id) ? 'Hide Answer' : 'Check Answer'}
               </button>
