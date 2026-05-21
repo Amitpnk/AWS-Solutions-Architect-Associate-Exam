@@ -853,6 +853,22 @@ function App() {
                     <strong>Explanation:</strong> {currentQuestion.explanation}
                   </div>
                 )}
+                {currentQuestion.incorrectOptionExplanations && (
+                  <div className="revision-incorrect-explanations">
+                    <div className="revision-incorrect-explanations-header">Why other options are wrong</div>
+                    {Object.entries(currentQuestion.incorrectOptionExplanations).map(([origIdx, reason]) => {
+                      const orig = parseInt(origIdx, 10);
+                      const displayIdx = orig;
+                      const letter = String.fromCharCode(65 + displayIdx);
+                      return (
+                        <div key={origIdx} className="revision-incorrect-item">
+                          <span className="revision-incorrect-letter">{letter}</span>
+                          <span>{reason}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             )}
 
@@ -940,7 +956,7 @@ function App() {
             <div className="revision-list">
               {selectedExam.questions.map((question, index) => {
                 const correctIndexes = getCorrectIndexes(question);
-                const shuffle = revisionShuffledOptions[question.id];
+                const shuffle = revisionShuffleKey > 0 ? revisionShuffledOptions[question.id] : null;
                 const displayOptions = shuffle ? shuffle.shuffled : question.options;
                 const displayCorrectIndexes = shuffle
                   ? correctIndexes.map(i => shuffle.oldToNew[i])
@@ -989,6 +1005,23 @@ function App() {
                               <strong>Explanation:</strong> {question.explanation}
                             </div>
                           )}
+                          {question.incorrectOptionExplanations &&
+                            Object.keys(question.incorrectOptionExplanations).length > 0 && (
+                              <div className="revision-incorrect-explanations">
+                                <div className="revision-incorrect-explanations-header">Why other options are wrong</div>
+                                {Object.entries(question.incorrectOptionExplanations).map(([origIdx, reason]) => {
+                                  const orig = parseInt(origIdx, 10);
+                                  const displayIdx = shuffle ? shuffle.oldToNew[orig] : orig;
+                                  const letter = String.fromCharCode(65 + displayIdx);
+                                  return (
+                                    <div key={origIdx} className="revision-incorrect-item">
+                                      <span className="revision-incorrect-letter">{letter}</span>
+                                      <span>{reason}</span>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            )}
                         </div>
                       )}
                     </div>

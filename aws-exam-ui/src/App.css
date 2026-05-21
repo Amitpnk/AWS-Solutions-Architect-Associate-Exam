@@ -1088,6 +1088,74 @@
   color: #fde68a;
 }
 
+/* Incorrect-option explanations block */
+.revision-incorrect-explanations {
+  margin-top: 12px;
+  padding: 12px;
+  background: #fef2f2;
+  border-left: 3px solid #ef4444;
+  border-radius: 0 6px 6px 0;
+}
+
+.revision-incorrect-explanations-header {
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #b91c1c;
+  margin-bottom: 8px;
+}
+
+.revision-incorrect-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: 6px;
+  font-size: 0.88rem;
+  line-height: 1.5;
+  color: #7f1d1d;
+  margin-bottom: 4px;
+  background: #fee2e2;
+}
+
+.revision-incorrect-item:last-child {
+  margin-bottom: 0;
+}
+
+.revision-incorrect-letter {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #ef4444;
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.75rem;
+  flex-shrink: 0;
+}
+
+/* Dark mode — incorrect explanations */
+.App.dark .revision-incorrect-explanations {
+  background: #1f0808;
+  border-left-color: #dc2626;
+}
+
+.App.dark .revision-incorrect-explanations-header {
+  color: #fca5a5;
+}
+
+.App.dark .revision-incorrect-item {
+  background: #2d0a0a;
+  color: #fecaca;
+}
+
+.App.dark .revision-incorrect-letter {
+  background: #dc2626;
+}
+
 /* Home Tabs */
 .home-tabs {
   display: flex;
@@ -1680,6 +1748,35 @@
     padding: 10px 12px !important;
     margin-top: 10px !important;
     border-radius: 0 4px 4px 0;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* ── Incorrect-option explanations (revision print) ── */
+  .revision-incorrect-explanations {
+    background: #fef2f2 !important;
+    border-left: 3px solid #ef4444 !important;
+    margin-top: 10px !important;
+    padding: 10px 12px !important;
+    border-radius: 0 4px 4px 0;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .revision-incorrect-explanations-header {
+    color: #b91c1c !important;
+  }
+
+  .revision-incorrect-item {
+    background: #fee2e2 !important;
+    color: #7f1d1d !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .revision-incorrect-letter {
+    background: #ef4444 !important;
+    color: white !important;
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
   }
