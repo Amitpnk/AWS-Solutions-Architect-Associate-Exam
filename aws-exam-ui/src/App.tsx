@@ -1078,15 +1078,36 @@ function App() {
                     </div>
                     <p>{question.prompt}</p>
                     <div className="review-answer">
-                      <strong>Your answer{selectedIndexes.length > 1 ? 's' : ''}:</strong>{' '}
-                      {selectedIndexes.length > 0
-                        ? selectedIndexes.map((optionIndex) => question.options[optionIndex]).join(', ')
-                        : 'No answer selected'}
+                      <strong>Your answer{selectedIndexes.length > 1 ? 's' : ''}:</strong>
+                      {selectedIndexes.length > 0 ? (
+                        <div className="review-options-list">
+                          {selectedIndexes.map((optionIndex) => {
+                            const isOptionCorrect = correctIndexes.includes(optionIndex);
+                            const letter = String.fromCharCode(65 + optionIndex);
+                            return (
+                              <div key={optionIndex} className={isOptionCorrect ? 'revision-correct-item' : 'revision-incorrect-item'}>
+                                <span className={isOptionCorrect ? 'revision-correct-letter' : 'revision-incorrect-letter'}>{letter}</span>
+                                <span>{question.options[optionIndex]}</span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      ) : <span> No answer selected</span>}
                     </div>
                     {!isCorrect && (
                       <div className="review-answer">
-                        <strong>Correct answer{correctIndexes.length > 1 ? 's' : ''}:</strong>{' '}
-                        {correctIndexes.map((optionIndex) => question.options[optionIndex]).join(', ')}
+                        <strong>Correct answer{correctIndexes.length > 1 ? 's' : ''}:</strong>
+                        <div className="review-options-list">
+                          {correctIndexes.map((optionIndex) => {
+                            const letter = String.fromCharCode(65 + optionIndex);
+                            return (
+                              <div key={optionIndex} className="revision-correct-item">
+                                <span className="revision-correct-letter">{letter}</span>
+                                <span>{question.options[optionIndex]}</span>
+                              </div>
+                            );
+                          })}
+                        </div>
                       </div>
                     )}
                     {question.explanation && <p className="explanation">{question.explanation}</p>}
