@@ -71,6 +71,7 @@ function App() {
     setIsSpeaking(true);
     window.speechSynthesis.speak(utterance);
   }, [stopSpeaking]);
+  const [resultFilter, setResultFilter] = useState<'all' | 'correct' | 'incorrect' | 'skipped'>('all');
   const [homeTab, setHomeTab] = useState<'exams' | 'study' | 'services' | 'cheatsheet' | 'compare' | 'about'>('exams');
   const [resourceSearch, setResourceSearch] = useState('');
   const [serviceSearch, setServiceSearch] = useState('');
@@ -250,6 +251,7 @@ function App() {
     setSkippedQuestions({});
     setCheckedAnswers(new Set());
     setExamTimedOut(false);
+    setResultFilter('all');
     setView('quiz');
     setTimeLeft(timerEnabled && exam.durationSeconds ? exam.durationSeconds : 0);
   };
@@ -330,6 +332,7 @@ function App() {
     setTimerEnabled(true);
     setTimeLeft(0);
     setExamTimedOut(false);
+    setResultFilter('all');
   };
 
   const handleOpenRevision = (examId: string) => {
@@ -1052,7 +1055,9 @@ function App() {
               {examTimedOut && <p className="alert-text">Time expired and the exam ended automatically.</p>}
               {(() => {
                 const total = selectedExam.questions.length;
-                const wrong = total - score;
+                const skipped = selectedExam.questions.filter(q => normalizeAnswer(answers[q.id]).length === 0).length;
+                const incorrect = total - score - skipped;
+                const wrong = total - score; // includes skipped, used for chart
                 const pct = score / total;
                 const circ = 2 * Math.PI * 45;
                 const passed = pct >= 0.72;
@@ -1087,8 +1092,27 @@ function App() {
                       {passed ? '✓ PASS' : '✗ FAIL'}
                     </span>
                     <div className="score-legend">
-                      <span><span className="legend-dot dot-correct" /> Correct: <strong>{score}</strong></span>
-                      <span><span className="legend-dot dot-incorrect" /> Incorrect: <strong>{wrong}</strong></span>
+                      <button
+                        className={`legend-chip ${resultFilter === 'correct' ? 'active' : ''}`}
+                        onClick={() => setResultFilter(f => f === 'correct' ? 'all' : 'correct')}
+                        title="Filter: Correct answers"
+                      >
+                        <span className="legend-dot dot-correct" /> Correct: <strong>{score}</strong>
+                      </button>
+                      <button
+                        className={`legend-chip ${resultFilter === 'incorrect' ? 'active' : ''}`}
+                        onClick={() => setResultFilter(f => f === 'incorrect' ? 'all' : 'incorrect')}
+                        title="Filter: Incorrect answers"
+                      >
+                        <span className="legend-dot dot-incorrect" /> Incorrect: <strong>{incorrect}</strong>
+                      </button>
+                      <button
+                        className={`legend-chip ${resultFilter === 'skipped' ? 'active' : ''}`}
+                        onClick={() => setResultFilter(f => f === 'skipped' ? 'all' : 'skipped')}
+                        title="Filter: Skipped / no answer"
+                      >
+                        <span className="legend-dot dot-skipped" /> Skipped: <strong>{skipped}</strong>
+                      </button>
                     </div>
                   </div>
                 );
@@ -1104,17 +1128,27 @@ function App() {
               </div>
             </div>
 
+            {resultFilter !== 'all' && (
+              <div className="review-filter-bar">
+                Showing: <strong>{resultFilter.charAt(0).toUpperCase() + resultFilter.slice(1)}</strong> questions
+                <button className="filter-clear-btn" onClick={() => setResultFilter('all')}>✕ Clear filter</button>
+              </div>
+            )}
             <div className="review-list">
               {selectedExam.questions.map((question, index) => {
                 const selectedAnswer = answers[question.id];
                 const selectedIndexes = normalizeAnswer(selectedAnswer);
                 const correctIndexes = getCorrectIndexes(question);
                 const isCorrect = isAnswerCorrect(question, selectedIndexes);
+                const isSkipped = selectedIndexes.length === 0;
+                if (resultFilter === 'correct' && !isCorrect) return null;
+                if (resultFilter === 'incorrect' && (isCorrect || isSkipped)) return null;
+                if (resultFilter === 'skipped' && !isSkipped) return null;
                 return (
-                  <article key={question.id} className={`review-card ${isCorrect ? 'correct' : 'incorrect'}`}>
+                  <article key={question.id} className={`review-card ${isSkipped ? 'skipped' : isCorrect ? 'correct' : 'incorrect'}`}>
                     <div className="review-header">
                       <h3>Question {index + 1}</h3>
-                      <span>{isCorrect ? 'Correct' : 'Incorrect'}</span>
+                      <span>{isSkipped ? 'Skipped' : isCorrect ? 'Correct' : 'Incorrect'}</span>
                     </div>
                     <p>{question.prompt}</p>
                     <div className="review-answer">

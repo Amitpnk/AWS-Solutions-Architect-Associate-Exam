@@ -310,6 +310,65 @@
   background: #fca5a5;
 }
 
+.dot-skipped {
+  background: #f59e0b;
+}
+
+/* Clickable legend chips */
+.legend-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: transparent;
+  border: 1.5px solid transparent;
+  border-radius: 20px;
+  padding: 4px 12px;
+  font-size: 0.9rem;
+  color: inherit;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.legend-chip:hover {
+  border-color: #94a3b8;
+  background: rgba(0,0,0,0.04);
+}
+
+.legend-chip.active {
+  border-color: #3b82f6;
+  background: rgba(59, 130, 246, 0.08);
+}
+
+/* Filter status bar */
+.review-filter-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 14px;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 8px;
+  font-size: 0.88rem;
+  color: #1e40af;
+  margin-bottom: 4px;
+}
+
+.filter-clear-btn {
+  margin-left: auto;
+  background: none;
+  border: none;
+  color: #3b82f6;
+  cursor: pointer;
+  font-size: 0.85rem;
+  padding: 2px 6px;
+  border-radius: 4px;
+  transition: background 0.15s;
+}
+
+.filter-clear-btn:hover {
+  background: #dbeafe;
+}
+
 .review-list {
   display: grid;
   gap: 18px;
@@ -321,6 +380,10 @@
 
 .review-card.incorrect {
   border-color: #ef4444;
+}
+
+.review-card.skipped {
+  border-color: #f59e0b;
 }
 
 .review-header {
@@ -698,6 +761,10 @@
   border-color: #ef4444;
 }
 
+.review-card.skipped {
+  border-color: #f59e0b;
+}
+
 .review-header {
   display: flex;
   justify-content: space-between;
@@ -934,6 +1001,39 @@
 .App.dark .review-card.incorrect {
   border-color: #ef4444;
   background: #250909;
+}
+
+.App.dark .review-card.skipped {
+  border-color: #f59e0b;
+  background: #1c1500;
+}
+
+.App.dark .legend-chip {
+  color: #94a3b8;
+}
+
+.App.dark .legend-chip:hover {
+  background: rgba(255,255,255,0.06);
+  border-color: #64748b;
+}
+
+.App.dark .legend-chip.active {
+  border-color: #60a5fa;
+  background: rgba(96, 165, 250, 0.12);
+}
+
+.App.dark .review-filter-bar {
+  background: #0f172a;
+  border-color: #1e3a5f;
+  color: #93c5fd;
+}
+
+.App.dark .filter-clear-btn {
+  color: #60a5fa;
+}
+
+.App.dark .filter-clear-btn:hover {
+  background: #1e3a5f;
 }
 
 .exam-card-buttons {
@@ -2003,6 +2103,10 @@
 
   .review-card.incorrect {
     border-left: 5px solid #ef4444 !important;
+  }
+
+  .review-card.skipped {
+    border-left: 5px solid #f59e0b !important;
   }
 
   .review-header {
