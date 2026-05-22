@@ -935,6 +935,52 @@
   color: #93c5fd;
 }
 
+/* ── Timer pause button ───────────────────────────── */
+.timer-wrap {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.timer-pill--paused {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.timer-pause-btn {
+  background: none;
+  border: 1.5px solid #0c4a6e;
+  color: #0c4a6e;
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  line-height: 1;
+  transition: background 0.15s, color 0.15s;
+  white-space: nowrap;
+}
+
+.timer-pause-btn:hover {
+  background: #0c4a6e;
+  color: #fff;
+}
+
+.App.dark .timer-pill--paused {
+  background: #78350f;
+  color: #fde68a;
+}
+
+.App.dark .timer-pause-btn {
+  border-color: #93c5fd;
+  color: #93c5fd;
+}
+
+.App.dark .timer-pause-btn:hover {
+  background: #93c5fd;
+  color: #0f172a;
+}
+
 .App.dark .question-nav-button {
   border-color: #1e3562;
   background: #0d1e3a;
